@@ -2,10 +2,13 @@
 
 #include <sodium.h>
 
+/* Errors */
 static
 ERL_NIF_TERM nacl_error_tuple(ErlNifEnv *env, char *error_atom) {
 	return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, error_atom));
 }
+
+/* Helper functions (Hashing, String Equality, ...) */
 
 static
 ERL_NIF_TERM enif_crypto_hash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
@@ -23,6 +26,22 @@ ERL_NIF_TERM enif_crypto_hash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[
 	crypto_hash(result.data, input.data, input.size);
 	
 	return enif_make_binary(env, &result);
+}
+
+/* Public-key cryptography */
+static
+ERL_NIF_TERM enif_crypto_box_NONCEBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_box_NONCEBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_box_ZEROBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_box_ZEROBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_box_BOXZEROBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_box_BOXZEROBYTES);
 }
 
 static
@@ -46,7 +65,11 @@ ERL_NIF_TERM enif_crypto_box_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 	return enif_make_tuple3(env, enif_make_atom(env, "ok"), enif_make_binary(env, &pk), enif_make_binary(env, &sk));
 }
 
+/* Tie the knot to the Erlang world */
 static ErlNifFunc nif_funcs[] = {
+	{"crypto_box_NONCEBYTES", 0, enif_crypto_box_NONCEBYTES},
+	{"crypto_box_ZEROBYTES", 0, enif_crypto_box_ZEROBYTES},
+	{"crypto_box_BOXZEROBYTES", 0, enif_crypto_box_BOXZEROBYTES},
 	{"crypto_box_keypair", 0, enif_crypto_box_keypair},
 	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 };
