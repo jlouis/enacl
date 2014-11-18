@@ -1,0 +1,8 @@
+.rebar
+ebin
+*.beam
+*.o
+*.d
+*.eqc
+*.so
+eqc_test/.eqc-info
