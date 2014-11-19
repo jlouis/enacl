@@ -125,6 +125,7 @@ ERL_NIF_TERM enif_crypto_box_open(ErlNifEnv *env, int argc, ERL_NIF_TERM const a
 	}
 	
 	if (crypto_box_open(result.data, padded_ciphertext.data, padded_ciphertext.size, nonce.data, pk.data, sk.data)) {
+		enif_release_binary(&result);
 		return nacl_error_tuple(env, "failed_verification");
 	}
 	
