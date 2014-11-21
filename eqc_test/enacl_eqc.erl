@@ -2,12 +2,13 @@
 -include_lib("eqc/include/eqc.hrl").
 -compile(export_all).
 
-%% CRYPTO BOX
-%% ---------------------------
-
 nonce() ->
     Sz = enacl:box_nonce_size(),
     binary(Sz).
+
+%% CRYPTO BOX
+%% ---------------------------
+
 
 prop_box_keypair() ->
     ?FORALL(_X, return(dummy),
@@ -35,6 +36,29 @@ prop_box_failure_integrity() ->
             Err = enacl:box_open([<<"x">>, CipherText], Nonce, PK1, SK2),
             equals(Err, {error, failed_verification})
         end).
+
+%% CRYPTO SECRET BOX
+%% -------------------------------
+
+secret_key() ->
+    Sz = enacl:secretbox_key_size(),
+    binary(Sz).
+
+prop_secretbox_correct() ->
+    ?FORALL({Msg, Nonce, Key}, {binary(), nonce(), secret_key()},
+      begin
+        CipherText = enacl:secretbox(Msg, Nonce, Key),
+        {ok, DecodedMsg} = enacl:secretbox_open(CipherText, Nonce, Key),
+        equals(Msg, DecodedMsg)
+      end).
+      
+prop_secretbox_failure_integrity() ->
+    ?FORALL({Msg, Nonce, Key}, {binary(), nonce(), secret_key()},
+      begin
+        CipherText = enacl:secretbox(Msg, Nonce, Key),
+        Err = enacl:secretbox_open([<<"x">>, CipherText], Nonce, Key),
+        equals(Err, {error, failed_verification})
+      end).
 
 %% HASHING
 %% ---------------------------
