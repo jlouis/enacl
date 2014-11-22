@@ -9,7 +9,9 @@
 	crypto_box_open/4,
 	crypto_box_NONCEBYTES/0,
 	crypto_box_ZEROBYTES/0,
-	crypto_box_BOXZEROBYTES/0
+	crypto_box_BOXZEROBYTES/0,
+	crypto_box_PUBLICKEYBYTES/0,
+	crypto_box_SECRETKEYBYTES/0
 ]).
 
 %% Secret key crypto
@@ -45,6 +47,9 @@ not_loaded() ->
 crypto_box_NONCEBYTES() -> not_loaded().
 crypto_box_ZEROBYTES() -> not_loaded().
 crypto_box_BOXZEROBYTES() -> not_loaded().
+crypto_box_PUBLICKEYBYTES() -> not_loaded().
+crypto_box_SECRETKEYBYTES() -> not_loaded().
+
 crypto_box_keypair() -> not_loaded().
 crypto_box(_PaddedMsg, _Nonce, _PK, _SK) -> not_loaded().
 crypto_box_open(_CipherText, _Nonce, _PK, _SK) -> not_loaded().

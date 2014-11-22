@@ -5,7 +5,9 @@
 	box_keypair/0,
 	box/4,
 	box_open/4,
-	box_nonce_size/0
+	box_nonce_size/0,
+	box_public_key_bytes/0,
+	box_secret_key_bytes/0
 ]).
 
 %% Secret key crypto
@@ -37,6 +39,12 @@ box_open(CipherText, Nonce, PK, SK) ->
 
 box_nonce_size() ->
 	enacl_nif:crypto_box_NONCEBYTES().
+
+box_public_key_bytes() ->
+	enacl_nif:crypto_box_PUBLICKEYBYTES().
+	
+box_secret_key_bytes() ->
+	enacl_nif:crypto_box_SECRETKEYBYTES().
 
 secretbox(Msg, Nonce, Key) ->
     enacl_nif:crypto_secretbox([s_zerobytes(), Msg], Nonce, Key).

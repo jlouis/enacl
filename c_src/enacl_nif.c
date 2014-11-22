@@ -45,6 +45,16 @@ ERL_NIF_TERM enif_crypto_box_BOXZEROBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM
 }
 
 static
+ERL_NIF_TERM enif_crypto_box_PUBLICKEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_box_PUBLICKEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_box_SECRETKEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_box_SECRETKEYBYTES);
+}
+
+static
 ERL_NIF_TERM enif_crypto_box_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	ErlNifBinary pk, sk;
 	
@@ -237,6 +247,8 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_NONCEBYTES", 0, enif_crypto_box_NONCEBYTES},
 	{"crypto_box_ZEROBYTES", 0, enif_crypto_box_ZEROBYTES},
 	{"crypto_box_BOXZEROBYTES", 0, enif_crypto_box_BOXZEROBYTES},
+	{"crypto_box_PUBLICKEYBYTES", 0, enif_crypto_box_PUBLICKEYBYTES},
+	{"crypto_box_SECRETKEYBYTES", 0, enif_crypto_box_SECRETKEYBYTES},
 	{"crypto_box_keypair", 0, enif_crypto_box_keypair},
 	{"crypto_box", 4, enif_crypto_box, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_box_open", 4, enif_crypto_box_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
