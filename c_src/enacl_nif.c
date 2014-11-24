@@ -145,6 +145,39 @@ ERL_NIF_TERM enif_crypto_box_open(ErlNifEnv *env, int argc, ERL_NIF_TERM const a
 		crypto_box_ZEROBYTES,
 		padded_ciphertext.size - crypto_box_ZEROBYTES);
 }
+
+/* Signing */
+static
+ERL_NIF_TERM enif_crypto_sign_PUBLICKEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_sign_PUBLICKEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_sign_SECRETKEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_sign_SECRETKEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_sign_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary pk, sk;
+
+	if (argc != 0) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(crypto_sign_PUBLICKEYBYTES, &pk)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	if (!enif_alloc_binary(crypto_sign_SECRETKEYBYTES, &sk)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_sign_keypair(pk.data, sk.data);
+
+	return enif_make_tuple3(env, enif_make_atom(env, "ok"), enif_make_binary(env, &pk), enif_make_binary(env, &sk));
+}
+
 /* Secret key cryptography */
 
 static
@@ -425,6 +458,10 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_keypair", 0, enif_crypto_box_keypair},
 	{"crypto_box", 4, enif_crypto_box, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_box_open", 4, enif_crypto_box_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
+	{"crypto_sign_PUBLICKEYBYTES", 0, enif_crypto_sign_PUBLICKEYBYTES},
+	{"crypto_sign_SECRETKEYBYTES", 0, enif_crypto_sign_SECRETKEYBYTES},
+	{"crypto_sign_keypair", 0, enif_crypto_sign_keypair},
 
 	{"crypto_secretbox_NONCEBYTES", 0, enif_crypto_secretbox_NONCEBYTES},
 	{"crypto_secretbox_ZEROBYTES", 0, enif_crypto_secretbox_ZEROBYTES},
