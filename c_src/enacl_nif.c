@@ -183,6 +183,11 @@ ERL_NIF_TERM enif_crypto_auth_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM co
 }
 
 static
+ERL_NIF_TERM enif_crypto_onetimeauth_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_onetimeauth_KEYBYTES);
+}
+
+static
 ERL_NIF_TERM enif_crypto_secretbox(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	ErlNifBinary key, nonce, padded_msg, padded_ciphertext;
 
@@ -347,20 +352,68 @@ ERL_NIF_TERM enif_crypto_auth_verify(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 	  (!enif_inspect_iolist_as_binary(env, argv[2], &k))) {
 		return enif_make_badarg(env);
 	}
-	
+
 	if (
 	  (k.size != crypto_auth_KEYBYTES) ||
 	  (a.size != crypto_auth_BYTES)) {
 		return enif_make_badarg(env);
 	}
-	
+
 	if (0 == crypto_auth_verify(a.data, m.data, m.size, k.data)) {
 		return enif_make_atom(env, "true");
 	} else {
 		return enif_make_atom(env, "false");
 	}
 }
-	  
+
+static
+ERL_NIF_TERM enif_crypto_onetimeauth(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary a,m,k;
+
+	if (
+	  (argc != 2) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[1], &k))) {
+		return enif_make_badarg(env);
+	}
+
+	if (k.size != crypto_onetimeauth_KEYBYTES) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(crypto_onetimeauth_BYTES, &a)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_onetimeauth(a.data, m.data, m.size, k.data);
+
+	return enif_make_binary(env, &a);
+}
+
+static
+ERL_NIF_TERM enif_crypto_onetimeauth_verify(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary a, m, k;
+
+	if (
+	  (argc != 3) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &a)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[1], &m)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[2], &k))) {
+		return enif_make_badarg(env);
+	}
+
+	if (
+	  (k.size != crypto_onetimeauth_KEYBYTES) ||
+	  (a.size != crypto_onetimeauth_BYTES)) {
+		return enif_make_badarg(env);
+	}
+
+	if (0 == crypto_onetimeauth_verify(a.data, m.data, m.size, k.data)) {
+		return enif_make_atom(env, "true");
+	} else {
+		return enif_make_atom(env, "false");
+	}
+}
 
 /* Tie the knot to the Erlang world */
 static ErlNifFunc nif_funcs[] = {
@@ -388,6 +441,10 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_auth_KEYBYTES", 0, enif_crypto_auth_KEYBYTES},
 	{"crypto_auth", 2, enif_crypto_auth, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_auth_verify", 3, enif_crypto_auth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
+	{"crypto_onetimeauth_KEYBYTES", 0, enif_crypto_onetimeauth_KEYBYTES},
+	{"crypto_onetimeauth", 2, enif_crypto_onetimeauth, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_onetimeauth_verify", 3, enif_crypto_onetimeauth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 };
