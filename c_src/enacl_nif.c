@@ -168,6 +168,16 @@ ERL_NIF_TERM enif_crypto_secretbox_BOXZEROBYTES(ErlNifEnv *env, int argc, ERL_NI
 }
 
 static
+ERL_NIF_TERM enif_crypto_stream_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_stream_KEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_stream_NONCEBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_stream_NONCEBYTES);
+}
+
+static
 ERL_NIF_TERM enif_crypto_secretbox(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	ErlNifBinary key, nonce, padded_msg, padded_ciphertext;
 	
@@ -241,7 +251,62 @@ ERL_NIF_TERM enif_crypto_secretbox_open(ErlNifEnv *env, int argc, ERL_NIF_TERM c
 	    crypto_secretbox_ZEROBYTES,
 	    padded_ciphertext.size - crypto_secretbox_ZEROBYTES);
 }
+
+static
+ERL_NIF_TERM enif_crypto_stream(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary c, n, k;
+	ErlNifUInt64 clen;
+
+	if (
+	  (argc != 3) ||
+	  (!enif_get_uint64(env, argv[0], &clen)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[1], &n)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[2], &k))) {
+		return enif_make_badarg(env);
+	}
 	
+	if (
+	  (k.size != crypto_stream_KEYBYTES) ||
+	  (n.size != crypto_stream_NONCEBYTES)) {
+		return enif_make_badarg(env);
+	}
+	
+	if (!enif_alloc_binary(clen, &c)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+	
+	crypto_stream(c.data, c.size, n.data, k.data);
+	
+	return enif_make_binary(env, &c);
+}
+
+static
+ERL_NIF_TERM enif_crypto_stream_xor(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary c, m, n, k;
+	
+	if (
+	  (argc != 3) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[1], &n)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[2], &k))) {
+		return enif_make_badarg(env);
+	}
+	
+	if (
+	  (k.size != crypto_stream_KEYBYTES) ||
+	  (n.size != crypto_stream_NONCEBYTES)) {
+		return enif_make_badarg(env);
+	}
+	
+	if (!enif_alloc_binary(m.size, &c)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+	
+	crypto_stream_xor(c.data, m.data, m.size, n.data, k.data);
+	
+	return enif_make_binary(env, &c);
+}
+
 /* Tie the knot to the Erlang world */
 static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_NONCEBYTES", 0, enif_crypto_box_NONCEBYTES},
@@ -259,6 +324,11 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_secretbox_KEYBYTES", 0, enif_crypto_secretbox_KEYBYTES},
 	{"crypto_secretbox", 3, enif_crypto_secretbox, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_secretbox_open", 3, enif_crypto_secretbox_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
+	{"crypto_stream_KEYBYTES", 0, enif_crypto_stream_KEYBYTES},
+	{"crypto_stream_NONCEBYTES", 0, enif_crypto_stream_NONCEBYTES},
+	{"crypto_stream", 3, enif_crypto_stream, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_stream_xor", 3, enif_crypto_stream_xor, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 };
