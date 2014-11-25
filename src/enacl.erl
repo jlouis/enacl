@@ -76,13 +76,13 @@ verify_32(X, Y) -> enacl_nif:crypto_verify_32(X, Y).
 %% Public Key Crypto
 %% ---------------------
 %% @doc box_keypair/0 creates a new Public/Secret keypair.
-%% Generates and returns a new key pair for the Box encryption scheme.
+%% Generates and returns a new key pair for the Box encryption scheme. The return value is a
+%% map in order to avoid using the public key as a secret key and vice versa.
 %% @end.
--spec box_keypair() -> {PublicKey, SecretKey}
-  when PublicKey :: binary(),
-       SecretKey :: binary().
+-spec box_keypair() -> maps:map(atom(), binary()).
 box_keypair() ->
-	enacl_nif:crypto_box_keypair().
+	{PK, SK} = enacl_nif:crypto_box_keypair(),
+	#{ public => PK, secret => SK}.
 
 %% @doc box/4 encrypts+authenticates a message to another party.
 %% Encrypt a `Msg` to the party identified by public key `PK` using your own secret key `SK` to

@@ -19,13 +19,13 @@ nonce() ->
     fault(nonce_bad(), nonce_good()).
 
 keypair_good() ->
-    {ok, PK, SK} = enacl:box_keypair(),
+    #{ public := PK, secret := SK} = enacl:box_keypair(),
     {PK, SK}.
 
 keypair_bad() ->
     ?LET(X, elements([pk, sk]),
       begin
-        {ok, PK, SK} = enacl:box_keypair(),
+        #{ public := PK, secret := SK} = enacl:box_keypair(),
         case X of
             pk ->
               PKBytes = enacl:box_public_key_bytes(),
@@ -42,7 +42,6 @@ keypair() ->
 %% CRYPTO BOX
 %% ---------------------------
 
-
 keypair_valid(PK, SK) when is_binary(PK), is_binary(SK) ->
     PKBytes = enacl:box_public_key_bytes(),
     SKBytes = enacl:box_secret_key_bytes(),
@@ -53,7 +52,7 @@ prop_box_keypair() ->
     ?FORALL(_X, return(dummy),
         ok_box_keypair(enacl:box_keypair())).
        
-ok_box_keypair({ok, _PK, _SK}) -> true;
+ok_box_keypair(#{ public := _, secret := _}) -> true;
 ok_box_keypair(_) -> false.
 
 box(Msg, Nonce , PK, SK) ->
