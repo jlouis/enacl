@@ -113,7 +113,7 @@ ERL_NIF_TERM enif_crypto_box_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 
 	crypto_box_keypair(pk.data, sk.data);
 
-	return enif_make_tuple3(env, enif_make_atom(env, "ok"), enif_make_binary(env, &pk), enif_make_binary(env, &sk));
+	return enif_make_tuple2(env, enif_make_binary(env, &pk), enif_make_binary(env, &sk));
 }
 
 static
@@ -216,7 +216,7 @@ ERL_NIF_TERM enif_crypto_sign_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM con
 
 	crypto_sign_keypair(pk.data, sk.data);
 
-	return enif_make_tuple3(env, enif_make_atom(env, "ok"), enif_make_binary(env, &pk), enif_make_binary(env, &sk));
+	return enif_make_tuple2(env, enif_make_binary(env, &pk), enif_make_binary(env, &sk));
 }
 
 static
