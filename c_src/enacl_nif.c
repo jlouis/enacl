@@ -219,6 +219,59 @@ ERL_NIF_TERM enif_crypto_sign_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM con
 	return enif_make_tuple3(env, enif_make_atom(env, "ok"), enif_make_binary(env, &pk), enif_make_binary(env, &sk));
 }
 
+static
+ERL_NIF_TERM enif_crypto_sign(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary m, sk, sm;
+	unsigned long long smlen;
+
+	if (
+	  (argc != 2) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[1], &sk))) {
+		return enif_make_badarg(env);
+	}
+
+	if (sk.size != crypto_sign_SECRETKEYBYTES) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(m.size + crypto_sign_BYTES, &sm)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_sign(sm.data, &smlen, m.data, m.size, sk.data);
+
+	return enif_make_sub_binary(env, enif_make_binary(env, &sm), 0, smlen);
+}
+
+static
+ERL_NIF_TERM enif_crypto_sign_open(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary m, sm, pk;
+	unsigned long long mlen;
+
+	if (
+	  (argc != 2) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &sm)) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[1], &pk))) {
+		return enif_make_badarg(env);
+	}
+
+	if (pk.size != crypto_sign_PUBLICKEYBYTES) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(sm.size, &m)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	if (0 == crypto_sign_open(m.data, &mlen, sm.data, sm.size, pk.data)) {
+		return enif_make_sub_binary(env, enif_make_binary(env, &m), 0, mlen);
+	} else {
+		enif_release_binary(&m);
+		return nacl_error_tuple(env, "failed_verification");
+	}
+}
+
 /* Secret key cryptography */
 
 static
@@ -503,6 +556,8 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_sign_PUBLICKEYBYTES", 0, enif_crypto_sign_PUBLICKEYBYTES},
 	{"crypto_sign_SECRETKEYBYTES", 0, enif_crypto_sign_SECRETKEYBYTES},
 	{"crypto_sign_keypair", 0, enif_crypto_sign_keypair},
+	{"crypto_sign", 2, enif_crypto_sign, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_sign_open", 2, enif_crypto_sign_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_secretbox_NONCEBYTES", 0, enif_crypto_secretbox_NONCEBYTES},
 	{"crypto_secretbox_ZEROBYTES", 0, enif_crypto_secretbox_ZEROBYTES},
