@@ -1,5 +1,6 @@
 %%% @doc module enacl_nif provides the low-level interface to the NaCl/Sodium NIFs.
 %%% @end
+%%% @private
 -module(enacl_nif).
 
 %% Public key auth
