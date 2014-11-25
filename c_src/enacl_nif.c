@@ -8,7 +8,7 @@ ERL_NIF_TERM nacl_error_tuple(ErlNifEnv *env, char *error_atom) {
 	return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, error_atom));
 }
 
-/* Helper functions (Hashing, String Equality, ...) */
+/* Low-level functions (Hashing, String Equality, ...) */
 
 static
 ERL_NIF_TERM enif_crypto_hash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
@@ -27,6 +27,47 @@ ERL_NIF_TERM enif_crypto_hash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[
 
 	return enif_make_binary(env, &result);
 }
+
+static
+ERL_NIF_TERM enif_crypto_verify_16(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary x,y;
+
+	if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &x))
+	  || (!enif_inspect_iolist_as_binary(env, argv[1], &y))) {
+		return enif_make_badarg(env);
+	}
+
+	if (x.size != 16 || y.size != 16) {
+		return enif_make_badarg(env);
+	}
+
+	if (0 == crypto_verify_16(x.data, y.data)) {
+		return enif_make_atom(env, "true");
+	} else {
+		return enif_make_atom(env, "false");
+	}
+}
+
+static
+ERL_NIF_TERM enif_crypto_verify_32(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary x,y;
+
+	if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &x))
+	  || (!enif_inspect_iolist_as_binary(env, argv[1], &y))) {
+		return enif_make_badarg(env);
+	}
+
+	if (x.size != 32 || y.size != 32) {
+		return enif_make_badarg(env);
+	}
+
+	if (0 == crypto_verify_32(x.data, y.data)) {
+		return enif_make_atom(env, "true");
+	} else {
+		return enif_make_atom(env, "false");
+	}
+}
+
 
 /* Public-key cryptography */
 static
@@ -483,7 +524,9 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_onetimeauth", 2, enif_crypto_onetimeauth, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_onetimeauth_verify", 3, enif_crypto_onetimeauth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
-	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND}
+	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_verify_16", 2, enif_crypto_verify_16},
+	{"crypto_verify_32", 2, enif_crypto_verify_32}
 };
 
 
