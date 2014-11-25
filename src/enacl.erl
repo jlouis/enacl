@@ -19,12 +19,20 @@
 ]).
 
 -export([
-	hash/1
+	hash/1,
+	verify_16/2,
+	verify_32/2
 ]).
 
-hash(Bin) ->
-	enacl_nif:crypto_hash(Bin).
+%% Low level helper functions
+%% -----------------
 
+hash(Bin) -> enacl_nif:crypto_hash(Bin).
+verify_16(X, Y) -> enacl_nif:crypto_verify_16(X, Y).
+verify_32(X, Y) -> enacl_nif:crypto_verify_32(X, Y).
+
+%% Public Key Crypto
+%% ---------------------
 box_keypair() ->
 	enacl_nif:crypto_box_keypair().
 

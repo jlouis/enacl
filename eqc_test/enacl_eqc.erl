@@ -216,3 +216,53 @@ prop_crypto_hash_neq() ->
         enacl:hash(X) /= enacl:hash(Y)
     )).
 
+%% STRING COMPARISON
+%% -------------------------
+
+verify_pair_bad(Sz) ->
+  ?LET(X, elements([fst, snd]),
+    case X of
+      fst ->
+        {?SUCHTHAT(B, binary(), byte_size(B) /= Sz), binary(Sz)};
+      snd ->
+        {binary(Sz), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)}
+    end).
+
+verify_pair_good(Sz) ->
+  oneof([
+    ?LET(Bin, binary(Sz), {Bin, Bin}),
+    ?SUCHTHAT({X, Y}, {binary(Sz), binary(Sz)}, X /= Y)]).
+    
+verify_pair(Sz) ->
+  fault(verify_pair_bad(Sz), verify_pair_good(Sz)).
+
+verify_pair_valid(Sz, X, Y) ->
+    byte_size(X) == Sz andalso byte_size(Y) == Sz.
+
+prop_verify_16() ->
+    ?FORALL({X, Y}, verify_pair(16),
+      case verify_pair_valid(16, X, Y) of
+          true ->
+              equals(X == Y, enacl:verify_16(X, Y));
+          false ->
+              try
+                 enacl:verify_16(X, Y),
+                 false
+              catch
+                  error:badarg -> true
+              end
+      end).
+      
+prop_verify_32() ->
+    ?FORALL({X, Y}, verify_pair(32),
+      case verify_pair_valid(32, X, Y) of
+          true ->
+              equals(X == Y, enacl:verify_32(X, Y));
+          false ->
+              try
+                 enacl:verify_32(X, Y),
+                 false
+              catch
+                  error:badarg -> true
+              end
+      end).
