@@ -28,13 +28,23 @@
 
 %% Secret key crypto
 -export([
+	secretbox_key_size/0,
+	secretbox_nonce_size/0,
 	secretbox/3,
 	secretbox_open/3,
-	secretbox_nonce_size/0,
-	secretbox_key_size/0,
-	
+
+	stream_key_size/0,
+	stream_nonce_size/0,
 	stream/3,
-	stream_xor/3
+	stream_xor/3,
+
+	auth_key_size/0,
+	auth/2,
+	auth_verify/3,
+
+	onetime_auth_key_size/0,
+	onetime_auth/2,
+	onetime_auth_verify/3
 ]).
 
 %% Low-level functions
@@ -100,7 +110,7 @@ box_keypair() ->
        CipherText :: binary().
 box(Msg, Nonce, PK, SK) ->
     enacl_nif:crypto_box([p_zerobytes(), Msg], Nonce, PK, SK).
-    
+
 %% @doc box_open/4 decrypts+verifies a message from another party.
 %% Decrypt a `CipherText` into a `Msg` given the other partys public key `PK` and your secret
 %% key `SK`. Also requires the same nonce as was used by the other party. Returns the plaintext
@@ -128,7 +138,7 @@ box_nonce_size() ->
 -spec box_public_key_bytes() -> pos_integer().
 box_public_key_bytes() ->
 	enacl_nif:crypto_box_PUBLICKEYBYTES().
-	
+
 %% @private
 -spec box_secret_key_bytes() -> pos_integer().
 box_secret_key_bytes() ->
@@ -136,7 +146,7 @@ box_secret_key_bytes() ->
 
 secretbox(Msg, Nonce, Key) ->
     enacl_nif:crypto_secretbox([s_zerobytes(), Msg], Nonce, Key).
-    
+
 secretbox_open(CipherText, Nonce, Key) ->
     case enacl_nif:crypto_secretbox_open([s_box_zerobytes(), CipherText], Nonce, Key) of
         {error, Err} -> {error, Err};
@@ -145,26 +155,114 @@ secretbox_open(CipherText, Nonce, Key) ->
 
 secretbox_nonce_size() ->
     enacl_nif:crypto_secretbox_NONCEBYTES().
-    
+
 secretbox_key_size() ->
     enacl_nif:crypto_secretbox_KEYBYTES().
 
+%% @doc stream_nonce_size/0 returns the byte size of the nonce for streams
+%% @end
+-spec stream_nonce_size() -> pos_integer().
+stream_nonce_size() -> enacl_nif:crypto_stream_NONCEBYTES().
+
+%% @doc stream_key_size/0 returns the byte size of the key for streams
+%% @end
+-spec stream_key_size() -> pos_integer().
+stream_key_size() -> enacl_nif:crypto_stream_KEYBYTES().
+
+%% @doc stream/3 produces a cryptographic stream suitable for secret-key encryption
+%% <p>Given a positive `Len' a `Nonce' and a `Key', the stream/3 function will return an unpredictable cryptographic stream of bytes
+%% based on this output. In other words, the produced stream is indistinguishable from a random stream. Using this stream one
+%% can XOR it with a message in order to produce a encrypted message.</p>
+%% <p><b>Note:</b>  You need to use different Nonce values for different messages. Otherwise the same stream is produced and thus
+%% the messages will have predictability which in turn makes the encryption scheme fail.</p>
+%% @end
+-spec stream(Len, Nonce, Key) -> CryptoStream
+  when
+    Len :: non_neg_integer(),
+    Nonce :: binary(),
+    Key :: binary(),
+    CryptoStream :: binary().
 stream(Len, Nonce, Key) when is_integer(Len), Len >= 0 ->
     enacl_nif:crypto_stream(Len, Nonce, Key);
 stream(_, _, _) -> error(badarg).
 
+%% @doc stream_xor/3 encrypts a plaintext message into ciphertext
+%% The stream_xor/3 function works by using the {@link stream/3} api to XOR a message with the cryptographic stream. The same
+%% caveat applies: the nonce must be new for each sent message or the system fails to work.
+%% @end
+-spec stream_xor(Msg, Nonce, Key) -> CipherText
+  when
+    Msg :: binary(),
+    Nonce :: binary(),
+    Key :: binary(),
+    CipherText :: binary().
 stream_xor(Msg, Nonce, Key) ->
     enacl_nif:crypto_stream_xor(Msg, Nonce, Key).
-    
+
+%% @doc auth_key_size/0 returns the byte-size of the authentication key
+%% @end
+-spec auth_key_size() -> pos_integer().
+auth_key_size() -> enacl_nif:crypto_auth_KEYBYTES().
+
+%% @doc auth/2 produces an authenticator (MAC) for a message
+%% Given a `Msg' and a `Key' produce a MAC/Authenticator for that message. The key can be reused for several such Msg/Authenticator pairs.
+%% An eavesdropper will not learn anything extra about the message structure.
+%% @end
+-spec auth(Msg, Key) -> Authenticator
+  when
+    Msg :: binary(),
+    Key :: binary(),
+    Authenticator :: binary().
+auth(Msg, Key) -> enacl_nif:crypto_auth(Msg, Key).
+
+%% @doc auth_verify/3 verifies an authenticator for a message
+%% Given an `Authenticator', a `Msg' and a `Key'; verify that the MAC for the pair `{Msg, Key}' is really `Authenticator'. Returns
+%% the value `true' if the verfication passes. Upon failure, the function returns `false'.
+%% @end
+-spec auth_verify(Authenticator, Msg, Key) -> boolean()
+  when
+    Authenticator :: binary(),
+    Msg :: binary(),
+    Key :: binary().
+auth_verify(A, M, K) -> enacl_nif:crypto_auth_verify(A, M, K).
+
+%% @doc onetime_auth/2 produces a ONE-TIME authenticator for a message
+%% This function works like {@link auth/2} except that the key must not be used again for subsequent messages. That is, the pair
+%% `{Msg, Key}' is unique and only to be used once. The advantage is primarily faster execution.
+%% @end
+-spec onetime_auth(Msg, Key) -> Authenticator
+  when
+    Msg :: binary(),
+    Key :: binary(),
+    Authenticator :: binary().
+onetime_auth(Msg, Key) -> enacl_nif:crypto_onetimeauth(Msg, Key).
+
+%% @doc onetime_auth_verify/3 verifies an ONE-TIME authenticator for a message
+%% Given an `Authenticator', a `Msg' and a `Key'; verify that the MAC for the pair `{Msg, Key}' is really `Authenticator'. Returns
+%% the value `true' if the verfication passes. Upon failure, the function returns `false'. Note the caveat from {@link onetime_auth/2}
+%% applies: you are not allowed to ever use the same key again for another message.
+%% @end
+-spec onetime_auth_verify(Authenticator, Msg, Key) -> boolean()
+  when
+    Authenticator :: binary(),
+    Msg :: binary(),
+    Key :: binary().
+onetime_auth_verify(A, M, K) -> enacl_nif:crypto_onetimeauth_verify(A, M, K).
+
+%% @doc onetime_auth_key_size/0 returns the byte-size of the onetime authentication key
+%% @end
+-spec onetime_auth_key_size() -> pos_integer().
+onetime_auth_key_size() -> enacl_nif:crypto_onetimeauth_KEYBYTES().
+
 %% Helpers
 p_zerobytes() ->
 	binary:copy(<<0>>, enacl_nif:crypto_box_ZEROBYTES()).
-	
+
 p_box_zerobytes() ->
 	binary:copy(<<0>>, enacl_nif:crypto_box_BOXZEROBYTES()).
 
 s_zerobytes() ->
 	binary:copy(<<0>>, enacl_nif:crypto_secretbox_ZEROBYTES()).
-	
+
 s_box_zerobytes() ->
 	binary:copy(<<0>>, enacl_nif:crypto_secretbox_BOXZEROBYTES()).

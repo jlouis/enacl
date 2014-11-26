@@ -5,7 +5,7 @@
 nonce_good() ->
     Sz = enacl:box_nonce_size(),
     binary(Sz).
-    
+
 nonce_bad() ->
     Sz = enacl:box_nonce_size(),
     oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)]).
@@ -51,7 +51,7 @@ keypair_valid(_PK, _SK) -> false.
 prop_box_keypair() ->
     ?FORALL(_X, return(dummy),
         ok_box_keypair(enacl:box_keypair())).
-       
+
 ok_box_keypair(#{ public := _, secret := _}) -> true;
 ok_box_keypair(_) -> false.
 
@@ -118,15 +118,34 @@ prop_box_failure_integrity() ->
 %% CRYPTO SECRET BOX
 %% -------------------------------
 
+%% Note: key sizes are the same in a lot of situations, so we can use the same generator
+%% for keys in many locations.
+
+key_sz(Sz) ->
+  equals(enacl:secretbox_key_size(), Sz).
+
+prop_key_sizes() ->
+    conjunction([{secret, key_sz(enacl:secretbox_key_size())},
+                 {stream, key_sz(enacl:stream_key_size())},
+                 {auth, key_sz(enacl:auth_key_size())},
+                 {onetimeauth, key_sz(enacl:onetime_auth_key_size())}]).
+
+nonce_sz(Sz) ->
+  equals(enacl:secretbox_nonce_size(), Sz).
+
+prop_nonce_sizes() ->
+    conjunction([{secret, nonce_sz(enacl:secretbox_nonce_size())},
+                 {stream, nonce_sz(enacl:stream_nonce_size())}]).
+
 secret_key_good() ->
 	Sz = enacl:secretbox_key_size(),
 	binary(Sz).
-	
+
 secret_key_bad() ->
 	oneof([return(a),
 	       nat(),
 	       ?SUCHTHAT(B, binary(), byte_size(B) /= enacl:secretbox_key_size())]).
-	
+
 secret_key() ->
 	fault(secret_key_bad(), secret_key_good()).
 
@@ -141,7 +160,7 @@ secretbox(Msg, Nonce, Key) ->
   catch
     error:badarg -> badarg
   end.
-  
+
 secretbox_open(Msg, Nonce, Key) ->
   try
     enacl:secretbox_open(Msg, Nonce, Key)
@@ -151,7 +170,7 @@ secretbox_open(Msg, Nonce, Key) ->
 
 prop_secretbox_correct() ->
     ?FORALL({Msg, Nonce, Key},
-            {binary(), 
+            {binary(),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, secret_key())},
       begin
@@ -168,7 +187,7 @@ prop_secretbox_correct() ->
              end
         end
       end).
-      
+
 prop_secretbox_failure_integrity() ->
     ?FORALL({Msg, Nonce, Key}, {binary(), nonce(), secret_key()},
       begin
@@ -177,6 +196,7 @@ prop_secretbox_failure_integrity() ->
         equals(Err, {error, failed_verification})
       end).
 
+%% CRYPTO STREAM
 prop_stream_correct() ->
     ?FORALL({Len, Nonce, Key},
             {int(),
@@ -187,12 +207,7 @@ prop_stream_correct() ->
               CipherStream = enacl:stream(Len, Nonce, Key),
               equals(Len, byte_size(CipherStream));
           false ->
-              try
-                enacl:stream(Len, Nonce, Key),
-                false
-              catch
-                error:badarg -> true
-              end
+              badargs(fun() -> enacl:stream(Len, Nonce, Key) end)
         end).
 
 prop_stream_xor_correct() ->
@@ -205,14 +220,35 @@ prop_stream_xor_correct() ->
                 CipherText = enacl:stream_xor(Msg, Nonce, Key),
                 equals(Msg, enacl:stream_xor(CipherText, Nonce, Key));
             false ->
-                try
-                  enacl:stream_xor(Msg, Nonce, Key),
-                  false
-                catch
-                  error:badarg -> true
-                end
+                badargs(fun() -> enacl:stream_xor(Msg, Nonce, Key) end)
         end).
-        
+
+%% CRYPTO AUTH
+prop_auth_correct() ->
+    ?FORALL({Msg, Key},
+            {binary(),
+             fault_rate(1, 40, secret_key())},
+       case secret_key_valid(Key) of
+         true ->
+           Authenticator = enacl:auth(Msg, Key),
+           equals(Authenticator, enacl:auth(Msg, Key));
+         false ->
+           badargs(fun() -> enacl:auth(Msg, Key) end)
+       end).
+
+%% CRYPTO ONETIME AUTH
+prop_onetimeauth_correct() ->
+    ?FORALL({Msg, Key},
+            {binary(),
+             fault_rate(1, 40, secret_key())},
+       case secret_key_valid(Key) of
+         true ->
+           Authenticator = enacl:onetime_auth(Msg, Key),
+           equals(Authenticator, enacl:onetime_auth(Msg, Key));
+         false ->
+           badargs(fun() -> enacl:onetime_auth(Msg, Key) end)
+       end).
+
 %% HASHING
 %% ---------------------------
 diff_pair(Sz) ->
@@ -244,7 +280,7 @@ prop_crypto_hash_eq() ->
             end
         end
     )).
-    
+
 prop_crypto_hash_neq() ->
     ?FORALL(Sz, oneof([1, 128, 1024, 1024*4]),
     ?FORALL({X, Y}, diff_pair(Sz),
@@ -267,7 +303,7 @@ verify_pair_good(Sz) ->
   oneof([
     ?LET(Bin, binary(Sz), {Bin, Bin}),
     ?SUCHTHAT({X, Y}, {binary(Sz), binary(Sz)}, X /= Y)]).
-    
+
 verify_pair(Sz) ->
   fault(verify_pair_bad(Sz), verify_pair_good(Sz)).
 
@@ -287,7 +323,7 @@ prop_verify_16() ->
                   error:badarg -> true
               end
       end).
-      
+
 prop_verify_32() ->
     ?FORALL({X, Y}, verify_pair(32),
       case verify_pair_valid(32, X, Y) of
@@ -301,3 +337,12 @@ prop_verify_32() ->
                   error:badarg -> true
               end
       end).
+
+%% HELPERS
+badargs(Thunk) ->
+  try
+    Thunk(),
+    false
+  catch
+    error:badarg -> true
+  end.

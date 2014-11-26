@@ -11,6 +11,10 @@ This package draws heavy inspiration from "erlang-nacl" by Tony Garnock-Jones.
 
 In addition, I would like to thank Steve Vinoski and Sverker Eriksson for providing the Dirty Scheduler API in the first place.
 
+# TODO
+
+* Write Eunit/Common Test cases which verifies that the byte-output of the functions matches the expected output from the NaCl library.
+
 # Rationale
 
 Doing crypto right in Erlang is not that easy. The obvious way to handle this is by the use of NIF implementations, but most C code will run to its conclusion once set off for processing. This is a major problem for a system which needs to keep its latency in check. The solution taken by this library is to use the new Dirty Scheduler API of Erlang in order to provide a safe way to handle the long-running cryptographic processing. It keeps the cryptographic primitives on the dirty schedulers and thus it avoids the major problem.
@@ -24,6 +28,8 @@ Also, while the standard `crypto` bindings in Erlang does a great job at providi
 Every primitive has been stress-tested through the use of Erlang QuickCheck with both *positive* and *negative* testing. This has been used to check against memory leaks as well as correct invocation. Please report any error so we can extend the test cases to include a randomized test which captures the problem so we generically catch every problem in a given class of errors.
 
 Positive and negative testing refers to Type I and Type II errors in statistical testing. This means false positives—given a *valid* input the function rejects it; as well as false negatives—given an *invalid* input the functions fails to reject that input.
+
+The problem however, is that while we are testing the API level, we can't really test the strength of the cryptographic primitives. We can verify their correctness by trying different standard correctness tests for the primitives, verifying that the output matches the expected one given a specific input. But there is no way we can show that the cryptographic primitive has the strength we want. Thus, we opted to mostly test the API and its invocation for stability.
 
 # Overview
 
