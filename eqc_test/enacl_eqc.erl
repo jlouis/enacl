@@ -177,6 +177,42 @@ prop_secretbox_failure_integrity() ->
         equals(Err, {error, failed_verification})
       end).
 
+prop_stream_correct() ->
+    ?FORALL({Len, Nonce, Key},
+            {int(),
+             fault_rate(1, 40, nonce()),
+             fault_rate(1, 40, secret_key())},
+        case Len >= 0 andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
+          true ->
+              CipherStream = enacl:stream(Len, Nonce, Key),
+              equals(Len, byte_size(CipherStream));
+          false ->
+              try
+                enacl:stream(Len, Nonce, Key),
+                false
+              catch
+                error:badarg -> true
+              end
+        end).
+
+prop_stream_xor_correct() ->
+    ?FORALL({Msg, Nonce, Key},
+            {binary(),
+             fault_rate(1, 40, nonce()),
+             fault_rate(1, 40, secret_key())},
+        case nonce_valid(Nonce) andalso secret_key_valid(Key) of
+            true ->
+                CipherText = enacl:stream_xor(Msg, Nonce, Key),
+                equals(Msg, enacl:stream_xor(CipherText, Nonce, Key));
+            false ->
+                try
+                  enacl:stream_xor(Msg, Nonce, Key),
+                  false
+                catch
+                  error:badarg -> true
+                end
+        end).
+        
 %% HASHING
 %% ---------------------------
 diff_pair(Sz) ->

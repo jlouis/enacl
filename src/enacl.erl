@@ -31,9 +31,13 @@
 	secretbox/3,
 	secretbox_open/3,
 	secretbox_nonce_size/0,
-	secretbox_key_size/0
+	secretbox_key_size/0,
+	
+	stream/3,
+	stream_xor/3
 ]).
 
+%% Low-level functions
 -export([
 	hash/1,
 	verify_16/2,
@@ -145,6 +149,13 @@ secretbox_nonce_size() ->
 secretbox_key_size() ->
     enacl_nif:crypto_secretbox_KEYBYTES().
 
+stream(Len, Nonce, Key) when is_integer(Len), Len >= 0 ->
+    enacl_nif:crypto_stream(Len, Nonce, Key);
+stream(_, _, _) -> error(badarg).
+
+stream_xor(Msg, Nonce, Key) ->
+    enacl_nif:crypto_stream_xor(Msg, Nonce, Key).
+    
 %% Helpers
 p_zerobytes() ->
 	binary:copy(<<0>>, enacl_nif:crypto_box_ZEROBYTES()).
