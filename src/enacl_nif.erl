@@ -35,10 +35,12 @@
 	crypto_stream/3,
 	crypto_stream_xor/3,
 
+	crypto_auth_BYTES/0,
 	crypto_auth_KEYBYTES/0,
 	crypto_auth/2,
 	crypto_auth_verify/3,
 
+	crypto_onetimeauth_BYTES/0,
 	crypto_onetimeauth_KEYBYTES/0,
 	crypto_onetimeauth/2,
 	crypto_onetimeauth_verify/3
@@ -93,10 +95,12 @@ crypto_stream_NONCEBYTES() -> not_loaded().
 crypto_stream(_Bytes, _Nonce, _Key) -> not_loaded().
 crypto_stream_xor(_M, _Nonce, _Key) -> not_loaded().
 
+crypto_auth_BYTES() -> not_loaded().
 crypto_auth_KEYBYTES() -> not_loaded().
 crypto_auth(_Msg, _Key) -> not_loaded().
 crypto_auth_verify(_Authenticator, _Msg, _Key) -> not_loaded().
 
+crypto_onetimeauth_BYTES() -> not_loaded().
 crypto_onetimeauth_KEYBYTES() -> not_loaded().
 crypto_onetimeauth(_Msg, _Key) -> not_loaded().
 crypto_onetimeauth_verify(_Authenticator, _Msg, _Key) -> not_loaded().

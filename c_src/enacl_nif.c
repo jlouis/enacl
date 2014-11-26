@@ -305,8 +305,18 @@ ERL_NIF_TERM enif_crypto_stream_NONCEBYTES(ErlNifEnv *env, int argc, ERL_NIF_TER
 }
 
 static
+ERL_NIF_TERM enif_crypto_auth_BYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_auth_BYTES);
+}
+
+static
 ERL_NIF_TERM enif_crypto_auth_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	return enif_make_int64(env, crypto_auth_KEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_onetimeauth_BYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_onetimeauth_BYTES);
 }
 
 static
@@ -571,10 +581,12 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_stream", 3, enif_crypto_stream, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_stream_xor", 3, enif_crypto_stream_xor, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
+	{"crypto_auth_BYTES", 0, enif_crypto_auth_BYTES},
 	{"crypto_auth_KEYBYTES", 0, enif_crypto_auth_KEYBYTES},
 	{"crypto_auth", 2, enif_crypto_auth, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_auth_verify", 3, enif_crypto_auth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
+	{"crypto_onetimeauth_BYTES", 0, enif_crypto_onetimeauth_BYTES},
 	{"crypto_onetimeauth_KEYBYTES", 0, enif_crypto_onetimeauth_KEYBYTES},
 	{"crypto_onetimeauth", 2, enif_crypto_onetimeauth, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_onetimeauth_verify", 3, enif_crypto_onetimeauth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},

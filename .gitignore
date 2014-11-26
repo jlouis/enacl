@@ -6,3 +6,7 @@ ebin
 *.eqc
 *.so
 eqc_test/.eqc-info
+doc/edoc-info
+doc/*.html
+doc/*.png
+doc/*.css

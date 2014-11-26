@@ -236,6 +236,45 @@ prop_auth_correct() ->
            badargs(fun() -> enacl:auth(Msg, Key) end)
        end).
 
+authenticator_bad() ->
+    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:auth_size())]).
+
+authenticator_good(Msg, Key) when is_binary(Key) ->
+    Sz = enacl:secretbox_key_size(),
+    case byte_size(Key) == Sz of
+      true ->
+        frequency([{1, ?LAZY({invalid, binary(enacl:auth_size())})},
+                   {3, return({valid, enacl:auth(Msg, Key)})}]);
+      false ->
+        binary(enacl:auth_size())
+    end;
+authenticator_good(_Msg, _Key) ->
+    binary(enacl:auth_size()).
+
+authenticator(Msg, Key) ->
+  fault(authenticator_bad(), authenticator_good(Msg, Key)).
+
+authenticator_valid({valid, _}) -> true;
+authenticator_valid({invalid, _}) -> true;
+authenticator_valid(_) -> false.
+
+prop_auth_verify_correct() ->
+    ?FORALL({Msg, Key},
+            {binary(),
+             fault_rate(1, 40, secret_key())},
+      ?FORALL(Authenticator, authenticator(Msg, Key),
+        case secret_key_valid(Key) andalso authenticator_valid(Authenticator) of
+          true ->
+            case Authenticator of
+              {valid, A} ->
+                equals(true, enacl:auth_verify(A, Msg, Key));
+              {invalid, A} ->
+                equals(false, enacl:auth_verify(A, Msg, Key))
+            end;
+          false ->
+            badargs(fun() -> enacl:auth_verify(Authenticator, Msg, Key) end)
+        end)).
+
 %% CRYPTO ONETIME AUTH
 prop_onetimeauth_correct() ->
     ?FORALL({Msg, Key},
@@ -248,6 +287,45 @@ prop_onetimeauth_correct() ->
          false ->
            badargs(fun() -> enacl:onetime_auth(Msg, Key) end)
        end).
+
+ot_authenticator_bad() ->
+    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:onetime_auth_size())]).
+
+ot_authenticator_good(Msg, Key) when is_binary(Key) ->
+    Sz = enacl:secretbox_key_size(),
+    case byte_size(Key) == Sz of
+      true ->
+        frequency([{1, ?LAZY({invalid, binary(enacl:onetime_auth_size())})},
+                   {3, return({valid, enacl:onetime_auth(Msg, Key)})}]);
+      false ->
+        binary(enacl:onetime_auth_size())
+    end;
+ot_authenticator_good(_Msg, _Key) ->
+    binary(enacl:auth_size()).
+
+ot_authenticator(Msg, Key) ->
+  fault(ot_authenticator_bad(), ot_authenticator_good(Msg, Key)).
+
+ot_authenticator_valid({valid, _}) -> true;
+ot_authenticator_valid({invalid, _}) -> true;
+ot_authenticator_valid(_) -> false.
+
+prop_onetime_auth_verify_correct() ->
+    ?FORALL({Msg, Key},
+            {binary(),
+             fault_rate(1, 40, secret_key())},
+      ?FORALL(Authenticator, ot_authenticator(Msg, Key),
+        case secret_key_valid(Key) andalso ot_authenticator_valid(Authenticator) of
+          true ->
+            case Authenticator of
+              {valid, A} ->
+                equals(true, enacl:onetime_auth_verify(A, Msg, Key));
+              {invalid, A} ->
+                equals(false, enacl:onetime_auth_verify(A, Msg, Key))
+            end;
+          false ->
+            badargs(fun() -> enacl:onetime_auth_verify(Authenticator, Msg, Key) end)
+        end)).
 
 %% HASHING
 %% ---------------------------

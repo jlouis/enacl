@@ -23,7 +23,11 @@
 	box_open/4,
 	box_nonce_size/0,
 	box_public_key_bytes/0,
-	box_secret_key_bytes/0
+	box_secret_key_bytes/0,
+	
+	sign_keypair/0,
+	sign/2,
+	sign_open/2
 ]).
 
 %% Secret key crypto
@@ -39,10 +43,12 @@
 	stream_xor/3,
 
 	auth_key_size/0,
+	auth_size/0,
 	auth/2,
 	auth_verify/3,
 
 	onetime_auth_key_size/0,
+	onetime_auth_size/0,
 	onetime_auth/2,
 	onetime_auth_verify/3
 ]).
@@ -139,6 +145,38 @@ box_nonce_size() ->
 box_public_key_bytes() ->
 	enacl_nif:crypto_box_PUBLICKEYBYTES().
 
+%% Signatures
+
+%% @doc sign_keypair/0 returns a signature keypair for signing
+%% The returned value is a map in order to make it harder to misuse keys.
+%% @end
+-spec sign_keypair() -> KeyMap
+  when KeyMap :: maps:map(atom(), binary()).
+sign_keypair() ->
+    {PK, SK} = enacl_nif:sign_keypair(),
+    #{ public => PK, secret => SK}.
+
+%% @doc sign/2 signs a message with a digital signature identified by a secret key.
+%% Given a message `M' and a secret key `SK' the function will sign the message and return a signed message `SM'.
+%% @end
+-spec sign(M, SK) -> SM
+  when
+    M :: binary(),
+    SK :: binary(),
+    SM :: binary().
+sign(M, SK) -> enacl_nif:sign(M, SK).
+
+%% @doc sign_open/2 opens a digital signature
+%% Given a signed message `SM' and a public key `PK', verify that the message has the right signature. Returns either
+%% `{ok, M}' or `{error, failed_verification}' depending on the correctness of the signature.
+%% @end
+-spec sign_open(SM, PK) -> {ok, M} | {error, failed_verification}
+  when
+    SM :: binary(),
+    PK :: binary(),
+    M :: binary().
+sign_open(SM, PK) -> enacl_nif:sign_open(SM, PK).
+
 %% @private
 -spec box_secret_key_bytes() -> pos_integer().
 box_secret_key_bytes() ->
@@ -204,6 +242,11 @@ stream_xor(Msg, Nonce, Key) ->
 -spec auth_key_size() -> pos_integer().
 auth_key_size() -> enacl_nif:crypto_auth_KEYBYTES().
 
+%% @doc auth_size/0 returns the byte-size of the authenticator
+%% @end
+-spec auth_size() -> pos_integer().
+auth_size() -> enacl_nif:crypto_auth_BYTES().
+
 %% @doc auth/2 produces an authenticator (MAC) for a message
 %% Given a `Msg' and a `Key' produce a MAC/Authenticator for that message. The key can be reused for several such Msg/Authenticator pairs.
 %% An eavesdropper will not learn anything extra about the message structure.
@@ -239,7 +282,7 @@ onetime_auth(Msg, Key) -> enacl_nif:crypto_onetimeauth(Msg, Key).
 
 %% @doc onetime_auth_verify/3 verifies an ONE-TIME authenticator for a message
 %% Given an `Authenticator', a `Msg' and a `Key'; verify that the MAC for the pair `{Msg, Key}' is really `Authenticator'. Returns
-%% the value `true' if the verfication passes. Upon failure, the function returns `false'. Note the caveat from {@link onetime_auth/2}
+%% the value `true' if the verification passes. Upon failure, the function returns `false'. Note the caveat from {@link onetime_auth/2}
 %% applies: you are not allowed to ever use the same key again for another message.
 %% @end
 -spec onetime_auth_verify(Authenticator, Msg, Key) -> boolean()
@@ -248,6 +291,11 @@ onetime_auth(Msg, Key) -> enacl_nif:crypto_onetimeauth(Msg, Key).
     Msg :: binary(),
     Key :: binary().
 onetime_auth_verify(A, M, K) -> enacl_nif:crypto_onetimeauth_verify(A, M, K).
+
+%% @doc onetime_auth_size/0 returns the number of bytes of the one-time authenticator
+%% @end
+-spec onetime_auth_size() -> pos_integer().
+onetime_auth_size() -> enacl_nif:crypto_onetimeauth_BYTES().
 
 %% @doc onetime_auth_key_size/0 returns the byte-size of the onetime authentication key
 %% @end
