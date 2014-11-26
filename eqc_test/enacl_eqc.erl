@@ -115,6 +115,73 @@ prop_box_failure_integrity() ->
             end
         end).
 
+%% SIGNATURES
+%% ----------
+
+prop_sign_keypair() ->
+    ?FORALL(_D, return(dummy),
+      begin
+        #{ public := _, secret := _ } = enacl:sign_keypair(),
+        true
+      end).
+
+sign_keypair_bad() ->
+  ?LET(X, elements([pk, sk]),
+    begin
+      KP = enacl:sign_keypair(),
+      case X of
+        pk ->
+          Sz = enacl:sign_keypair_public_size(),
+          ?LET(Wrong, oneof([a, int(), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)]),
+            KP#{ public := Wrong });
+        sk ->
+          Sz = enacl:sign_keypair_secret_size(),
+          ?LET(Wrong, oneof([a, int(), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)]),
+            KP#{ secret := Wrong })
+      end
+    end).
+
+sign_keypair_good() ->
+  return(enacl:sign_keypair()).
+
+sign_keypair() ->
+  fault(sign_keypair_bad(), sign_keypair_good()).
+
+sign_keypair_public_valid(#{ public := Public })
+  when is_binary(Public) ->
+    byte_size(Public) == enacl:sign_keypair_public_size();
+sign_keypair_public_valid(_) -> false.
+    
+sign_keypair_secret_valid(#{ secret := Secret })
+  when is_binary(Secret) ->
+    byte_size(Secret) == enacl:sign_keypair_secret_size();
+sign_keypair_secret_valid(_) -> false.
+    
+sign_keypair_valid(KP) ->
+  sign_keypair_public_valid(KP) andalso sign_keypair_secret_valid(KP).
+
+prop_sign() ->
+    ?FORALL({Msg, KeyPair}, {binary(), fault_rate(1, 40, sign_keypair())},
+      begin
+        case sign_keypair_secret_valid(KeyPair) of
+          true ->
+            #{ secret := Secret } = KeyPair,
+            enacl:sign(Msg, Secret),
+            true;
+          false ->
+            #{ secret := Secret } = KeyPair,
+            badargs(fun() -> enacl:sign(Msg, Secret) end)
+        end
+      end).
+
+prop_sign_open() ->
+    ?FORALL({Msg, KeyPair}, {binary(), sign_keypair()},
+      begin
+        #{ public := Public, secret := Secret } = KeyPair,
+        SM = enacl:sign(Msg, Secret),
+        equals({ok, Msg}, enacl:sign_open(SM, Public))
+      end).
+      
 %% CRYPTO SECRET BOX
 %% -------------------------------
 

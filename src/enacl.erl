@@ -25,6 +25,8 @@
 	box_public_key_bytes/0,
 	box_secret_key_bytes/0,
 	
+	sign_keypair_public_size/0,
+	sign_keypair_secret_size/0,
 	sign_keypair/0,
 	sign/2,
 	sign_open/2
@@ -147,13 +149,21 @@ box_public_key_bytes() ->
 
 %% Signatures
 
+%% @private
+sign_keypair_public_size() ->
+    enacl_nif:crypto_sign_PUBLICKEYBYTES().
+    
+%% @private
+sign_keypair_secret_size() ->
+    enacl_nif:crypto_sign_SECRETKEYBYTES().
+
 %% @doc sign_keypair/0 returns a signature keypair for signing
 %% The returned value is a map in order to make it harder to misuse keys.
 %% @end
 -spec sign_keypair() -> KeyMap
   when KeyMap :: maps:map(atom(), binary()).
 sign_keypair() ->
-    {PK, SK} = enacl_nif:sign_keypair(),
+    {PK, SK} = enacl_nif:crypto_sign_keypair(),
     #{ public => PK, secret => SK}.
 
 %% @doc sign/2 signs a message with a digital signature identified by a secret key.
@@ -164,7 +174,7 @@ sign_keypair() ->
     M :: binary(),
     SK :: binary(),
     SM :: binary().
-sign(M, SK) -> enacl_nif:sign(M, SK).
+sign(M, SK) -> enacl_nif:crypto_sign(M, SK).
 
 %% @doc sign_open/2 opens a digital signature
 %% Given a signed message `SM' and a public key `PK', verify that the message has the right signature. Returns either
@@ -175,7 +185,11 @@ sign(M, SK) -> enacl_nif:sign(M, SK).
     SM :: binary(),
     PK :: binary(),
     M :: binary().
-sign_open(SM, PK) -> enacl_nif:sign_open(SM, PK).
+sign_open(SM, PK) ->
+    case enacl_nif:crypto_sign_open(SM, PK) of
+        M when is_binary(M) -> {ok, M};
+        {error, Err} -> {error, Err}
+    end.
 
 %% @private
 -spec box_secret_key_bytes() -> pos_integer().
