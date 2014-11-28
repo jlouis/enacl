@@ -23,6 +23,20 @@ Focus has first and foremost been on the correct use of dirty schedulers, withou
 
 Also, while the standard `crypto` bindings in Erlang does a great job at providing cryptographic primitives, these are based on OpenSSL, which is known to be highly problematic in many ways. It is not as easy to use the OpenSSL library correctly as it is with these bindings. Rather than providing a low-level cipher suite, NaCl provides intermediate level primitives constructed as to protect the user against typical low-level cryptographic gotchas and problems.
 
+## Scheduler handling
+
+The major problem which a NIF library has to address is the problem of blocking Erlang schedulers. A long-running NIF messes with the scheduler in many ways, the worst of which is breaking it. To avoid this, we have to address long-running work on the NIF. The current method used is to care about the *progress* of the system rather than the *precision*. That is, we guarantee the system will always quickly progress toward a new process, even when running many cryptographic NIFs are run in a given process. However, we don't care about the precision of the progress. A cryptographic NIF may get either a free ride on the reduction budget, or be penalized more than it should be.
+
+The current approach is to switch between blocking NIF calls and dirty scheduler use at a breakoff threshold. Currently, we use the meaurements obtained by assuming a schedule of 100μs is 1/10th of a 1ms budget. And then we set a reduction budget based on these values. 100μs is roughly set at 200 reductions. And to be on the safe side, we multiply these values by two to handle older CPUs as well too. Measurements are obtained by running:
+
+	enacl_timing:all().
+	
+The current "typical modern machine" is:
+
+	Intel Core i7-4900QM
+	
+I'm interested in machines for which the schedules end up being far off. That is, machines for which the current CPU schedule takes more than 250μs. This is especially interesting for virtual machines.
+
 # Testing
 
 Every primitive has been stress-tested through the use of Erlang QuickCheck with both *positive* and *negative* testing. This has been used to check against memory leaks as well as correct invocation. Please report any error so we can extend the test cases to include a randomized test which captures the problem so we generically catch every problem in a given class of errors.

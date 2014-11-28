@@ -143,6 +143,3 @@ crypto_hash(Input) when is_binary(Input) -> not_loaded().
 crypto_hash_b(Input) when is_binary(Input) -> not_loaded().
 crypto_verify_16(_X, _Y) -> not_loaded().
 crypto_verify_32(_X, _Y) -> not_loaded().
-
-
-

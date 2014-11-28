@@ -67,6 +67,12 @@
 	reds/1
 ]).
 
+%% Definitions of system budgets
+-define(HASH_SIZE, 32 * 1024).
+-define(HASH_REDUCTIONS, 2 * 200).
+-define(BOX_SIZE, 32 * 1024).
+-define(BOX_REDUCTIONS, 2 * 250).
+
 %% Count reductions and number of scheduler yields for Fun. Fun is assumed
 %% to be one of the above exor variants.
 reds(Fun) ->
@@ -97,7 +103,12 @@ reds(Fun) ->
   when Data :: binary(),
        Checksum :: binary().
 
-hash(Bin) -> enacl_nif:crypto_hash(Bin).
+hash(Bin) when byte_size(Bin) =< ?HASH_SIZE ->
+    R = enacl_nif:crypto_hash_b(Bin),
+    bump(?HASH_REDUCTIONS, ?HASH_SIZE, byte_size(Bin)),
+    R;
+hash(Bin) ->
+    enacl_nif:crypto_hash(Bin).
 
 %% @doc verify_16/2 implements constant time 16-byte string verification
 %% <p>A subtle problem in cryptographic software are timing attacks where an attacker exploits
@@ -138,6 +149,10 @@ box_keypair() ->
        PK :: binary(),
        SK :: binary(),
        CipherText :: binary().
+box(Msg, Nonce, PK, SK) when byte_size(Msg) =< ?BOX_SIZE ->
+    R = enacl_nif:crypto_box_b([p_zerobytes(), Msg], Nonce, PK, SK),
+    bump(?BOX_REDUCTIONS, ?BOX_SIZE, byte_size(Msg)),
+    R;
 box(Msg, Nonce, PK, SK) ->
     enacl_nif:crypto_box([p_zerobytes(), Msg], Nonce, PK, SK).
 
@@ -151,6 +166,13 @@ box(Msg, Nonce, PK, SK) ->
        PK :: binary(),
        SK :: binary(),
        Msg :: binary().
+box_open(CipherText, Nonce, PK, SK) when byte_size(CipherText) =< ?BOX_SIZE ->
+    R = case enacl_nif:crypto_box_open_b([p_box_zerobytes(), CipherText], Nonce, PK, SK) of
+            {error, Err} -> {error, Err};
+            Bin when is_binary(Bin) -> {ok, Bin}
+        end,
+    bump(?BOX_REDUCTIONS, ?BOX_SIZE, byte_size(CipherText)),
+    R;
 box_open(CipherText, Nonce, PK, SK) ->
     case enacl_nif:crypto_box_open([p_box_zerobytes(), CipherText], Nonce, PK, SK) of
         {error, Err} -> {error, Err};
@@ -350,3 +372,8 @@ s_zerobytes() ->
 
 s_box_zerobytes() ->
 	binary:copy(<<0>>, enacl_nif:crypto_secretbox_BOXZEROBYTES()).
+
+bump(Budget, Max, Sz) ->
+    Reds =  (Budget * Sz) div Max,
+    erlang:bump_reductions(max(1, Reds)),
+    ok.
