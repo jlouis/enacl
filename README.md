@@ -17,7 +17,7 @@ In addition, I would like to thank Steve Vinoski and Sverker Eriksson for provid
 
 # Rationale
 
-Doing crypto right in Erlang is not that easy. The obvious way to handle this is by the use of NIF implementations, but most C code will run to its conclusion once set off for processing. This is a major problem for a system which needs to keep its latency in check. The solution taken by this library is to use the new Dirty Scheduler API of Erlang in order to provide a safe way to handle the long-running cryptographic processing. It keeps the cryptographic primitives on the dirty schedulers and thus it avoids the major problem.
+Doing crypto right in Erlang is not that easy. For one, the crypto system has to be rather fast, which rules out Erlang as the main vehicle. Second, cryptographic systems must be void of timing attacks. This mandates we write the code in a language where we can avoid cache timing attacks. This leaves only C as a contender, more or less. The obvious way to handle this is by the use of NIF implementations, but most C code will run to its conclusion once set off for processing. This is a major problem for a system which needs to keep its latency in check. The solution taken by this library is to use the new Dirty Scheduler API of Erlang in order to provide a safe way to handle the long-running cryptographic processing. It keeps the cryptographic primitives on the dirty schedulers and thus it avoids the major problem.
 
 Focus has first and foremost been on the correct use of dirty schedulers, without any regard for speed. The plan is to extend the underlying implementation, while keeping the API stable. In a future version, we might want to make simple short-lived crypto-calls directly on the Erlang scheduler rather than moving these to a separate scheduler and paying the price of scheduler invocation.
 
@@ -30,6 +30,8 @@ Every primitive has been stress-tested through the use of Erlang QuickCheck with
 Positive and negative testing refers to Type I and Type II errors in statistical testing. This means false positives—given a *valid* input the function rejects it; as well as false negatives—given an *invalid* input the functions fails to reject that input.
 
 The problem however, is that while we are testing the API level, we can't really test the strength of the cryptographic primitives. We can verify their correctness by trying different standard correctness tests for the primitives, verifying that the output matches the expected one given a specific input. But there is no way we can show that the cryptographic primitive has the strength we want. Thus, we opted to mostly test the API and its invocation for stability.
+
+Also, in addition to correctness, testing the system like this makes sure we have no memory leaks as they will show themselves under the extensive QuickCheck test cases we run. It has been verified there are no leaks in the code.
 
 # Overview
 

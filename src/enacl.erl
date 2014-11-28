@@ -62,6 +62,28 @@
 	verify_32/2
 ]).
 
+%% Other helper functions
+-export([
+	reds/1
+]).
+
+%% Count reductions and number of scheduler yields for Fun. Fun is assumed
+%% to be one of the above exor variants.
+reds(Fun) ->
+    Parent = self(),
+    Pid = spawn(fun() ->
+                        Self = self(),
+                        Start = os:timestamp(),
+                        R0 = process_info(Self, reductions),
+                        Fun(),
+                        R1 = process_info(Self, reductions),
+                        T = timer:now_diff(os:timestamp(), Start),
+                        Parent ! {Self,{T, R1, R0}} end),
+    receive
+        {Pid,Result} ->
+            Result
+    end.
+
 %% Low level helper functions
 %% -----------------
 
