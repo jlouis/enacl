@@ -8,6 +8,13 @@ ERL_NIF_TERM nacl_error_tuple(ErlNifEnv *env, char *error_atom) {
 	return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, error_atom));
 }
 
+/* Initialization */
+static
+int enif_crypto_load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
+	sodium_init();
+	return 0;
+}
+
 /* Low-level functions (Hashing, String Equality, ...) */
 
 static
@@ -598,4 +605,4 @@ static ErlNifFunc nif_funcs[] = {
 
 
 
-ERL_NIF_INIT(enacl_nif, nif_funcs, NULL, NULL, NULL, NULL);
+ERL_NIF_INIT(enacl_nif, nif_funcs, enif_crypto_load, NULL, NULL, NULL);
