@@ -174,14 +174,43 @@ prop_sign() ->
         end
       end).
 
+signed_message_good(M) ->
+    #{ public := PK, secret := SK} = enacl:sign_keypair(),
+    SM = enacl:sign(M, SK),
+    frequency([
+        {3, return({{valid, SM}, PK})},
+        {1, ?LET(X, elements([sm, pk]),
+               case X of
+                 sm -> {{invalid, binary(byte_size(SM))}, PK};
+                 pk -> {{invalid, SM}, binary(byte_size(PK))}
+               end)}]).
+
+signed_message_bad() ->
+    Sz = enacl:sign_keypair_public_size(),
+    {binary(), oneof([a, int(), ?SUCHTHAT(B, binary(Sz), byte_size(B) /= Sz)])}.
+
+signed_message(M) ->
+    fault(signed_message_bad(), signed_message_good(M)).
+
+signed_message_valid({valid, _}, _) -> true;
+signed_message_valid({invalid, _}, _) -> true;
+signed_message_valid(_, _) -> false.
+
 prop_sign_open() ->
-    ?FORALL({Msg, KeyPair}, {binary(), sign_keypair()},
-      begin
-        #{ public := Public, secret := Secret } = KeyPair,
-        SM = enacl:sign(Msg, Secret),
-        equals({ok, Msg}, enacl:sign_open(SM, Public))
-      end).
-      
+    ?FORALL(Msg, binary(),
+      ?FORALL({SignMsg, PK}, signed_message(Msg),
+          case signed_message_valid(SignMsg, PK) of
+              true ->
+                  case SignMsg of
+                    {valid, SM} ->
+                        equals({ok, Msg}, enacl:sign_open(SM, PK));
+                    {invalid, SM} ->
+                        equals({error, failed_verification}, enacl:sign_open(SM, PK))
+                  end;
+              false ->
+                  badargs(fun() -> enacl:sign_open(SignMsg, PK) end)
+          end)).
+     
 %% CRYPTO SECRET BOX
 %% -------------------------------
 
