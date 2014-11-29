@@ -72,6 +72,8 @@
 -define(HASH_REDUCTIONS, 2 * 200).
 -define(BOX_SIZE, 32 * 1024).
 -define(BOX_REDUCTIONS, 2 * 250).
+-define(SIGN_SIZE, 16 * 1024).
+-define(SIGN_REDUCTIONS, 2 * 350).
 
 %% Count reductions and number of scheduler yields for Fun. Fun is assumed
 %% to be one of the above exor variants.
@@ -218,7 +220,12 @@ sign_keypair() ->
     M :: binary(),
     SK :: binary(),
     SM :: binary().
-sign(M, SK) -> enacl_nif:crypto_sign(M, SK).
+sign(M, SK) when byte_size(M) =< ?SIGN_SIZE ->
+    R = enacl_nif:crypto_sign_b(M, SK),
+    bump(?SIGN_REDUCTIONS, ?SIGN_SIZE, byte_size(M)),
+    R;
+sign(M, SK) ->
+    enacl_nif:crypto_sign(M, SK).
 
 %% @doc sign_open/2 opens a digital signature
 %% Given a signed message `SM' and a public key `PK', verify that the message has the right signature. Returns either
@@ -229,6 +236,13 @@ sign(M, SK) -> enacl_nif:crypto_sign(M, SK).
     SM :: binary(),
     PK :: binary(),
     M :: binary().
+sign_open(SM, PK) when byte_size(SM) =< ?SIGN_SIZE ->
+    R = case enacl_nif:crypto_sign_open(SM, PK) of
+            M when is_binary(M) -> {ok, M};
+            {error, Err} -> {error, Err}
+        end,
+    bump(?SIGN_REDUCTIONS, ?SIGN_SIZE, byte_size(SM)),
+    R;
 sign_open(SM, PK) ->
     case enacl_nif:crypto_sign_open(SM, PK) of
         M when is_binary(M) -> {ok, M};

@@ -113,10 +113,10 @@ crypto_secretbox_ZEROBYTES() -> not_loaded().
 crypto_secretbox_KEYBYTES() -> not_loaded().
 crypto_secretbox_BOXZEROBYTES() -> not_loaded().
 
-crypto_secretbox(_CipherText, _Nonce, _Key) -> not_loaded().
-crypto_secretbox_b(_CipherText, _Nonce, _Key) -> not_loaded().
-crypto_secretbox_open(_CipherText, _Nonce, _Key) -> not_loaded().
-crypto_secretbox_open_b(_CipherText, _Nonce, _Key) -> not_loaded().
+crypto_secretbox(_Msg, _Nonce, _Key) -> not_loaded().
+crypto_secretbox_b(_Msg, _Nonce, _Key) -> not_loaded().
+crypto_secretbox_open(_Msg, _Nonce, _Key) -> not_loaded().
+crypto_secretbox_open_b(_Msg, _Nonce, _Key) -> not_loaded().
 
 crypto_stream_KEYBYTES() -> not_loaded().
 crypto_stream_NONCEBYTES() -> not_loaded().
