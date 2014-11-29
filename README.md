@@ -9,7 +9,7 @@ This library provides bindings for the NaCl cryptographic library for Erlang. Se
 
 This package draws heavy inspiration from "erlang-nacl" by Tony Garnock-Jones.
 
-In addition, I would like to thank Steve Vinoski and Sverker Eriksson for providing the Dirty Scheduler API in the first place.
+In addition, I would like to thank Steve Vinoski, Rickard Green, and Sverker Eriksson for providing the Dirty Scheduler API in the first place.
 
 # TODO
 
