@@ -40,7 +40,7 @@ ERL_NIF_TERM enif_crypto_verify_16(ErlNifEnv *env, int argc, ERL_NIF_TERM const 
 	ErlNifBinary x,y;
 
 	if ((argc != 2) || (!enif_inspect_binary(env, argv[0], &x))
-	  || (!enif_inspect_iolist_as_binary(env, argv[1], &y))) {
+	  || (!enif_inspect_binary(env, argv[1], &y))) {
 		return enif_make_badarg(env);
 	}
 
@@ -59,8 +59,8 @@ static
 ERL_NIF_TERM enif_crypto_verify_32(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	ErlNifBinary x,y;
 
-	if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &x))
-	  || (!enif_inspect_iolist_as_binary(env, argv[1], &y))) {
+	if ((argc != 2) || (!enif_inspect_binary(env, argv[0], &x))
+	  || (!enif_inspect_binary(env, argv[1], &y))) {
 		return enif_make_badarg(env);
 	}
 
@@ -130,9 +130,9 @@ ERL_NIF_TERM enif_crypto_box(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]
 	if (
 	  (argc != 4) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &padded_msg)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &nonce)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[2], &pk)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[3], &sk))) {
+	  (!enif_inspect_binary(env, argv[1], &nonce)) ||
+	  (!enif_inspect_binary(env, argv[2], &pk)) ||
+	  (!enif_inspect_binary(env, argv[3], &sk))) {
 	  	return enif_make_badarg(env);
 	}
 
@@ -164,9 +164,9 @@ ERL_NIF_TERM enif_crypto_box_open(ErlNifEnv *env, int argc, ERL_NIF_TERM const a
 	if (
 	  (argc != 4) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &padded_ciphertext)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &nonce)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[2], &pk)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[3], &sk))) {
+	  (!enif_inspect_binary(env, argv[1], &nonce)) ||
+	  (!enif_inspect_binary(env, argv[2], &pk)) ||
+	  (!enif_inspect_binary(env, argv[3], &sk))) {
 		return enif_make_badarg(env);
 	}
 
@@ -234,7 +234,7 @@ ERL_NIF_TERM enif_crypto_sign(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[
 	if (
 	  (argc != 2) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &sk))) {
+	  (!enif_inspect_binary(env, argv[1], &sk))) {
 		return enif_make_badarg(env);
 	}
 
@@ -259,7 +259,7 @@ ERL_NIF_TERM enif_crypto_sign_open(ErlNifEnv *env, int argc, ERL_NIF_TERM const 
 	if (
 	  (argc != 2) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &sm)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &pk))) {
+	  (!enif_inspect_binary(env, argv[1], &pk))) {
 		return enif_make_badarg(env);
 	}
 
@@ -338,8 +338,8 @@ ERL_NIF_TERM enif_crypto_secretbox(ErlNifEnv *env, int argc, ERL_NIF_TERM const 
 	if (
 	  (argc != 3) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &padded_msg)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &nonce)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[2], &key))) {
+	  (!enif_inspect_binary(env, argv[1], &nonce)) ||
+	  (!enif_inspect_binary(env, argv[2], &key))) {
 		return enif_make_badarg(env);
 	}
 
@@ -373,8 +373,8 @@ ERL_NIF_TERM enif_crypto_secretbox_open(ErlNifEnv *env, int argc, ERL_NIF_TERM c
 	if (
 	  (argc != 3) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &padded_ciphertext)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &nonce)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[2], &key))) {
+	  (!enif_inspect_binary(env, argv[1], &nonce)) ||
+	  (!enif_inspect_binary(env, argv[2], &key))) {
 		return enif_make_badarg(env);
 	}
 
@@ -414,8 +414,8 @@ ERL_NIF_TERM enif_crypto_stream(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
 	if (
 	  (argc != 3) ||
 	  (!enif_get_uint64(env, argv[0], &clen)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &n)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[2], &k))) {
+	  (!enif_inspect_binary(env, argv[1], &n)) ||
+	  (!enif_inspect_binary(env, argv[2], &k))) {
 		return enif_make_badarg(env);
 	}
 
@@ -441,8 +441,8 @@ ERL_NIF_TERM enif_crypto_stream_xor(ErlNifEnv *env, int argc, ERL_NIF_TERM const
 	if (
 	  (argc != 3) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &n)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[2], &k))) {
+	  (!enif_inspect_binary(env, argv[1], &n)) ||
+	  (!enif_inspect_binary(env, argv[2], &k))) {
 		return enif_make_badarg(env);
 	}
 
@@ -468,7 +468,7 @@ ERL_NIF_TERM enif_crypto_auth(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[
 	if (
 	  (argc != 2) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &k))) {
+	  (!enif_inspect_binary(env, argv[1], &k))) {
 		return enif_make_badarg(env);
 	}
 
@@ -491,9 +491,9 @@ ERL_NIF_TERM enif_crypto_auth_verify(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 
 	if (
 	  (argc != 3) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[0], &a)) ||
+	  (!enif_inspect_binary(env, argv[0], &a)) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[1], &m)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[2], &k))) {
+	  (!enif_inspect_binary(env, argv[2], &k))) {
 		return enif_make_badarg(env);
 	}
 
@@ -517,7 +517,7 @@ ERL_NIF_TERM enif_crypto_onetimeauth(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 	if (
 	  (argc != 2) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[1], &k))) {
+	  (!enif_inspect_binary(env, argv[1], &k))) {
 		return enif_make_badarg(env);
 	}
 
@@ -540,9 +540,9 @@ ERL_NIF_TERM enif_crypto_onetimeauth_verify(ErlNifEnv *env, int argc, ERL_NIF_TE
 
 	if (
 	  (argc != 3) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[0], &a)) ||
+	  (!enif_inspect_binary(env, argv[0], &a)) ||
 	  (!enif_inspect_iolist_as_binary(env, argv[1], &m)) ||
-	  (!enif_inspect_iolist_as_binary(env, argv[2], &k))) {
+	  (!enif_inspect_binary(env, argv[2], &k))) {
 		return enif_make_badarg(env);
 	}
 

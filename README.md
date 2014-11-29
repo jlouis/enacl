@@ -13,7 +13,8 @@ In addition, I would like to thank Steve Vinoski and Sverker Eriksson for provid
 
 # TODO
 
-* Write Eunit/Common Test cases which verifies that the byte-output of the functions matches the expected output from the NaCl library.
+* Write simple correctness unit tests for the different NaCl primitives.
+* Introduce `iodata()` and `eqc_gen:largebinary/2` support to test the code base for very large binaries and iodata input. The current test cases mostly concerns themselves about the rather small input.
 
 # Overview
 
@@ -54,9 +55,9 @@ Also, while the standard `crypto` bindings in Erlang does a great job at providi
 
 ## Scheduler handling
 
-The major problem which a NIF library has to address is the problem of blocking Erlang schedulers. A long-running NIF messes with the scheduler in many ways, the worst of which is breaking it. To avoid this, we have to address long-running work on the NIF. The current method used is to care about the *progress* of the system rather than the *precision*. That is, we guarantee the system will always quickly progress toward a new process, even when running many cryptographic NIFs are run in a given process. However, we don't care about the precision of the progress. A cryptographic NIF may get either a free ride on the reduction budget, or be penalized more than it should be.
+To avoid long running NIFs, the library switches to the use of dirty schedulers for large encryption tasks. The target is roughly set at 1/10th of the 1ms budget at 100μs. That is, we have a threshold set such that work taking more than roughly 100μs will invoke the dirty scheduler. We currently care much more about the *progress* of the system rather than the *precision*. We care that another Erlang process gets to use the core so one process is unable to monopolize the scheduler thread. On the other hand, the price that a process pays to use encryption is something we care less about. A process may get a free ride or it may get penalized more than it should if it invokes crypto-code.
 
-The current approach is to switch between blocking NIF calls and dirty scheduler use at a breakoff threshold. Currently, we use the meaurements obtained by assuming a schedule of 100μs is 1/10th of a 1ms budget. And then we set a reduction budget based on these values. 100μs is roughly set at 200 reductions. And to be on the safe side, we multiply these values by two to handle older CPUs as well too. Measurements are obtained by running:
+We currently use measurements to obtain some rough figures on the reduction counts different operations take. You can run these measurements by invoking:
 
 	enacl_timing:all().
 	
@@ -64,9 +65,9 @@ The current "typical modern machine" is:
 
 	Intel Core i7-4900QM
 	
-When running benchmarks, we warm the CPU a bit before conducting the benchmark. Also, the script `benchmark.sh` can be used (altered to your CPU type), to disable the powersave mode of CPUs in order to obtain realistic benchmarks. Do note nothing was done to get a realistic disable of Intel's Turbo Boost functionality and this is a one-core benchmark.
+When running benchmarks, we warm the CPU a bit before conducting the benchmark. Also, the script `benchmark.sh` can be used (altered to your CPU type), to disable the powersave mode of CPUs in order to obtain realistic benchmarks. Do note nothing was done to get a realistic disable of Intel's Turbo Boost functionality and this is a one-core benchmark. The numbers given are used as an input to the reduction budget. If a task takes roughly 134μs we assume it costs `134*2` reductions.
 
-I'm interested in machines for which the schedules end up being far off. That is, machines for which the current CPU schedule takes more than 250μs. This is especially interesting for virtual machines. If you are running on very slow machines, you may have to tune the reduction counts and threshold sizes to get good latency on the system.
+I'm interested in machines for which the schedules end up being far off. That is, machines for which the current CPU schedule takes more than 250μs. This is especially interesting for virtual machines, and machines with ARM cores. If you are running on very slow machines, you may have to tune the reduction counts and threshold sizes to get good latency on the system.
 
 # Testing
 

@@ -71,20 +71,20 @@
 %% To get a grip for these, call `enacl_timing:all/0' on your system. The numbers here are
 %% described in the README.md file.
 -define(HASH_SIZE, 32 * 1024).
--define(HASH_REDUCTIONS, 104 * 2 * 2).
+-define(HASH_REDUCTIONS, 104 * 2).
 -define(BOX_SIZE, 32 * 1024).
--define(BOX_REDUCTIONS, 115 *2 *2).
+-define(BOX_REDUCTIONS, 115 * 2).
 -define(SIGN_SIZE, 16 * 1024).
--define(SIGN_REDUCTIONS, 160 * 2 *2).
+-define(SIGN_REDUCTIONS, 160 * 2).
 -define(SECRETBOX_SIZE, 64 * 1024).
--define(SECRETBOX_REDUCTIONS, 107 * 2 * 2).
--define(SECRETBOX_OPEN_REDUCTIONS, 51 * 2 * 2).
+-define(SECRETBOX_REDUCTIONS, 107 * 2).
+-define(SECRETBOX_OPEN_REDUCTIONS, 51 * 2).
 -define(STREAM_SIZE, 128 * 1024).
--define(STREAM_REDUCTIONS, 120 * 2 * 2).
+-define(STREAM_REDUCTIONS, 120 * 2).
 -define(AUTH_SIZE, 32 * 1024).
--define(AUTH_REDUCTIONS, 102 * 2 * 2).
+-define(AUTH_REDUCTIONS, 102 * 2).
 -define(ONETIME_AUTH_SIZE, 128 * 1024).
--define(ONETIME_AUTH_REDUCTIONS, 105 * 2 * 2).
+-define(ONETIME_AUTH_REDUCTIONS, 105 * 2).
 
 %% Count reductions and number of scheduler yields for Fun. Fun is assumed
 %% to be one of the above exor variants.
@@ -118,8 +118,10 @@ reds(Fun) ->
 
 hash(Bin) ->
     case iolist_size(Bin) of
-        K when K =< ?HASH_SIZE -> bump(enacl_nif:crypto_hash_b(Bin), ?HASH_REDUCTIONS, ?HASH_SIZE, K);
-        _ -> enacl_nif:crypto_hash(Bin)
+        K when K =< ?HASH_SIZE ->
+            bump(enacl_nif:crypto_hash_b(Bin), ?HASH_REDUCTIONS, ?HASH_SIZE, K);
+        _ ->
+            enacl_nif:crypto_hash(Bin)
     end.
 
 %% @doc verify_16/2 implements constant time 16-byte binary() verification
@@ -258,7 +260,7 @@ sign(M, SK) ->
 sign_open(SM, PK) ->
     case iolist_size(SM) of
         K when K =< ?SIGN_SIZE ->
-          R = case enacl_nif:crypto_sign_open(SM, PK) of
+          R = case enacl_nif:crypto_sign_open_b(SM, PK) of
                   M when is_binary(M) -> {ok, M};
                   {error, Err} -> {error, Err}
               end,
@@ -371,7 +373,15 @@ stream(_, _, _) -> error(badarg).
     Key :: binary(),
     CipherText :: binary().
 stream_xor(Msg, Nonce, Key) ->
-    enacl_nif:crypto_stream_xor(Msg, Nonce, Key).
+    case iolist_size(Msg) of
+      K when K =< ?STREAM_SIZE ->
+        bump(enacl_nif:crypto_stream_xor_b(Msg, Nonce, Key),
+             ?STREAM_REDUCTIONS,
+             ?STREAM_SIZE,
+             K);
+      _ ->
+        enacl_nif:crypto_stream_xor(Msg, Nonce, Key)
+    end.
 
 %% @doc auth_key_size/0 returns the byte-size of the authentication key
 %% @end
@@ -389,10 +399,16 @@ auth_size() -> enacl_nif:crypto_auth_BYTES().
 %% @end
 -spec auth(Msg, Key) -> Authenticator
   when
-    Msg :: binary(),
+    Msg :: iodata(),
     Key :: binary(),
     Authenticator :: binary().
-auth(Msg, Key) -> enacl_nif:crypto_auth(Msg, Key).
+auth(Msg, Key) ->
+  case iolist_size(Msg) of
+    K when K =< ?AUTH_SIZE ->
+      bump(enacl_nif:crypto_auth_b(Msg, Key), ?AUTH_REDUCTIONS, ?AUTH_SIZE, K);
+    _ ->
+      enacl_nif:crypto_auth(Msg, Key)
+  end.
 
 %% @doc auth_verify/3 verifies an authenticator for a message
 %% Given an `Authenticator', a `Msg' and a `Key'; verify that the MAC for the pair `{Msg, Key}' is really `Authenticator'. Returns
@@ -401,20 +417,38 @@ auth(Msg, Key) -> enacl_nif:crypto_auth(Msg, Key).
 -spec auth_verify(Authenticator, Msg, Key) -> boolean()
   when
     Authenticator :: binary(),
-    Msg :: binary(),
+    Msg :: iodata(),
     Key :: binary().
-auth_verify(A, M, K) -> enacl_nif:crypto_auth_verify(A, M, K).
+auth_verify(A, M, K) ->
+    case iolist_size(M) of
+      K when K =< ?AUTH_SIZE ->
+        bump(enacl_nif:crypto_auth_verify_b(A, M, K),
+             ?AUTH_REDUCTIONS,
+             ?AUTH_SIZE,
+             K);
+      _ ->
+        enacl_nif:crypto_auth_verify(A, M, K)
+    end.
 
 %% @doc onetime_auth/2 produces a ONE-TIME authenticator for a message
 %% This function works like {@link auth/2} except that the key must not be used again for subsequent messages. That is, the pair
-%% `{Msg, Key}' is unique and only to be used once. The advantage is primarily faster execution.
+%% `{Msg, Key}' is unique and only to be used once. The advantage is noticably faster execution.
 %% @end
 -spec onetime_auth(Msg, Key) -> Authenticator
   when
-    Msg :: binary(),
+    Msg :: iodata(),
     Key :: binary(),
     Authenticator :: binary().
-onetime_auth(Msg, Key) -> enacl_nif:crypto_onetimeauth(Msg, Key).
+onetime_auth(Msg, Key) ->
+    case iolist_size(Msg) of
+      K when K =< ?ONETIME_AUTH_SIZE ->
+        bump(enacl_nif:crypto_onetimeauth_b(Msg, Key),
+             ?ONETIME_AUTH_REDUCTIONS,
+             ?ONETIME_AUTH_SIZE,
+             K);
+      _ ->
+        enacl_nif:crypto_onetimeauth(Msg, Key)
+    end.
 
 %% @doc onetime_auth_verify/3 verifies an ONE-TIME authenticator for a message
 %% Given an `Authenticator', a `Msg' and a `Key'; verify that the MAC for the pair `{Msg, Key}' is really `Authenticator'. Returns
@@ -424,9 +458,18 @@ onetime_auth(Msg, Key) -> enacl_nif:crypto_onetimeauth(Msg, Key).
 -spec onetime_auth_verify(Authenticator, Msg, Key) -> boolean()
   when
     Authenticator :: binary(),
-    Msg :: binary(),
+    Msg :: iodata(),
     Key :: binary().
-onetime_auth_verify(A, M, K) -> enacl_nif:crypto_onetimeauth_verify(A, M, K).
+onetime_auth_verify(A, M, K) ->
+    case iolist_size(M) of
+      K when K =< ?ONETIME_AUTH_SIZE ->
+        bump(enacl_nif:crypto_onetimeauth_verify_b(A, M, K),
+             ?ONETIME_AUTH_REDUCTIONS,
+             ?ONETIME_AUTH_SIZE,
+             K);
+      _ ->
+        enacl_nif:crypto_onetimeauth_verify(A, M, K)
+    end.
 
 %% @doc onetime_auth_size/0 returns the number of bytes of the one-time authenticator
 %% @end
