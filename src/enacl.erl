@@ -68,12 +68,23 @@
 ]).
 
 %% Definitions of system budgets
+%% To get a grip for these, call `enacl_timing:all/0' on your system. The numbers here are
+%% described in the README.md file.
 -define(HASH_SIZE, 32 * 1024).
--define(HASH_REDUCTIONS, 2 * 200).
+-define(HASH_REDUCTIONS, 104 * 2 * 2).
 -define(BOX_SIZE, 32 * 1024).
--define(BOX_REDUCTIONS, 2 * 250).
+-define(BOX_REDUCTIONS, 115 *2 *2).
 -define(SIGN_SIZE, 16 * 1024).
--define(SIGN_REDUCTIONS, 2 * 350).
+-define(SIGN_REDUCTIONS, 160 * 2 *2).
+-define(SECRETBOX_SIZE, 64 * 1024).
+-define(SECRETBOX_REDUCTIONS, 107 * 2 * 2).
+-define(SECRETBOX_OPEN_REDUCTIONS, 51 * 2 * 2).
+-define(STREAM_SIZE, 128 * 1024).
+-define(STREAM_REDUCTIONS, 120 * 2 * 2).
+-define(AUTH_SIZE, 32 * 1024).
+-define(AUTH_REDUCTIONS, 102 * 2 * 2).
+-define(ONETIME_AUTH_SIZE, 128 * 1024).
+-define(ONETIME_AUTH_REDUCTIONS, 105 * 2 * 2).
 
 %% Count reductions and number of scheduler yields for Fun. Fun is assumed
 %% to be one of the above exor variants.
@@ -96,39 +107,41 @@ reds(Fun) ->
 %% -----------------
 
 %% @doc hash/1 hashes data into a cryptographically secure checksum.
-%% <p>Given a binary, `Data' of any size, run a cryptographically secure hash algorithm to
+%% <p>Given an iodata(), `Data' of any size, run a cryptographically secure hash algorithm to
 %% produce a checksum of the data. This can be used to verify the integrity of a data block
 %% since the checksum have the properties of cryptographic hashes in general.</p>
 %% <p>The currently selected primitive (Nov. 2014) is SHA-512</p>
 %% @end
 -spec hash(Data) -> Checksum
-  when Data :: binary(),
+  when Data :: iodata(),
        Checksum :: binary().
 
-hash(Bin) when byte_size(Bin) =< ?HASH_SIZE ->
-    R = enacl_nif:crypto_hash_b(Bin),
-    bump(?HASH_REDUCTIONS, ?HASH_SIZE, byte_size(Bin)),
-    R;
 hash(Bin) ->
-    enacl_nif:crypto_hash(Bin).
+    case iolist_size(Bin) of
+        K when K =< ?HASH_SIZE -> bump(enacl_nif:crypto_hash_b(Bin), ?HASH_REDUCTIONS, ?HASH_SIZE, K);
+        _ -> enacl_nif:crypto_hash(Bin)
+    end.
 
-%% @doc verify_16/2 implements constant time 16-byte string verification
+%% @doc verify_16/2 implements constant time 16-byte binary() verification
 %% <p>A subtle problem in cryptographic software are timing attacks where an attacker exploits
 %% early exist in string verification if the strings happen to mismatch. This allows the
 %% attacker to time how long verification took and thus learn the structure of the desired
 %% string to use. The verify_16/2 call will check two 16 byte strings for equality while
 %% guaranteeing the equality operation is constant time.</p>
 %% <p>If the strings are not exactly 16 bytes, the comparison function will fail with badarg.</p>
+%% <p>The functions take binary() values and not iolist() values since the latter would convert in non-constant time</p>
 %% <p>Verification returns a boolean. `true' if the strings match, `false' otherwise.</p>
 %% @end
 -spec verify_16(binary(), binary()) -> boolean().
-verify_16(X, Y) -> enacl_nif:crypto_verify_16(X, Y).
+verify_16(X, Y) when is_binary(X), is_binary(Y) -> enacl_nif:crypto_verify_16(X, Y);
+verify_16(_, _) -> error(badarg).
 
-%% @doc verify_32/2 implements constant time 32-byte string verification
-%% This function works as {@link verify_16/2} but does so on 32 byte strings.
+%% @doc verify_32/2 implements constant time 32-byte iolist() verification
+%% This function works as {@link verify_16/2} but does so on 32 byte strings. Same caveats apply.
 %% @end
 -spec verify_32(binary(), binary()) -> boolean().
-verify_32(X, Y) -> enacl_nif:crypto_verify_32(X, Y).
+verify_32(X, Y) when is_binary(X), is_binary(Y) -> enacl_nif:crypto_verify_32(X, Y);
+verify_32(_, _) -> error(badarg).
 
 %% Public Key Crypto
 %% ---------------------
@@ -146,39 +159,43 @@ box_keypair() ->
 %% authenticate yourself. Requires a `Nonce` in addition. Returns the ciphered message.
 %% @end
 -spec box(Msg, Nonce, PK, SK) -> CipherText
-  when Msg :: binary(),
+  when Msg :: iodata(),
        Nonce :: binary(),
        PK :: binary(),
        SK :: binary(),
        CipherText :: binary().
-box(Msg, Nonce, PK, SK) when byte_size(Msg) =< ?BOX_SIZE ->
-    R = enacl_nif:crypto_box_b([p_zerobytes(), Msg], Nonce, PK, SK),
-    bump(?BOX_REDUCTIONS, ?BOX_SIZE, byte_size(Msg)),
-    R;
 box(Msg, Nonce, PK, SK) ->
-    enacl_nif:crypto_box([p_zerobytes(), Msg], Nonce, PK, SK).
+    case iolist_size(Msg) of
+        K when K =< ?BOX_SIZE ->
+            bump(enacl_nif:crypto_box_b([p_zerobytes(), Msg], Nonce, PK, SK), ?BOX_REDUCTIONS, ?BOX_SIZE, K);
+        _ ->
+            enacl_nif:crypto_box([p_zerobytes(), Msg], Nonce, PK, SK)
+    end.
 
 %% @doc box_open/4 decrypts+verifies a message from another party.
 %% Decrypt a `CipherText` into a `Msg` given the other partys public key `PK` and your secret
 %% key `SK`. Also requires the same nonce as was used by the other party. Returns the plaintext
 %% message.
 -spec box_open(CipherText, Nonce, PK, SK) -> Msg
-  when CipherText :: binary(),
+  when CipherText :: iodata(),
        Nonce :: binary(),
        PK :: binary(),
        SK :: binary(),
        Msg :: binary().
-box_open(CipherText, Nonce, PK, SK) when byte_size(CipherText) =< ?BOX_SIZE ->
-    R = case enacl_nif:crypto_box_open_b([p_box_zerobytes(), CipherText], Nonce, PK, SK) of
-            {error, Err} -> {error, Err};
-            Bin when is_binary(Bin) -> {ok, Bin}
-        end,
-    bump(?BOX_REDUCTIONS, ?BOX_SIZE, byte_size(CipherText)),
-    R;
 box_open(CipherText, Nonce, PK, SK) ->
-    case enacl_nif:crypto_box_open([p_box_zerobytes(), CipherText], Nonce, PK, SK) of
-        {error, Err} -> {error, Err};
-        Bin when is_binary(Bin) -> {ok, Bin}
+    case iolist_size(CipherText) of
+        K when K =< ?BOX_SIZE ->
+           R =
+            case enacl_nif:crypto_box_open_b([p_box_zerobytes(), CipherText], Nonce, PK, SK) of
+              {error, Err} -> {error, Err};
+              Bin when is_binary(Bin) -> {ok, Bin}
+            end,
+           bump(R, ?BOX_REDUCTIONS, ?BOX_SIZE, K);
+        _ ->
+            case enacl_nif:crypto_box_open([p_box_zerobytes(), CipherText], Nonce, PK, SK) of
+              {error, Err} -> {error, Err};
+              Bin when is_binary(Bin) -> {ok, Bin}
+            end
     end.
 
 %% @doc box_nonce_size/0 return the byte-size of the nonce
@@ -217,36 +234,40 @@ sign_keypair() ->
 %% @end
 -spec sign(M, SK) -> SM
   when
-    M :: binary(),
+    M :: iodata(),
     SK :: binary(),
     SM :: binary().
-sign(M, SK) when byte_size(M) =< ?SIGN_SIZE ->
-    R = enacl_nif:crypto_sign_b(M, SK),
-    bump(?SIGN_REDUCTIONS, ?SIGN_SIZE, byte_size(M)),
-    R;
 sign(M, SK) ->
-    enacl_nif:crypto_sign(M, SK).
+    case iolist_size(M) of
+      K when K =< ?SIGN_SIZE ->
+        bump(enacl_nif:crypto_sign_b(M, SK), ?SIGN_REDUCTIONS, ?SIGN_SIZE, K);
+      _ ->
+        enacl_nif:crypto_sign(M, SK)
+    end.
 
 %% @doc sign_open/2 opens a digital signature
-%% Given a signed message `SM' and a public key `PK', verify that the message has the right signature. Returns either
-%% `{ok, M}' or `{error, failed_verification}' depending on the correctness of the signature.
+%% Given a signed message `SM' and a public key `PK', verify that the message has the
+%% right signature. Returns either `{ok, M}' or `{error, failed_verification}' depending
+%% on the correctness of the signature.
 %% @end
 -spec sign_open(SM, PK) -> {ok, M} | {error, failed_verification}
   when
-    SM :: binary(),
+    SM :: iodata(),
     PK :: binary(),
     M :: binary().
-sign_open(SM, PK) when byte_size(SM) =< ?SIGN_SIZE ->
-    R = case enacl_nif:crypto_sign_open(SM, PK) of
-            M when is_binary(M) -> {ok, M};
-            {error, Err} -> {error, Err}
-        end,
-    bump(?SIGN_REDUCTIONS, ?SIGN_SIZE, byte_size(SM)),
-    R;
 sign_open(SM, PK) ->
-    case enacl_nif:crypto_sign_open(SM, PK) of
-        M when is_binary(M) -> {ok, M};
-        {error, Err} -> {error, Err}
+    case iolist_size(SM) of
+        K when K =< ?SIGN_SIZE ->
+          R = case enacl_nif:crypto_sign_open(SM, PK) of
+                  M when is_binary(M) -> {ok, M};
+                  {error, Err} -> {error, Err}
+              end,
+          bump(R, ?SIGN_REDUCTIONS, ?SIGN_SIZE, byte_size(SM));
+        _ ->
+          case enacl_nif:crypto_sign_open(SM, PK) of
+              M when is_binary(M) -> {ok, M};
+              {error, Err} -> {error, Err}
+          end
     end.
 
 %% @private
@@ -254,15 +275,53 @@ sign_open(SM, PK) ->
 box_secret_key_bytes() ->
 	enacl_nif:crypto_box_SECRETKEYBYTES().
 
+%% @doc secretbox/3 encrypts a message with a key
+%% Given a `Msg', a `Nonce' and a `Key' encrypt the message with the Key while taking the
+%% nonce into consideration. The function returns the Box obtained from the encryption.
+%% @end
+-spec secretbox(Msg, Nonce, Key) -> Box
+  when
+    Msg :: iodata(),
+    Nonce :: binary(),
+    Key :: binary(),
+    Box :: binary().
+
 secretbox(Msg, Nonce, Key) ->
-    enacl_nif:crypto_secretbox([s_zerobytes(), Msg], Nonce, Key).
-
-secretbox_open(CipherText, Nonce, Key) ->
-    case enacl_nif:crypto_secretbox_open([s_box_zerobytes(), CipherText], Nonce, Key) of
-        {error, Err} -> {error, Err};
-        Bin when is_binary(Bin) -> {ok, Bin}
+    case iolist_size(Msg) of
+        K when K =< ?SECRETBOX_SIZE ->
+          bump(enacl_nif:crypto_secretbox_b([s_zerobytes(), Msg], Nonce, Key),
+               ?SECRETBOX_REDUCTIONS,
+               ?SECRETBOX_SIZE,
+               K);
+        _ ->
+          enacl_nif:crypto_secretbox([s_zerobytes(), Msg], Nonce, Key)
     end.
-
+%% @doc secretbox_open/3 opens a sealed box.
+%% Given a boxed `CipherText' and given we know the used `Nonce' and `Key' we can open the box
+%% to obtain the `Msg` within. Returns either `{ok, Msg}' or `{error, failed_verification}'.
+%% @end
+-spec secretbox_open(CipherText, Nonce, Key) -> {ok, Msg} | {error, failed_verification}
+  when
+    CipherText :: iodata(),
+    Nonce :: binary(),
+    Key :: binary(),
+    Msg :: binary().
+secretbox_open(CipherText, Nonce, Key) ->
+    case iolist_size(CipherText) of
+        K when K =< ?SECRETBOX_SIZE ->
+          R = case enacl_nif:crypto_secretbox_open_b([s_box_zerobytes(), CipherText],
+                                                     Nonce, Key) of
+                  {error, Err} -> {error, Err};
+                  Bin when is_binary(Bin) -> {ok, Bin}
+              end,
+          bump(R, ?SECRETBOX_OPEN_REDUCTIONS, ?SECRETBOX_SIZE, K);
+        _ ->
+          case enacl_nif:crypto_secretbox_open([s_box_zerobytes(), CipherText], Nonce, Key) of
+              {error, Err} -> {error, Err};
+              Bin when is_binary(Bin) -> {ok, Bin}
+          end
+   end.
+       
 secretbox_nonce_size() ->
     enacl_nif:crypto_secretbox_NONCEBYTES().
 
@@ -292,6 +351,11 @@ stream_key_size() -> enacl_nif:crypto_stream_KEYBYTES().
     Nonce :: binary(),
     Key :: binary(),
     CryptoStream :: binary().
+stream(Len, Nonce, Key) when is_integer(Len), Len >= 0, Len =< ?STREAM_SIZE ->
+    bump(enacl_nif:crypto_stream_b(Len, Nonce, Key),
+         ?STREAM_REDUCTIONS,
+         ?STREAM_SIZE,
+         Len);
 stream(Len, Nonce, Key) when is_integer(Len), Len >= 0 ->
     enacl_nif:crypto_stream(Len, Nonce, Key);
 stream(_, _, _) -> error(badarg).
@@ -387,7 +451,7 @@ s_zerobytes() ->
 s_box_zerobytes() ->
 	binary:copy(<<0>>, enacl_nif:crypto_secretbox_BOXZEROBYTES()).
 
-bump(Budget, Max, Sz) ->
+bump(Res, Budget, Max, Sz) ->
     Reds =  (Budget * Sz) div Max,
     erlang:bump_reductions(max(1, Reds)),
-    ok.
+    Res.

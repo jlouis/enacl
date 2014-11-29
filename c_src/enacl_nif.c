@@ -39,7 +39,7 @@ static
 ERL_NIF_TERM enif_crypto_verify_16(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	ErlNifBinary x,y;
 
-	if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &x))
+	if ((argc != 2) || (!enif_inspect_binary(env, argv[0], &x))
 	  || (!enif_inspect_iolist_as_binary(env, argv[1], &y))) {
 		return enif_make_badarg(env);
 	}
