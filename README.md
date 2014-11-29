@@ -17,6 +17,16 @@ In addition, I would like to thank Steve Vinoski and Sverker Eriksson for provid
 * Introduce `iodata()` and `eqc_gen:largebinary/2` support to test the code base for very large binaries and iodata input. The current test cases mostly concerns themselves about the rather small input.
 * Verify that the binary-only inputs doesn't accept incorrect `iodata()` input.
 
+# Versions
+
+## v0.9.x
+
+Ultra-late beta. Code probably works, but it requires some real-world use before it is deemed entirely stable.
+
+### v0.9.0
+
+Initial release.
+
 # Overview
 
 The NaCl cryptographic library provides a number of different cryptographic primitives. In the following, we split up the different generic primitives and explain them briefly.
