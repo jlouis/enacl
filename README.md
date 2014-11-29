@@ -15,6 +15,7 @@ In addition, I would like to thank Steve Vinoski and Sverker Eriksson for provid
 
 * Write simple correctness unit tests for the different NaCl primitives.
 * Introduce `iodata()` and `eqc_gen:largebinary/2` support to test the code base for very large binaries and iodata input. The current test cases mostly concerns themselves about the rather small input.
+* Verify that the binary-only inputs doesn't accept incorrect `iodata()` input.
 
 # Overview
 
