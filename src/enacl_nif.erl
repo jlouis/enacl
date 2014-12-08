@@ -72,6 +72,12 @@
 	crypto_verify_32/2
 ]).
 
+%% Access to the RNG
+-export([
+	randombytes/1,
+	randombytes_b/1
+]).
+
 -on_load(init/0).
 
 init() ->
@@ -143,3 +149,7 @@ crypto_hash(Input) when is_binary(Input) -> not_loaded().
 crypto_hash_b(Input) when is_binary(Input) -> not_loaded().
 crypto_verify_16(_X, _Y) -> not_loaded().
 crypto_verify_32(_X, _Y) -> not_loaded().
+
+randombytes(_RequestedSize) -> not_loaded().
+randombytes_b(_RequestedSize) -> not_loaded().
+

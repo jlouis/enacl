@@ -62,6 +62,11 @@
 	verify_32/2
 ]).
 
+%% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
+-export([
+	randombytes/1
+]).
+
 %% Other helper functions
 -export([
 	reds/1
@@ -85,6 +90,8 @@
 -define(AUTH_REDUCTIONS, 102 * 2).
 -define(ONETIME_AUTH_SIZE, 128 * 1024).
 -define(ONETIME_AUTH_REDUCTIONS, 105 * 2).
+-define(RANDOMBYTES_SIZE, 1024).
+-define(RANDOMBYTES_REDUCTIONS, 200).
 
 %% Count reductions and number of scheduler yields for Fun. Fun is assumed
 %% to be one of the above exor variants.
@@ -480,6 +487,24 @@ onetime_auth_size() -> enacl_nif:crypto_onetimeauth_BYTES().
 %% @end
 -spec onetime_auth_key_size() -> pos_integer().
 onetime_auth_key_size() -> enacl_nif:crypto_onetimeauth_KEYBYTES().
+
+%% Obtaining random bytes
+
+%% @doc randombytes/1 produces a stream of random bytes of the given size
+%% The security properties of the random stream are that of the libsodium library. Specifically,
+%% we use:
+%%
+%% * RtlGenRandom() on Windows systems
+%% * arc4random() on OpenBSD and Bitrig
+%% * /dev/urandom on other Unix environments
+%%
+%% It is up to you to pick a system with a appropriately strong (P)RNG for your purpose. We refer
+%% you to the underlying system implementations for random data.
+%% @end
+randombytes(N) when N =< ?RANDOMBYTES_SIZE ->
+    bump(enacl_nif:randombytes_b(N), ?RANDOMBYTES_REDUCTIONS, ?RANDOMBYTES_SIZE, N);
+randombytes(N) ->
+    enacl_nif:randombytes(N).
 
 %% Helpers
 p_zerobytes() ->

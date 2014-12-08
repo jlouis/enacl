@@ -19,6 +19,16 @@ In addition, I would like to thank Steve Vinoski, Rickard Green, and Sverker Eri
 
 # Versions
 
+## v0.10.x
+
+Ultra-late beta; tuning for the last couple of functions which could be nice to have. Added the function `randombytes/1` to obtain randombytes from the operating system. The system uses the "best" applicable (P)RNG on the target system:
+
+* Windows: `RtlGenRandom()`
+* OpenBSD, Bitrig: `arc4random()`
+* Unix in general: `/dev/urandom`
+
+Do note that on Linux and FreeBSD at the *least*, this is the best thing you can do. Relying on `/dev/random` is almost always wrong and gives no added security benefit. Key generation in NaCl relies on `/dev/urandom`. Go relies on `/dev/urandom`. It is about time Erlang does as well.
+
 ## v0.9.x
 
 Ultra-late beta. Code probably works, but it requires some real-world use before it is deemed entirely stable.

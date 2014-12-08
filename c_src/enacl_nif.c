@@ -559,6 +559,25 @@ ERL_NIF_TERM enif_crypto_onetimeauth_verify(ErlNifEnv *env, int argc, ERL_NIF_TE
 	}
 }
 
+static
+ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[])
+{
+	size_t req_size;
+	ErlNifBinary result;
+	
+	if ((argc != 1) || (!enif_get_uint64(env, argv[0], &req_size))) {
+		return enif_make_badarg(env);
+	}
+	
+	if (!enif_alloc_binary(req_size, &result)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+	
+	randombytes(result.data, result.size);
+	
+	return enif_make_binary(env, &result);
+}
+
 /* Tie the knot to the Erlang world */
 static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_NONCEBYTES", 0, enif_crypto_box_NONCEBYTES},
@@ -613,7 +632,10 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_hash_b", 1, enif_crypto_hash},
 	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_verify_16", 2, enif_crypto_verify_16},
-	{"crypto_verify_32", 2, enif_crypto_verify_32}
+	{"crypto_verify_32", 2, enif_crypto_verify_32},
+	
+	{"randombytes_b", 1, enif_randombytes},
+	{"randombytes", 1, enif_randombytes, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 };
 
 
