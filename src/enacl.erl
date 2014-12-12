@@ -501,6 +501,7 @@ onetime_auth_key_size() -> enacl_nif:crypto_onetimeauth_KEYBYTES().
 %% It is up to you to pick a system with a appropriately strong (P)RNG for your purpose. We refer
 %% you to the underlying system implementations for random data.
 %% @end
+-spec randombytes(non_neg_integer()) -> binary().
 randombytes(N) when N =< ?RANDOMBYTES_SIZE ->
     bump(enacl_nif:randombytes_b(N), ?RANDOMBYTES_REDUCTIONS, ?RANDOMBYTES_SIZE, N);
 randombytes(N) ->
