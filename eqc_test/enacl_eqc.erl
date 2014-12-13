@@ -20,8 +20,24 @@ v_binary(Sz, N) when is_binary(N) ->
     byte_size(N) == Sz;
 v_binary(_, _) -> false.
 
+%% Typical generators based on the binaries
 nonce() -> g_binary(enacl:box_nonce_size()).
 nonce_valid(N) -> v_binary(enacl:box_nonce_size(), N).
+
+%% Generator of natural numbers
+g_nat() ->
+    fault(g_nat_bad(), nat()).
+    
+g_nat_bad() ->
+    oneof([
+        elements([a,b,c]),
+        real(),
+        binary(),
+        ?LET(X, nat(), -X)
+    ]).
+
+is_nat(N) when is_integer(N), N >= 0 -> true;
+is_nat(_) -> false.
 
 keypair_good() ->
     #{ public := PK, secret := SK} = enacl:box_keypair(),
@@ -505,6 +521,27 @@ prop_verify_32() ->
                   error:badarg -> true
               end
       end).
+
+%% RANDOMBYTES
+prop_randombytes() ->
+    ?FORALL(X, g_nat(),
+        case is_nat(X) of
+            true ->
+                is_binary(enacl:randombytes(X));
+            false ->
+                try
+                    enacl:randombytes(X),
+                    false
+                catch
+                    error:badarg ->
+                       true
+                end
+       end).
+
+%% SCRAMBLING
+prop_scramble_block() ->
+    ?FORALL({Block, Key}, {binary(16), eqc_gen:largebinary(32)},
+        is_binary(enacl_ext:scramble_block_16(Block, Key))).
 
 %% HELPERS
 badargs(Thunk) ->
