@@ -158,7 +158,7 @@ verify_32(_, _) -> error(badarg).
 %% Generates and returns a new key pair for the Box encryption scheme. The return value is a
 %% map in order to avoid using the public key as a secret key and vice versa.
 %% @end.
--spec box_keypair() -> maps:map(atom(), binary()).
+-spec box_keypair() -> #{ atom() => binary() }.
 box_keypair() ->
 	{PK, SK} = enacl_nif:crypto_box_keypair(),
 	#{ public => PK, secret => SK}.
@@ -232,8 +232,7 @@ sign_keypair_secret_size() ->
 %% @doc sign_keypair/0 returns a signature keypair for signing
 %% The returned value is a map in order to make it harder to misuse keys.
 %% @end
--spec sign_keypair() -> KeyMap
-  when KeyMap :: maps:map(atom(), binary()).
+-spec sign_keypair() -> #{ atom() => binary() }.
 sign_keypair() ->
     {PK, SK} = enacl_nif:crypto_sign_keypair(),
     #{ public => PK, secret => SK}.
