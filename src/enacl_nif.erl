@@ -78,6 +78,11 @@
 	randombytes_b/1
 ]).
 
+%% Undocumented features :>
+-export([
+	scramble_block_16/2
+]).
+
 -on_load(init/0).
 
 init() ->
@@ -153,3 +158,4 @@ crypto_verify_32(_X, _Y) -> not_loaded().
 randombytes(_RequestedSize) -> not_loaded().
 randombytes_b(_RequestedSize) -> not_loaded().
 
+scramble_block_16(_Block, _Key) -> not_loaded().

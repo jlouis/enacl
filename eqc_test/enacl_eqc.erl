@@ -2,21 +2,26 @@
 -include_lib("eqc/include/eqc.hrl").
 -compile(export_all).
 
-nonce_good() ->
-    Sz = enacl:box_nonce_size(),
-    binary(Sz).
+%% Generator for binaries of a given size with different properties and fault injection:
+g_binary(Sz) ->
+    fault(g_binary_bad(Sz), g_binary_good(Sz)).
 
-nonce_bad() ->
-    Sz = enacl:box_nonce_size(),
-    oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)]).
+g_binary_good(Sz) when Sz =< 32 -> binary(Sz);
+g_binary_good(Sz) -> eqc_gen:largebinary(Sz).
 
-nonce_valid(N) when is_binary(N) ->
-    Sz = enacl:box_nonce_size(),
+g_binary_bad(Sz) ->
+    frequency([
+        {5, ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)},
+        {1, elements([a, b])},
+        {1, int()}
+    ]).
+    
+v_binary(Sz, N) when is_binary(N) ->
     byte_size(N) == Sz;
-nonce_valid(_) -> false.
+v_binary(_, _) -> false.
 
-nonce() ->
-    fault(nonce_bad(), nonce_good()).
+nonce() -> g_binary(enacl:box_nonce_size()).
+nonce_valid(N) -> v_binary(enacl:box_nonce_size(), N).
 
 keypair_good() ->
     #{ public := PK, secret := SK} = enacl:box_keypair(),
@@ -426,24 +431,13 @@ prop_onetime_auth_verify_correct() ->
 %% HASHING
 %% ---------------------------
 diff_pair(Sz) ->
-    ?SUCHTHAT({X, Y}, {binary(Sz), binary(Sz)},
+    ?SUCHTHAT({X, Y}, {g_binary(Sz), g_binary(Sz)},
         X /= Y).
-
-data_bad() ->
-  oneof([return(a), nat()]).
-
-data_good(Sz) -> binary(Sz).
-
-data(Sz) ->
-  fault(data_bad(), data_good(Sz)).
-
-data_valid(B) when is_binary(B) -> true;
-data_valid(_B) -> false.
 
 prop_crypto_hash_eq() ->
     ?FORALL(Sz, oneof([1, 128, 1024, 1024*4]),
-    ?FORALL(X, data(Sz),
-        case data_valid(X) of
+    ?FORALL(X, g_binary(Sz),
+        case is_binary(X) of
           true -> equals(enacl:hash(X), enacl:hash(X));
           false ->
             try
