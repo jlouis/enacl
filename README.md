@@ -35,6 +35,12 @@ In addition, I would like to thank Steve Vinoski, Rickard Green, and Sverker Eri
 
 ## v0.10.x
 
+### v0.10.x
+
+Maintenance release.
+
+* Fix type for `enacl:box_open/4`. The specification was wrong which results in errors in other applications using enacl.
+
 ### v0.10.2
 
 Maintenance release. Fix some usability problems with the library.
