@@ -185,7 +185,7 @@ box(Msg, Nonce, PK, SK) ->
 %% Decrypt a `CipherText` into a `Msg` given the other partys public key `PK` and your secret
 %% key `SK`. Also requires the same nonce as was used by the other party. Returns the plaintext
 %% message.
--spec box_open(CipherText, Nonce, PK, SK) -> {ok, M} | {error, failed_verification}
+-spec box_open(CipherText, Nonce, PK, SK) -> {ok, Msg} | {error, failed_verification}
   when CipherText :: iodata(),
        Nonce :: binary(),
        PK :: binary(),
