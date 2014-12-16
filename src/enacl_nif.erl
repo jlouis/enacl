@@ -95,67 +95,64 @@ init() ->
 		end, atom_to_list(?MODULE)),
 	erlang:load_nif(SoName, 0).
 
-not_loaded() ->
-    error({nif_not_loaded, ?MODULE}).
+crypto_box_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_box_ZEROBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_box_BOXZEROBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_box_PUBLICKEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_box_SECRETKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 
-crypto_box_NONCEBYTES() -> not_loaded().
-crypto_box_ZEROBYTES() -> not_loaded().
-crypto_box_BOXZEROBYTES() -> not_loaded().
-crypto_box_PUBLICKEYBYTES() -> not_loaded().
-crypto_box_SECRETKEYBYTES() -> not_loaded().
+crypto_box_keypair() -> erlang:nif_error(nif_not_loaded).
+crypto_box(_PaddedMsg, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
+crypto_box_b(_PaddedMsg, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
+crypto_box_open(_CipherText, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
+crypto_box_open_b(_CipherText, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
 
-crypto_box_keypair() -> not_loaded().
-crypto_box(_PaddedMsg, _Nonce, _PK, _SK) -> not_loaded().
-crypto_box_b(_PaddedMsg, _Nonce, _PK, _SK) -> not_loaded().
-crypto_box_open(_CipherText, _Nonce, _PK, _SK) -> not_loaded().
-crypto_box_open_b(_CipherText, _Nonce, _PK, _SK) -> not_loaded().
+crypto_sign_PUBLICKEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_sign_SECRETKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 
-crypto_sign_PUBLICKEYBYTES() -> not_loaded().
-crypto_sign_SECRETKEYBYTES() -> not_loaded().
+crypto_sign_keypair() -> erlang:nif_error(nif_not_loaded).
+crypto_sign(_M, _SK) -> erlang:nif_error(nif_not_loaded).
+crypto_sign_b(_M, _SK) -> erlang:nif_error(nif_not_loaded).
+crypto_sign_open(_SignedMessage, _PK) -> erlang:nif_error(nif_not_loaded).
+crypto_sign_open_b(_SignedMessage, _PK) -> erlang:nif_error(nif_not_loaded).
 
-crypto_sign_keypair() -> not_loaded().
-crypto_sign(_M, _SK) -> not_loaded().
-crypto_sign_b(_M, _SK) -> not_loaded().
-crypto_sign_open(_SignedMessage, _PK) -> not_loaded().
-crypto_sign_open_b(_SignedMessage, _PK) -> not_loaded().
+crypto_secretbox_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_ZEROBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_BOXZEROBYTES() -> erlang:nif_error(nif_not_loaded).
 
-crypto_secretbox_NONCEBYTES() -> not_loaded().
-crypto_secretbox_ZEROBYTES() -> not_loaded().
-crypto_secretbox_KEYBYTES() -> not_loaded().
-crypto_secretbox_BOXZEROBYTES() -> not_loaded().
+crypto_secretbox(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_b(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_open(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_open_b(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 
-crypto_secretbox(_Msg, _Nonce, _Key) -> not_loaded().
-crypto_secretbox_b(_Msg, _Nonce, _Key) -> not_loaded().
-crypto_secretbox_open(_Msg, _Nonce, _Key) -> not_loaded().
-crypto_secretbox_open_b(_Msg, _Nonce, _Key) -> not_loaded().
+crypto_stream_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_stream_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_stream(_Bytes, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_stream_b(_Bytes, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_stream_xor(_M, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_stream_xor_b(_M, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 
-crypto_stream_KEYBYTES() -> not_loaded().
-crypto_stream_NONCEBYTES() -> not_loaded().
-crypto_stream(_Bytes, _Nonce, _Key) -> not_loaded().
-crypto_stream_b(_Bytes, _Nonce, _Key) -> not_loaded().
-crypto_stream_xor(_M, _Nonce, _Key) -> not_loaded().
-crypto_stream_xor_b(_M, _Nonce, _Key) -> not_loaded().
+crypto_auth_BYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_auth_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_auth(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_auth_b(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_auth_verify(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_auth_verify_b(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 
-crypto_auth_BYTES() -> not_loaded().
-crypto_auth_KEYBYTES() -> not_loaded().
-crypto_auth(_Msg, _Key) -> not_loaded().
-crypto_auth_b(_Msg, _Key) -> not_loaded().
-crypto_auth_verify(_Authenticator, _Msg, _Key) -> not_loaded().
-crypto_auth_verify_b(_Authenticator, _Msg, _Key) -> not_loaded().
+crypto_onetimeauth_BYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_onetimeauth_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_onetimeauth(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_onetimeauth_b(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_onetimeauth_verify(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_onetimeauth_verify_b(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 
-crypto_onetimeauth_BYTES() -> not_loaded().
-crypto_onetimeauth_KEYBYTES() -> not_loaded().
-crypto_onetimeauth(_Msg, _Key) -> not_loaded().
-crypto_onetimeauth_b(_Msg, _Key) -> not_loaded().
-crypto_onetimeauth_verify(_Authenticator, _Msg, _Key) -> not_loaded().
-crypto_onetimeauth_verify_b(_Authenticator, _Msg, _Key) -> not_loaded().
+crypto_hash(Input) when is_binary(Input) -> erlang:nif_error(nif_not_loaded).
+crypto_hash_b(Input) when is_binary(Input) -> erlang:nif_error(nif_not_loaded).
+crypto_verify_16(_X, _Y) -> erlang:nif_error(nif_not_loaded).
+crypto_verify_32(_X, _Y) -> erlang:nif_error(nif_not_loaded).
 
-crypto_hash(Input) when is_binary(Input) -> not_loaded().
-crypto_hash_b(Input) when is_binary(Input) -> not_loaded().
-crypto_verify_16(_X, _Y) -> not_loaded().
-crypto_verify_32(_X, _Y) -> not_loaded().
+randombytes(_RequestedSize) -> erlang:nif_error(nif_not_loaded).
+randombytes_b(_RequestedSize) -> erlang:nif_error(nif_not_loaded).
 
-randombytes(_RequestedSize) -> not_loaded().
-randombytes_b(_RequestedSize) -> not_loaded().
-
-scramble_block_16(_Block, _Key) -> not_loaded().
+scramble_block_16(_Block, _Key) -> erlang:nif_error(nif_not_loaded).
