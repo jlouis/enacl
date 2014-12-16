@@ -65,7 +65,7 @@ auth(M, K, N) ->
 auth_verify(_A, _M, _K, 0) -> ok;
 auth_verify(A, M, K, N) ->
     enacl_nif:crypto_auth_verify_b(A, M, K),
-    auth(M, K, N-1).
+    auth_verify(A, M, K, N-1).
 
 %% STREAM
 %% -----------
