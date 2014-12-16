@@ -2,9 +2,23 @@
 
 This library provides bindings for the NaCl cryptographic library for Erlang. Several such libraries exist, but this one is a re-write with a number of different requirements, and foci:
 
+### INSTALL/Requirements:
+
 * Erlang/OTP 17.3. This library *needs* the newest dirty scheduler implementation.
-* Uses the libsodium sources. This is a deliberate choice, since it is easy to implement.
-* Does not provide anything but the original NaCl code base. This is also a deliberate choice so we are not in a situation where we can't jump to a newer version of the library later at some point.
+* Uses the libsodium sources. *Note:* libsodium is not in Debian/Ubuntu by default. You need to use something to handle the installation for you. E.g., `checkinstall` or `stow` are good tools for this. 
+
+To build the software execute:
+
+	make
+	
+or
+
+	rebar compile
+
+### Features:
+
+* Complete library for every NaCl call, save `beforenm/afternm` invocations
+* Implements a small set of additional functionality from libsodium. Most notably access to a proper CSPRNG random source
 * Tests created by aggressive use of Erlang QuickCheck.
 
 This package draws heavy inspiration from "erlang-nacl" by Tony Garnock-Jones.
@@ -20,6 +34,17 @@ In addition, I would like to thank Steve Vinoski, Rickard Green, and Sverker Eri
 # Versions
 
 ## v0.10.x
+
+### v0.10.1
+
+Maintenance release. Fix some usability problems with the library.
+
+* Do not compile the C NIF code if there are no dirty scheduler support in the Erlang system (Thanks to David N. Welton)
+* Fix dialyzer warnings (Thanks Anthony Ramine)
+* Fix a wrong call in the timing code. Luckily, this error has not affected anything as it has only replaced a verification call with one that does not verify. In practice, the timing is roughly the same for both, save for a small constant factor (Thanks to the dialyzer)
+* Improve documentation around installation/building the software. Hopefully it is now more prominent (Thanks to David N. Welton)
+
+### v0.10.0
 
 Ultra-late beta; tuning for the last couple of functions which could be nice to have. Added the function `randombytes/1` to obtain randombytes from the operating system. The system uses the "best" applicable (P)RNG on the target system:
 
