@@ -5,7 +5,7 @@ This library provides bindings for the NaCl cryptographic library for Erlang. Se
 ### INSTALL/Requirements:
 
 * Erlang/OTP 17.3. This library *needs* the newest dirty scheduler implementation.
-* Uses the libsodium sources. *Note:* libsodium is not in Debian/Ubuntu by default. You need to use something to handle the installation for you. E.g., `checkinstall` or `stow` are good tools for this. 
+* *Requires* the libsodium library. *Note:* libsodium is not packaged in Debian/Ubuntu by default. You need to use something to handle the installation for you. E.g., `checkinstall` or `stow` are good tools for this. For other systems, consult your package manager on how to install the package. Make sure you also get "development" packages containing the header file `libsodium.h`.
 
 To build the software execute:
 
