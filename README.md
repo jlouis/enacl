@@ -35,7 +35,7 @@ In addition, I would like to thank Steve Vinoski, Rickard Green, and Sverker Eri
 
 ## v0.10.x
 
-### v0.10.1
+### v0.10.2
 
 Maintenance release. Fix some usability problems with the library.
 
@@ -43,6 +43,10 @@ Maintenance release. Fix some usability problems with the library.
 * Fix dialyzer warnings (Thanks Anthony Ramine)
 * Fix a wrong call in the timing code. Luckily, this error has not affected anything as it has only replaced a verification call with one that does not verify. In practice, the timing is roughly the same for both, save for a small constant factor (Thanks to the dialyzer)
 * Improve documentation around installation/building the software. Hopefully it is now more prominent (Thanks to David N. Welton)
+
+### v0.10.1
+
+This small patch-release provides tests for the `randombytes/1` function call, and optimizes EQC tests to make it easier to implement `largebinary`-support in EQC tests. The release also adds an (experimental) scrambling function for hiding the internal structure of counters. This is based on an enlarged TEA-cipher by Wheeler and Needham. It is neccessary for correct operation of the CurveCP implementation, which is why it is included in this library.
 
 ### v0.10.0
 
