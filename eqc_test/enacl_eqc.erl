@@ -141,7 +141,7 @@ failure(_) -> false.
 
 prop_box_correct() ->
     ?FORALL({Msg, Nonce, {PK1, SK1}, {PK2, SK2}},
-            {g_iodata(),
+            {fault_rate(1, 40, g_iodata()),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, keypair()),
              fault_rate(1, 40, keypair())},
@@ -161,7 +161,7 @@ prop_box_correct() ->
 
 prop_box_failure_integrity() ->
     ?FORALL({Msg, Nonce, {PK1, SK1}, {PK2, SK2}},
-            {g_iodata(),
+            {fault_rate(1, 40, g_iodata()),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, keypair()),
              fault_rate(1, 40, keypair())},
@@ -175,7 +175,7 @@ prop_box_failure_integrity() ->
                     Err = enacl:box_open([<<"x">>, CipherText], Nonce, PK1, SK2),
                     equals(Err, {error, failed_verification});
                 false ->
-                    case box(iolist_to_binary(Msg), Nonce, PK2, SK1) of
+                    case box(Msg, Nonce, PK2, SK1) of
                       badarg -> true;
                       Res ->
                         failure(box_open(Res, Nonce, PK1, SK2))
@@ -229,7 +229,9 @@ sign_keypair_valid(KP) ->
   sign_keypair_public_valid(KP) andalso sign_keypair_secret_valid(KP).
 
 prop_sign() ->
-    ?FORALL({Msg, KeyPair}, {g_iodata(), fault_rate(1, 40, sign_keypair())},
+    ?FORALL({Msg, KeyPair},
+          {fault_rate(1, 40, g_iodata()),
+           fault_rate(1, 40, sign_keypair())},
       begin
         case v_iodata(Msg) andalso sign_keypair_secret_valid(KeyPair) of
           true ->
@@ -334,7 +336,7 @@ secretbox_open(Msg, Nonce, Key) ->
 
 prop_secretbox_correct() ->
     ?FORALL({Msg, Nonce, Key},
-            {g_iodata(),
+            {fault_rate(1, 40, g_iodata()),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, secret_key())},
       begin
@@ -380,7 +382,7 @@ xor_bytes(<<>>, <<>>) -> [].
 
 prop_stream_xor_correct() ->
     ?FORALL({Msg, Nonce, Key},
-            {g_iodata(),
+            {fault_rate(1, 40, g_iodata()),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, secret_key())},
         case v_iodata(Msg) andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
@@ -399,7 +401,7 @@ prop_stream_xor_correct() ->
 %% CRYPTO AUTH
 prop_auth_correct() ->
     ?FORALL({Msg, Key},
-            {g_iodata(),
+            {fault_rate(1, 40, g_iodata()),
              fault_rate(1, 40, secret_key())},
        case v_iodata(Msg) andalso secret_key_valid(Key) of
          true ->
@@ -414,7 +416,7 @@ authenticator_bad() ->
 
 authenticator_good(Msg, Key) when is_binary(Key) ->
     Sz = enacl:secretbox_key_size(),
-    case byte_size(Key) == Sz of
+    case v_iodata(Msg) andalso byte_size(Key) == Sz of
       true ->
         frequency([{1, ?LAZY({invalid, binary(enacl:auth_size())})},
                    {3, return({valid, enacl:auth(Msg, Key)})}]);
@@ -433,7 +435,7 @@ authenticator_valid(_) -> false.
 
 prop_auth_verify_correct() ->
     ?FORALL({Msg, Key},
-            {g_iodata(),
+            {fault_rate(1, 40, g_iodata()),
              fault_rate(1, 40, secret_key())},
       ?FORALL(Authenticator, authenticator(Msg, Key),
         case v_iodata(Msg) andalso secret_key_valid(Key) andalso authenticator_valid(Authenticator) of
@@ -451,7 +453,7 @@ prop_auth_verify_correct() ->
 %% CRYPTO ONETIME AUTH
 prop_onetimeauth_correct() ->
     ?FORALL({Msg, Key},
-            {g_iodata(),
+            {fault_rate(1, 40, g_iodata()),
              fault_rate(1, 40, secret_key())},
        case v_iodata(Msg) andalso secret_key_valid(Key) of
          true ->
@@ -466,7 +468,7 @@ ot_authenticator_bad() ->
 
 ot_authenticator_good(Msg, Key) when is_binary(Key) ->
     Sz = enacl:secretbox_key_size(),
-    case byte_size(Key) == Sz of
+    case v_iodata(Msg) andalso byte_size(Key) == Sz of
       true ->
         frequency([{1, ?LAZY({invalid, binary(enacl:onetime_auth_size())})},
                    {3, return({valid, enacl:onetime_auth(Msg, Key)})}]);
@@ -485,7 +487,7 @@ ot_authenticator_valid(_) -> false.
 
 prop_onetime_auth_verify_correct() ->
     ?FORALL({Msg, Key},
-            {g_iodata(),
+            {fault_rate(1, 40, g_iodata()),
              fault_rate(1, 40, secret_key())},
       ?FORALL(Authenticator, ot_authenticator(Msg, Key),
         case v_iodata(Msg) andalso secret_key_valid(Key) andalso ot_authenticator_valid(Authenticator) of
