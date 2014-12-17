@@ -759,8 +759,10 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_open_b", 4, enif_crypto_box_open},
 	{"crypto_box_open", 4, enif_crypto_box_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_box_beforenm", 2, enif_crypto_box_beforenm},
-	{"crypto_box_afternm", 3, enif_crypto_box_afternm},
-	{"crypto_box_open_afternm", 3, enif_crypto_box_open_afternm},
+	{"crypto_box_afternm_b", 3, enif_crypto_box_afternm},
+	{"crypto_box_afternm", 3, enif_crypto_box_afternm, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_box_open_afternm_b", 3, enif_crypto_box_open_afternm},
+	{"crypto_box_open_afternm", 3, enif_crypto_box_open_afternm, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_sign_PUBLICKEYBYTES", 0, enif_crypto_sign_PUBLICKEYBYTES},
 	{"crypto_sign_SECRETKEYBYTES", 0, enif_crypto_sign_SECRETKEYBYTES},

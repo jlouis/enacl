@@ -20,7 +20,9 @@
 
 	crypto_box_beforenm/2,
 	crypto_box_afternm/3,
+	crypto_box_afternm_b/3,
 	crypto_box_open_afternm/3,
+	crypto_box_open_afternm_b/3,
 
 	crypto_sign_PUBLICKEYBYTES/0,
 	crypto_sign_SECRETKEYBYTES/0,
@@ -115,7 +117,9 @@ crypto_box_open_b(_CipherText, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loa
 
 crypto_box_beforenm(_PK, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_box_afternm(_M, _Nonce, _K) -> erlang:nif_error(nif_not_loaded).
+crypto_box_afternm_b(_M, _Nonce, _K) -> erlang:nif_error(nif_not_loaded).
 crypto_box_open_afternm(_CipherText, _Nonce, _K) -> erlang:nif_error(nif_not_loaded).
+crypto_box_open_afternm_b(_CipherText, _Nonce, _K) -> erlang:nif_error(nif_not_loaded).
 
 crypto_sign_PUBLICKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_sign_SECRETKEYBYTES() -> erlang:nif_error(nif_not_loaded).
