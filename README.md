@@ -17,7 +17,7 @@ or
 
 ### Features:
 
-* Complete library for every NaCl call, save `beforenm/afternm` invocations
+* Complete NaCl library, implementing all default functionality.
 * Implements a small set of additional functionality from libsodium. Most notably access to a proper CSPRNG random source
 * Tests created by aggressive use of Erlang QuickCheck.
 
@@ -31,9 +31,12 @@ In addition, I would like to thank Steve Vinoski, Rickard Green, and Sverker Eri
 
 # Versions
 
-## Upcoming release:
+## v0.11.x
+
+### v0.11.0
 
 * Introduce NIF layer beforenm/afternm calls.
+* Introduce the API for precomputed keys (beforenm/afternm calls).
 * Use test cases which tries to inject `iodata()` rather than binaries in all places where `iodata()` tend to be accepted.
 * Fix type for `enacl:box_open/4`. The specification was wrong which results in errors in other applications using enacl.
 

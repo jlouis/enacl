@@ -1,7 +1,7 @@
 {application, enacl,
   [
     {description, "Erlang NaCl bindings"},
-    {vsn, "0.10.2"},
+    {vsn, "0.11.0"},
     {registered, []},
     {applications, [kernel, stdlib]},
     {env, []}

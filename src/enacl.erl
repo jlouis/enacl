@@ -21,9 +21,14 @@
 	box_keypair/0,
 	box/4,
 	box_open/4,
+	box_beforenm/2,
+	box_afternm/3,
+	box_open_afternm/3,
+
 	box_nonce_size/0,
 	box_public_key_bytes/0,
 	box_secret_key_bytes/0,
+	box_beforenm_bytes/0,
 	
 	sign_keypair_public_size/0,
 	sign_keypair_secret_size/0,
@@ -210,6 +215,64 @@ box_open(CipherText, Nonce, PK, SK) ->
             end
     end.
 
+%% @doc box_beforenm/2 precomputes a box shared key for a PK/SK keypair
+%% @end
+-spec box_beforenm(PK, SK) -> binary()
+    when
+      PK :: binary(),
+      SK :: binary().
+box_beforenm(PK, SK) ->
+    R = enacl_nif:crypto_box_beforenm(PK, SK),
+    erlang:bump_reductions(?BOX_BEFORENM_REDUCTIONS),
+    R.
+    
+%% @doc box_afternm/3 works like `box/4' but uses a precomputed key
+%% Calling `box_afternm(M, Nonce, K)' for a precomputed key `K = box_beforenm(PK, SK)' works exactly as
+%% if you had called `box(M, Nonce, PK, SK)'. Except that it avoids computations in the elliptic curve Curve25519,
+%% and thus is a much faster operation.
+%% @end
+-spec box_afternm(Msg, Nonce, K) -> CipherText
+  when
+    Msg :: iodata(),
+    Nonce :: binary(),
+    K :: binary(),
+    CipherText :: binary().
+box_afternm(Msg, Nonce, Key) ->
+    case iolist_size(Msg) of
+        K when K =< ?BOX_AFTERNM_SIZE ->
+            bump(enacl_nif:crypto_box_afternm_b([p_zerobytes(), Msg], Nonce, Key),
+            	?BOX_AFTERNM_REDUCTIONS, ?BOX_AFTERNM_SIZE, K);
+        _ ->
+            enacl_nif:crypto_box_afternm([p_zerobytes(), Msg], Nonce, Key)
+    end.
+
+%% @doc box_open_afternm/3 works like `box_open/4` but uses a precomputed key
+%% Calling `box_open_afternm(M, Nonce, K)' for a precomputed key `K = box_beforenm(PK, SK)' works exactly as
+%% if you had called `box_open(M, Nonce, PK, SK)'. Except the operation is much faster as it avoids costly
+%% computations in the elliptic curve Curve25519.
+%% @end
+-spec box_open_afternm(CT, Nonce, K) -> {ok, Msg} | {error, failed_verification}
+  when
+    CT :: binary(),
+    Nonce :: binary(),
+    K :: binary(),
+    Msg :: binary().
+box_open_afternm(CipherText, Nonce, Key) ->
+    case iolist_size(CipherText) of
+        K when K =< ?BOX_AFTERNM_SIZE ->
+           R =
+            case enacl_nif:crypto_box_open_afternm_b([p_box_zerobytes(), CipherText], Nonce, Key) of
+              {error, Err} -> {error, Err};
+              Bin when is_binary(Bin) -> {ok, Bin}
+            end,
+           bump(R, ?BOX_AFTERNM_REDUCTIONS, ?BOX_AFTERNM_SIZE, K);
+        _ ->
+            case enacl_nif:crypto_box_open_afternm([p_box_zerobytes(), CipherText], Nonce, Key) of
+              {error, Err} -> {error, Err};
+              Bin when is_binary(Bin) -> {ok, Bin}
+            end
+    end.
+
 %% @doc box_nonce_size/0 return the byte-size of the nonce
 %% Used to obtain the size of the nonce.
 %% @end.
@@ -221,6 +284,10 @@ box_nonce_size() ->
 -spec box_public_key_bytes() -> pos_integer().
 box_public_key_bytes() ->
 	enacl_nif:crypto_box_PUBLICKEYBYTES().
+
+%% @private
+box_beforenm_bytes() ->
+	enacl_nif:crypto_box_BEFORENMBYTES().
 
 %% Signatures
 
