@@ -2,6 +2,50 @@
 -include_lib("eqc/include/eqc.hrl").
 -compile(export_all).
 
+non_byte_int() ->
+    oneof([
+        ?LET(N, nat(), -(N+1)),
+        ?LET(N, nat(), N+256)
+    ]).
+
+g_iolist() ->
+    ?SIZED(Sz, g_iolist(Sz)).
+    
+g_iolist(0) ->
+    fault(
+        oneof([
+          elements([a,b,c]),
+          real(),
+          non_byte_int()
+        ]),
+        return([]));
+g_iolist(N) ->
+    fault(
+        oneof([
+          elements([a,b,c]),
+          real(),
+          non_byte_int()
+        ]),
+        frequency([
+            {1, g_iolist(0)},
+            {N, ?LAZY(list(oneof([char(), binary(), g_iolist(N div 4)])))}
+        ])).
+                    
+g_iodata() ->
+    fault(
+      oneof([elements([a,b,c]), real()]),
+      oneof([binary(), g_iolist()])).
+
+v_iolist([]) -> true;
+v_iolist([B|Xs]) when is_binary(B) -> v_iolist(Xs);
+v_iolist([C|Xs]) when is_integer(C), C >= 0, C < 256 -> v_iolist(Xs);
+v_iolist([L|Xs]) when is_list(L) ->
+    v_iolist(L) andalso v_iolist(Xs);
+v_iolist(_) -> false.
+
+v_iodata(B) when is_binary(B) -> true;
+v_iodata(Structure) -> v_iolist(Structure).
+
 %% Generator for binaries of a given size with different properties and fault injection:
 g_binary(Sz) ->
     fault(g_binary_bad(Sz), g_binary_good(Sz)).
@@ -13,13 +57,15 @@ g_binary_bad(Sz) ->
     frequency([
         {5, ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)},
         {1, elements([a, b])},
-        {1, int()}
+        {1, int()},
+        {1, g_iodata()}
     ]).
     
 v_binary(Sz, N) when is_binary(N) ->
     byte_size(N) == Sz;
 v_binary(_, _) -> false.
 
+                  
 %% Typical generators based on the binaries
 nonce() -> g_binary(enacl:box_nonce_size()).
 nonce_valid(N) -> v_binary(enacl:box_nonce_size(), N).
@@ -95,16 +141,16 @@ failure(_) -> false.
 
 prop_box_correct() ->
     ?FORALL({Msg, Nonce, {PK1, SK1}, {PK2, SK2}},
-            {binary(),
+            {g_iodata(),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, keypair()),
              fault_rate(1, 40, keypair())},
         begin
-            case nonce_valid(Nonce) andalso keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
+            case v_iodata(Msg) andalso nonce_valid(Nonce) andalso keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
                 true ->
                     CipherText = enacl:box(Msg, Nonce, PK2, SK1),
                     {ok, DecodedMsg} = enacl:box_open(CipherText, Nonce, PK1, SK2),
-                    equals(Msg, DecodedMsg);
+                    equals(iolist_to_binary(Msg), DecodedMsg);
                 false ->
                     case box(Msg, Nonce, PK2, SK1) of
                         badarg -> true;
@@ -115,12 +161,13 @@ prop_box_correct() ->
 
 prop_box_failure_integrity() ->
     ?FORALL({Msg, Nonce, {PK1, SK1}, {PK2, SK2}},
-            {binary(),
+            {g_iodata(),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, keypair()),
              fault_rate(1, 40, keypair())},
         begin
-            case nonce_valid(Nonce)
+            case v_iodata(Msg)
+                 andalso nonce_valid(Nonce)
                  andalso keypair_valid(PK1, SK1)
                  andalso keypair_valid(PK2, SK2) of
                 true ->
@@ -128,7 +175,7 @@ prop_box_failure_integrity() ->
                     Err = enacl:box_open([<<"x">>, CipherText], Nonce, PK1, SK2),
                     equals(Err, {error, failed_verification});
                 false ->
-                    case box(Msg, Nonce, PK2, SK1) of
+                    case box(iolist_to_binary(Msg), Nonce, PK2, SK1) of
                       badarg -> true;
                       Res ->
                         failure(box_open(Res, Nonce, PK1, SK2))
@@ -182,9 +229,9 @@ sign_keypair_valid(KP) ->
   sign_keypair_public_valid(KP) andalso sign_keypair_secret_valid(KP).
 
 prop_sign() ->
-    ?FORALL({Msg, KeyPair}, {binary(), fault_rate(1, 40, sign_keypair())},
+    ?FORALL({Msg, KeyPair}, {g_iodata(), fault_rate(1, 40, sign_keypair())},
       begin
-        case sign_keypair_secret_valid(KeyPair) of
+        case v_iodata(Msg) andalso sign_keypair_secret_valid(KeyPair) of
           true ->
             #{ secret := Secret } = KeyPair,
             enacl:sign(Msg, Secret),
@@ -218,13 +265,13 @@ signed_message_valid({invalid, _}, _) -> true;
 signed_message_valid(_, _) -> false.
 
 prop_sign_open() ->
-    ?FORALL(Msg, binary(),
+    ?FORALL(Msg, g_iodata(),
       ?FORALL({SignMsg, PK}, signed_message(Msg),
-          case signed_message_valid(SignMsg, PK) of
+          case v_iodata(Msg) andalso signed_message_valid(SignMsg, PK) of
               true ->
                   case SignMsg of
                     {valid, SM} ->
-                        equals({ok, Msg}, enacl:sign_open(SM, PK));
+                        equals({ok, iolist_to_binary(Msg)}, enacl:sign_open(SM, PK));
                     {invalid, SM} ->
                         equals({error, failed_verification}, enacl:sign_open(SM, PK))
                   end;
@@ -287,15 +334,15 @@ secretbox_open(Msg, Nonce, Key) ->
 
 prop_secretbox_correct() ->
     ?FORALL({Msg, Nonce, Key},
-            {binary(),
+            {g_iodata(),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, secret_key())},
       begin
-        case nonce_valid(Nonce) andalso secret_key_valid(Key) of
+        case v_iodata(Msg) andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
           true ->
              CipherText = enacl:secretbox(Msg, Nonce, Key),
              {ok, DecodedMsg} = enacl:secretbox_open(CipherText, Nonce, Key),
-             equals(Msg, DecodedMsg);
+             equals(iolist_to_binary(Msg), DecodedMsg);
           false ->
              case secretbox(Msg, Nonce, Key) of
                badarg -> true;
@@ -306,7 +353,7 @@ prop_secretbox_correct() ->
       end).
 
 prop_secretbox_failure_integrity() ->
-    ?FORALL({Msg, Nonce, Key}, {binary(), nonce(), secret_key()},
+    ?FORALL({Msg, Nonce, Key}, {g_iodata(), nonce(), secret_key()},
       begin
         CipherText = enacl:secretbox(Msg, Nonce, Key),
         Err = enacl:secretbox_open([<<"x">>, CipherText], Nonce, Key),
@@ -327,15 +374,24 @@ prop_stream_correct() ->
               badargs(fun() -> enacl:stream(Len, Nonce, Key) end)
         end).
 
+xor_bytes(<<A, As/binary>>, <<B, Bs/binary>>) ->
+    [A bxor B | xor_bytes(As, Bs)];
+xor_bytes(<<>>, <<>>) -> [].
+
 prop_stream_xor_correct() ->
     ?FORALL({Msg, Nonce, Key},
-            {binary(),
+            {g_iodata(),
              fault_rate(1, 40, nonce()),
              fault_rate(1, 40, secret_key())},
-        case nonce_valid(Nonce) andalso secret_key_valid(Key) of
+        case v_iodata(Msg) andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
             true ->
+                Stream = enacl:stream(iolist_size(Msg), Nonce, Key),
                 CipherText = enacl:stream_xor(Msg, Nonce, Key),
-                equals(Msg, enacl:stream_xor(CipherText, Nonce, Key));
+                StreamXor = enacl:stream_xor(CipherText, Nonce, Key),
+                conjunction([
+                    {'xor', equals(iolist_to_binary(Msg), StreamXor)},
+                    {stream, equals(iolist_to_binary(xor_bytes(Stream, iolist_to_binary(Msg))), CipherText)}
+                ]);
             false ->
                 badargs(fun() -> enacl:stream_xor(Msg, Nonce, Key) end)
         end).
@@ -343,9 +399,9 @@ prop_stream_xor_correct() ->
 %% CRYPTO AUTH
 prop_auth_correct() ->
     ?FORALL({Msg, Key},
-            {binary(),
+            {g_iodata(),
              fault_rate(1, 40, secret_key())},
-       case secret_key_valid(Key) of
+       case v_iodata(Msg) andalso secret_key_valid(Key) of
          true ->
            Authenticator = enacl:auth(Msg, Key),
            equals(Authenticator, enacl:auth(Msg, Key));
@@ -377,10 +433,10 @@ authenticator_valid(_) -> false.
 
 prop_auth_verify_correct() ->
     ?FORALL({Msg, Key},
-            {binary(),
+            {g_iodata(),
              fault_rate(1, 40, secret_key())},
       ?FORALL(Authenticator, authenticator(Msg, Key),
-        case secret_key_valid(Key) andalso authenticator_valid(Authenticator) of
+        case v_iodata(Msg) andalso secret_key_valid(Key) andalso authenticator_valid(Authenticator) of
           true ->
             case Authenticator of
               {valid, A} ->
@@ -395,9 +451,9 @@ prop_auth_verify_correct() ->
 %% CRYPTO ONETIME AUTH
 prop_onetimeauth_correct() ->
     ?FORALL({Msg, Key},
-            {binary(),
+            {g_iodata(),
              fault_rate(1, 40, secret_key())},
-       case secret_key_valid(Key) of
+       case v_iodata(Msg) andalso secret_key_valid(Key) of
          true ->
            Authenticator = enacl:onetime_auth(Msg, Key),
            equals(Authenticator, enacl:onetime_auth(Msg, Key));
@@ -429,10 +485,10 @@ ot_authenticator_valid(_) -> false.
 
 prop_onetime_auth_verify_correct() ->
     ?FORALL({Msg, Key},
-            {binary(),
+            {g_iodata(),
              fault_rate(1, 40, secret_key())},
       ?FORALL(Authenticator, ot_authenticator(Msg, Key),
-        case secret_key_valid(Key) andalso ot_authenticator_valid(Authenticator) of
+        case v_iodata(Msg) andalso secret_key_valid(Key) andalso ot_authenticator_valid(Authenticator) of
           true ->
             case Authenticator of
               {valid, A} ->
@@ -446,14 +502,13 @@ prop_onetime_auth_verify_correct() ->
 
 %% HASHING
 %% ---------------------------
-diff_pair(Sz) ->
-    ?SUCHTHAT({X, Y}, {g_binary(Sz), g_binary(Sz)},
-        X /= Y).
+diff_pair() ->
+    ?SUCHTHAT({X, Y}, {g_iodata(), g_iodata()},
+        iolist_to_binary(X) /= iolist_to_binary(Y)).
 
 prop_crypto_hash_eq() ->
-    ?FORALL(Sz, oneof([1, 128, 1024, 1024*4]),
-    ?FORALL(X, g_binary(Sz),
-        case is_binary(X) of
+    ?FORALL(X, g_iodata(),
+        case v_iodata(X) of
           true -> equals(enacl:hash(X), enacl:hash(X));
           false ->
             try
@@ -463,13 +518,12 @@ prop_crypto_hash_eq() ->
               error:badarg -> true
             end
         end
-    )).
+    ).
 
 prop_crypto_hash_neq() ->
-    ?FORALL(Sz, oneof([1, 128, 1024, 1024*4]),
-    ?FORALL({X, Y}, diff_pair(Sz),
+    ?FORALL({X, Y}, diff_pair(),
         enacl:hash(X) /= enacl:hash(Y)
-    )).
+    ).
 
 %% STRING COMPARISON
 %% -------------------------
