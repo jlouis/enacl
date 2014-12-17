@@ -79,6 +79,9 @@
 -define(HASH_REDUCTIONS, 104 * 2).
 -define(BOX_SIZE, 32 * 1024).
 -define(BOX_REDUCTIONS, 115 * 2).
+-define(BOX_BEFORENM_REDUCTIONS, 60).
+-define(BOX_AFTERNM_SIZE, 64 * 1024).
+-define(BOX_AFTERNM_REDUCTIONS, 110 * 2).
 -define(SIGN_SIZE, 16 * 1024).
 -define(SIGN_REDUCTIONS, 160 * 2).
 -define(SECRETBOX_SIZE, 64 * 1024).

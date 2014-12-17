@@ -11,7 +11,8 @@ all() ->
     time_secretbox(),
     time_stream(),
     time_auth(),
-    time_onetimeauth()].
+    time_onetimeauth(),
+    time_precomputed()].
 
 -define(ROUNDS, 300).
 
@@ -170,6 +171,45 @@ box(_Bin, _Nonce, _PK, _SK, 0) -> ok;
 box(Bin, Nonce, PK, SK, N) ->
     enacl_nif:crypto_box_b(Bin, Nonce, PK, SK),
     box(Bin, Nonce, PK, SK, N-1).
+
+%% PRECOMPUTED
+%% -------------------
+
+time_precomputed() ->
+    Sz = 1024 * 64,
+    Bin = binary:copy(<<0>>, Sz),
+    ZB = binary:copy(<<0>>, enacl_nif:crypto_box_ZEROBYTES()),
+    BZB = binary:copy(<<0>>, enacl_nif:crypto_box_BOXZEROBYTES()),
+    Nonce = binary:copy(<<0>>, enacl_nif:crypto_box_NONCEBYTES()),
+    #{ public := PK1, secret := SK1 } = enacl:box_keypair(),
+    #{ public := PK2, secret := SK2 } = enacl:box_keypair(),
+    T = timed(fun() -> beforenm(PK1, SK2, ?ROUNDS) end) / ?ROUNDS,
+    K = enacl_nif:crypto_box_beforenm(PK1, SK2),
+    K = enacl_nif:crypto_box_beforenm(PK2, SK1),
+    T2 = timed(fun() -> afternm([ZB, Bin], Nonce, K, ?ROUNDS) end) / ?ROUNDS,
+    Ciphered = enacl_nif:crypto_box_afternm_b([ZB, Bin], Nonce, K),
+    Bin = enacl_nif:crypto_box_open_afternm_b([BZB, Ciphered], Nonce, K),
+    T3 = timed(fun() -> afternm_open([BZB, Ciphered], Nonce, K, ?ROUNDS) end) / ?ROUNDS,
+    [
+      #{ size => 'n/a', time => T, operation => box_beforenm },
+      #{ size => Sz, time => T2, operation => box_afternm },
+      #{ size => Sz, time => T3, operation => box_open_afternm }
+    ].
+    
+afternm(_M, _Nonce, _K, 0) -> ok;
+afternm(M, Nonce, K, N) ->
+    enacl_nif:crypto_box_afternm_b(M, Nonce, K),
+    afternm(M, Nonce, K, N-1).
+    
+afternm_open(_C, _Nonce, _K, 0) -> ok;
+afternm_open(C, Nonce, K, N) ->
+    enacl_nif:crypto_box_open_afternm_b(C, Nonce, K),
+    afternm_open(C, Nonce, K, N-1).
+
+beforenm(_PK, _SK, 0) -> ok;
+beforenm(PK, SK, N) ->
+    enacl_nif:crypto_box_beforenm(PK, SK),
+    beforenm(PK, SK, N-1).
 
 %% HASHING
 %% ----------------
