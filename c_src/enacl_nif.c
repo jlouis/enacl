@@ -191,7 +191,7 @@ ERL_NIF_TERM enif_crypto_box_open(ErlNifEnv *env, int argc, ERL_NIF_TERM const a
 		return nacl_error_tuple(env, "alloc_failed");
 	}
 
-	if (crypto_box_open(result.data, padded_ciphertext.data, padded_ciphertext.size, nonce.data, pk.data, sk.data) != 0) {
+	if (0 != crypto_box_open(result.data, padded_ciphertext.data, padded_ciphertext.size, nonce.data, pk.data, sk.data)) {
 		enif_release_binary(&result);
 		return nacl_error_tuple(env, "failed_verification");
 	}
@@ -274,7 +274,7 @@ ERL_NIF_TERM enif_crypto_box_open_afternm(ErlNifEnv *env, int argc, ERL_NIF_TERM
 		return nacl_error_tuple(env, "alloc_failed");
 	}
 	
-	if (crypto_box_open_afternm(result.data, m.data, m.size, nonce.data, k.data)) {
+	if (0 != crypto_box_open_afternm(result.data, m.data, m.size, nonce.data, k.data)) {
 		enif_release_binary(&result);
 		return nacl_error_tuple(env, "failed_verification");
 	}
