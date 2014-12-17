@@ -28,18 +28,16 @@ In addition, I would like to thank Steve Vinoski, Rickard Green, and Sverker Eri
 # TODO
 
 * Write simple correctness unit tests for the different NaCl primitives.
-* Introduce `iodata()` and `eqc_gen:largebinary/2` support to test the code base for very large binaries and iodata input. The current test cases mostly concerns themselves about the rather small input.
-* Verify that the binary-only inputs doesn't accept incorrect `iodata()` input.
 
 # Versions
 
-## v0.10.x
+## Upcoming release:
 
-### v0.10.x
-
-Maintenance release.
-
+* Introduce NIF layer beforenm/afternm calls.
+* Use test cases which tries to inject `iodata()` rather than binaries in all places where `iodata()` tend to be accepted.
 * Fix type for `enacl:box_open/4`. The specification was wrong which results in errors in other applications using enacl.
+
+## v0.10.x
 
 ### v0.10.2
 
