@@ -374,7 +374,7 @@ stream(_, _, _) -> error(badarg).
 %% @end
 -spec stream_xor(Msg, Nonce, Key) -> CipherText
   when
-    Msg :: binary(),
+    Msg :: iodata(),
     Nonce :: binary(),
     Key :: binary(),
     CipherText :: binary().
