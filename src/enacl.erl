@@ -11,7 +11,7 @@
 %%% <p><b>Warning:</b> The cryptographic strength of your implementation is no stronger than
 %%% plaintext cryptography unless you take care in using these primitives correctly. Hence,
 %%% implementors should use these primitives with that in mind.</p>
-%%% <p><b>Note:</b>All functions will fail with a `badarg' error if given incorrect
+%%% <p><b>Note:</b> All functions will fail with a `badarg' error if given incorrect
 %%% parameters.</p>
 %%% @end.
 -module(enacl).
@@ -101,8 +101,12 @@
 -define(RANDOMBYTES_SIZE, 1024).
 -define(RANDOMBYTES_REDUCTIONS, 200).
 
+%% @doc reds/1 counts the number of reductions and scheduler yields for a thunk
+%%
 %% Count reductions and number of scheduler yields for Fun. Fun is assumed
 %% to be one of the above exor variants.
+%% @end
+-spec reds(fun (() -> any())) -> #{ atom() => any() }.
 reds(Fun) ->
     Parent = self(),
     Pid = spawn(fun() ->
@@ -112,7 +116,8 @@ reds(Fun) ->
                         Fun(),
                         R1 = process_info(Self, reductions),
                         T = timer:now_diff(os:timestamp(), Start),
-                        Parent ! {Self,{T, R1, R0}} end),
+                        Parent ! {Self,#{ time_diff => T, after_reductions => R1, before_reductions => R0}}
+                    end),
     receive
         {Pid,Result} ->
             Result
@@ -122,6 +127,7 @@ reds(Fun) ->
 %% -----------------
 
 %% @doc hash/1 hashes data into a cryptographically secure checksum.
+%%
 %% <p>Given an iodata(), `Data' of any size, run a cryptographically secure hash algorithm to
 %% produce a checksum of the data. This can be used to verify the integrity of a data block
 %% since the checksum have the properties of cryptographic hashes in general.</p>
@@ -140,6 +146,7 @@ hash(Bin) ->
     end.
 
 %% @doc verify_16/2 implements constant time 16-byte binary() verification
+%%
 %% <p>A subtle problem in cryptographic software are timing attacks where an attacker exploits
 %% early exist in string verification if the strings happen to mismatch. This allows the
 %% attacker to time how long verification took and thus learn the structure of the desired
@@ -154,6 +161,7 @@ verify_16(X, Y) when is_binary(X), is_binary(Y) -> enacl_nif:crypto_verify_16(X,
 verify_16(_, _) -> error(badarg).
 
 %% @doc verify_32/2 implements constant time 32-byte iolist() verification
+%%
 %% This function works as {@link verify_16/2} but does so on 32 byte strings. Same caveats apply.
 %% @end
 -spec verify_32(binary(), binary()) -> boolean().
@@ -163,6 +171,7 @@ verify_32(_, _) -> error(badarg).
 %% Public Key Crypto
 %% ---------------------
 %% @doc box_keypair/0 creates a new Public/Secret keypair.
+%%
 %% Generates and returns a new key pair for the Box encryption scheme. The return value is a
 %% map in order to avoid using the public key as a secret key and vice versa.
 %% @end.
@@ -172,8 +181,9 @@ box_keypair() ->
 	#{ public => PK, secret => SK}.
 
 %% @doc box/4 encrypts+authenticates a message to another party.
-%% Encrypt a `Msg` to the party identified by public key `PK` using your own secret key `SK` to
-%% authenticate yourself. Requires a `Nonce` in addition. Returns the ciphered message.
+%%
+%% Encrypt a `Msg' to the party identified by public key `PK' using your own secret key `SK' to
+%% authenticate yourself. Requires a `Nonce' in addition. Returns the ciphered message.
 %% @end
 -spec box(Msg, Nonce, PK, SK) -> CipherText
   when Msg :: iodata(),
@@ -190,9 +200,11 @@ box(Msg, Nonce, PK, SK) ->
     end.
 
 %% @doc box_open/4 decrypts+verifies a message from another party.
-%% Decrypt a `CipherText` into a `Msg` given the other partys public key `PK` and your secret
-%% key `SK`. Also requires the same nonce as was used by the other party. Returns the plaintext
+%%
+%% Decrypt a `CipherText' into a `Msg' given the other partys public key `PK' and your secret
+%% key `SK'. Also requires the same nonce as was used by the other party. Returns the plaintext
 %% message.
+%% @end
 -spec box_open(CipherText, Nonce, PK, SK) -> {ok, Msg} | {error, failed_verification}
   when CipherText :: iodata(),
        Nonce :: binary(),
@@ -227,6 +239,7 @@ box_beforenm(PK, SK) ->
     R.
     
 %% @doc box_afternm/3 works like `box/4' but uses a precomputed key
+%%
 %% Calling `box_afternm(M, Nonce, K)' for a precomputed key `K = box_beforenm(PK, SK)' works exactly as
 %% if you had called `box(M, Nonce, PK, SK)'. Except that it avoids computations in the elliptic curve Curve25519,
 %% and thus is a much faster operation.
@@ -247,6 +260,7 @@ box_afternm(Msg, Nonce, Key) ->
     end.
 
 %% @doc box_open_afternm/3 works like `box_open/4` but uses a precomputed key
+%%
 %% Calling `box_open_afternm(M, Nonce, K)' for a precomputed key `K = box_beforenm(PK, SK)' works exactly as
 %% if you had called `box_open(M, Nonce, PK, SK)'. Except the operation is much faster as it avoids costly
 %% computations in the elliptic curve Curve25519.
@@ -274,6 +288,7 @@ box_open_afternm(CipherText, Nonce, Key) ->
     end.
 
 %% @doc box_nonce_size/0 return the byte-size of the nonce
+%%
 %% Used to obtain the size of the nonce.
 %% @end.
 -spec box_nonce_size() -> pos_integer().
@@ -300,6 +315,7 @@ sign_keypair_secret_size() ->
     enacl_nif:crypto_sign_SECRETKEYBYTES().
 
 %% @doc sign_keypair/0 returns a signature keypair for signing
+%%
 %% The returned value is a map in order to make it harder to misuse keys.
 %% @end
 -spec sign_keypair() -> #{ atom() => binary() }.
@@ -308,6 +324,7 @@ sign_keypair() ->
     #{ public => PK, secret => SK}.
 
 %% @doc sign/2 signs a message with a digital signature identified by a secret key.
+%%
 %% Given a message `M' and a secret key `SK' the function will sign the message and return a signed message `SM'.
 %% @end
 -spec sign(M, SK) -> SM
@@ -324,6 +341,7 @@ sign(M, SK) ->
     end.
 
 %% @doc sign_open/2 opens a digital signature
+%%
 %% Given a signed message `SM' and a public key `PK', verify that the message has the
 %% right signature. Returns either `{ok, M}' or `{error, failed_verification}' depending
 %% on the correctness of the signature.
@@ -354,6 +372,7 @@ box_secret_key_bytes() ->
 	enacl_nif:crypto_box_SECRETKEYBYTES().
 
 %% @doc secretbox/3 encrypts a message with a key
+%%
 %% Given a `Msg', a `Nonce' and a `Key' encrypt the message with the Key while taking the
 %% nonce into consideration. The function returns the Box obtained from the encryption.
 %% @end
@@ -375,6 +394,7 @@ secretbox(Msg, Nonce, Key) ->
           enacl_nif:crypto_secretbox([s_zerobytes(), Msg], Nonce, Key)
     end.
 %% @doc secretbox_open/3 opens a sealed box.
+%%
 %% Given a boxed `CipherText' and given we know the used `Nonce' and `Key' we can open the box
 %% to obtain the `Msg` within. Returns either `{ok, Msg}' or `{error, failed_verification}'.
 %% @end
@@ -400,9 +420,17 @@ secretbox_open(CipherText, Nonce, Key) ->
           end
    end.
        
+%% @doc secretbox_nonce_size/0 returns the size of the secretbox nonce
+%%
+%% When encrypting with a secretbox, the nonce must have this size
+%% @end
 secretbox_nonce_size() ->
     enacl_nif:crypto_secretbox_NONCEBYTES().
 
+%% @doc secretbox_key_size/0 returns the size of the secretbox key
+%%
+%% When encrypting with a secretbox, the key must have this size
+%% @end
 secretbox_key_size() ->
     enacl_nif:crypto_secretbox_KEYBYTES().
 
@@ -417,6 +445,7 @@ stream_nonce_size() -> enacl_nif:crypto_stream_NONCEBYTES().
 stream_key_size() -> enacl_nif:crypto_stream_KEYBYTES().
 
 %% @doc stream/3 produces a cryptographic stream suitable for secret-key encryption
+%%
 %% <p>Given a positive `Len' a `Nonce' and a `Key', the stream/3 function will return an unpredictable cryptographic stream of bytes
 %% based on this output. In other words, the produced stream is indistinguishable from a random stream. Using this stream one
 %% can XOR it with a message in order to produce a encrypted message.</p>
@@ -439,6 +468,7 @@ stream(Len, Nonce, Key) when is_integer(Len), Len >= 0 ->
 stream(_, _, _) -> error(badarg).
 
 %% @doc stream_xor/3 encrypts a plaintext message into ciphertext
+%%
 %% The stream_xor/3 function works by using the {@link stream/3} api to XOR a message with the cryptographic stream. The same
 %% caveat applies: the nonce must be new for each sent message or the system fails to work.
 %% @end
@@ -470,6 +500,7 @@ auth_key_size() -> enacl_nif:crypto_auth_KEYBYTES().
 auth_size() -> enacl_nif:crypto_auth_BYTES().
 
 %% @doc auth/2 produces an authenticator (MAC) for a message
+%%
 %% Given a `Msg' and a `Key' produce a MAC/Authenticator for that message. The key can be reused for several such Msg/Authenticator pairs.
 %% An eavesdropper will not learn anything extra about the message structure.
 %% @end
@@ -487,6 +518,7 @@ auth(Msg, Key) ->
   end.
 
 %% @doc auth_verify/3 verifies an authenticator for a message
+%%
 %% Given an `Authenticator', a `Msg' and a `Key'; verify that the MAC for the pair `{Msg, Key}' is really `Authenticator'. Returns
 %% the value `true' if the verfication passes. Upon failure, the function returns `false'.
 %% @end
@@ -507,6 +539,7 @@ auth_verify(A, M, K) ->
     end.
 
 %% @doc onetime_auth/2 produces a ONE-TIME authenticator for a message
+%%
 %% This function works like {@link auth/2} except that the key must not be used again for subsequent messages. That is, the pair
 %% `{Msg, Key}' is unique and only to be used once. The advantage is noticably faster execution.
 %% @end
@@ -527,6 +560,7 @@ onetime_auth(Msg, Key) ->
     end.
 
 %% @doc onetime_auth_verify/3 verifies an ONE-TIME authenticator for a message
+%%
 %% Given an `Authenticator', a `Msg' and a `Key'; verify that the MAC for the pair `{Msg, Key}' is really `Authenticator'. Returns
 %% the value `true' if the verification passes. Upon failure, the function returns `false'. Note the caveat from {@link onetime_auth/2}
 %% applies: you are not allowed to ever use the same key again for another message.
@@ -560,6 +594,7 @@ onetime_auth_key_size() -> enacl_nif:crypto_onetimeauth_KEYBYTES().
 %% Obtaining random bytes
 
 %% @doc randombytes/1 produces a stream of random bytes of the given size
+%%
 %% The security properties of the random stream are that of the libsodium library. Specifically,
 %% we use:
 %%

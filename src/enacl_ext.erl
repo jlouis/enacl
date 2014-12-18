@@ -1,6 +1,6 @@
 %%% @doc module enacl_ext implements various enacl extensions.
 %%% <p>None of the extensions listed here are part of the official NaCl library.
-%%% Things may be removed without further notice if it suddenly ends up being
+%%% Functions may be removed without further notice if it suddenly ends up being
 %%% better to do something differently than the solution given here.
 %%% </p>
 -module(enacl_ext).

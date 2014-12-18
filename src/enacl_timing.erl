@@ -1,9 +1,14 @@
-%%% @doc module enacl_timing provides helpers for timing enacl toward your installation
+%%% @doc module enacl_timing provides helpers for timing enacl toward your installation.
+%%% <p>To use this module, make sure you disable CPU frequency scaling to obtain better numbers for your system.</p>
 %%% @end
 -module(enacl_timing).
 
 -export([all/0]).
 
+%% @doc all/0 runs all timing code and reports the timings of different enacl primitives
+%% <p>Returns a nested list structure containing maps which explains the runtimes of different primitives</p>
+%% <p>The structure is subject to change without notice, so don't rely on it in code.</p>
+%% @end
 all() ->
    [time_hashing(),
     time_box(),
