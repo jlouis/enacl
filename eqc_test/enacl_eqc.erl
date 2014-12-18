@@ -148,8 +148,12 @@ prop_box_correct() ->
         begin
             case v_iodata(Msg) andalso nonce_valid(Nonce) andalso keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
                 true ->
+                    Key = enacl:box_beforenm(PK2, SK1),
+                    Key = enacl:box_beforenm(PK1, SK2),
                     CipherText = enacl:box(Msg, Nonce, PK2, SK1),
+                    CipherText = enacl:box_afternm(Msg, Nonce, Key),
                     {ok, DecodedMsg} = enacl:box_open(CipherText, Nonce, PK1, SK2),
+                    {ok, DecodedMsg} = enacl:box_open_afternm(CipherText, Nonce, Key),
                     equals(iolist_to_binary(Msg), DecodedMsg);
                 false ->
                     case box(Msg, Nonce, PK2, SK1) of
@@ -171,8 +175,10 @@ prop_box_failure_integrity() ->
                  andalso keypair_valid(PK1, SK1)
                  andalso keypair_valid(PK2, SK2) of
                 true ->
+                    Key = enacl:box_beforenm(PK2, SK1),
                     CipherText = enacl:box(Msg, Nonce, PK2, SK1),
                     Err = enacl:box_open([<<"x">>, CipherText], Nonce, PK1, SK2),
+                    Err = enacl:box_open_afternm([<<"x">>, CipherText], Nonce, Key),
                     equals(Err, {error, failed_verification});
                 false ->
                     case box(Msg, Nonce, PK2, SK1) of
@@ -183,6 +189,60 @@ prop_box_failure_integrity() ->
             end
         end).
 
+%% PRECOMPUTATIONS
+beforenm_key() ->
+    ?LET([{PK1, SK1}, {PK2, SK2}], [fault_rate(1, 40, keypair()), fault_rate(1, 40, keypair())],
+        case keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
+            true ->
+                enacl:box_beforenm(PK1, SK2);
+            false ->
+                oneof([
+                  elements([a,b,c]),
+                  real(),
+                  ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:box_beforenm_bytes())
+                  ])
+        end).
+
+v_key(K) when is_binary(K) -> byte_size(K) == enacl:box_beforenm_bytes();
+v_key(_) -> false.
+
+prop_beforenm_correct() ->
+    ?FORALL([{PK1, SK1}, {PK2, SK2}], [fault_rate(1, 40, keypair()), fault_rate(1, 40, keypair())],
+        case keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
+            true ->
+                equals(enacl:box_beforenm(PK1, SK2), enacl:box_beforenm(PK2, SK1));
+            false ->
+                badargs(fun() ->
+                	K = enacl:box_beforenm(PK1, SK2),
+                	K = enacl:box_beforenm(PK2, SK1)
+                end)
+        end).
+
+prop_afternm_correct() ->
+    ?FORALL([Msg, Nonce, Key],
+        [fault_rate(1, 40, g_iodata()),
+         fault_rate(1, 40, nonce()),
+         fault_rate(1, 40, beforenm_key())],
+      begin
+          case v_iodata(Msg) andalso nonce_valid(Nonce) andalso v_key(Key) of
+              true ->
+                  CipherText = enacl:box_afternm(Msg, Nonce, Key),
+                  equals({ok, iolist_to_binary(Msg)}, enacl:box_open_afternm(CipherText, Nonce, Key));
+              false ->
+                  try enacl:box_afternm(Msg, Nonce, Key) of
+                      CipherText ->
+                          try enacl:box_open_afternm(Msg, Nonce, Key) of
+                              {ok, _M} -> false;
+                              {error, failed_validation} -> false
+                          catch
+                              error:badarg -> true
+                          end
+                  catch
+                      error:badarg -> true
+                  end
+          end
+      end).
+                  
 %% SIGNATURES
 %% ----------
 
