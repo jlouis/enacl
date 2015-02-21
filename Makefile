@@ -1,12 +1,8 @@
-REBAR=rebar
+REBAR=rebar3
 
 .PHONY: compile
-compile: deps
+compile:
 	$(REBAR) compile
-
-.PHONY: deps
-deps:
-	$(REBAR) get-deps
 
 .PHONY: clean
 clean:
