@@ -70,6 +70,7 @@
 %% Curve25519
 -export([
 	curve25519_keypair/0,
+	curve25519_public_key/1,
 	curve25519_shared/2
 ]).
 
@@ -185,8 +186,14 @@ verify_32(_, _) -> error(badarg).
 curve25519_keypair() ->
 	<<B0:8/integer, B1:30/binary, B2:8/integer>> = randombytes(32),
 	SK = <<(B0 band 248), B1/binary, (64 bor (B2 band 127))>>,
-	PK = enacl_nif:crypto_curve25519_scalarmult(SK, <<9, 0:248>>),
+	PK = curve25519_public_key(SK),
 	#{ public => PK, secret => SK }.
+
+%% @doc curve25519_public_key/1 creates a public key from a given SecretKey.
+%% @end
+-spec curve25519_public_key(SecretKey :: binary()) -> binary().
+curve25519_public_key(SecretKey) ->
+	enacl_nif:crypto_curve25519_scalarmult(SecretKey, <<9, 0:248>>).
 
 %% @doc curve25519_shared/2 creates a new shared secret from a given SecretKey and PublicKey.
 %% @end.
