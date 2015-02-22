@@ -231,7 +231,7 @@ prop_afternm_correct() ->
               false ->
                   try enacl:box_afternm(Msg, Nonce, Key) of
                       CipherText ->
-                          try enacl:box_open_afternm(Msg, Nonce, Key) of
+                          try enacl:box_open_afternm(CipherText, Nonce, Key) of
                               {ok, _M} -> false;
                               {error, failed_validation} -> false
                           catch
