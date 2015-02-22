@@ -60,6 +60,11 @@
 	onetime_auth_verify/3
 ]).
 
+%% Curve 25519.
+-export([
+	curve25519_scalarmult/2
+]).
+
 %% Low-level functions
 -export([
 	hash/1,
@@ -590,6 +595,14 @@ onetime_auth_size() -> enacl_nif:crypto_onetimeauth_BYTES().
 %% @end
 -spec onetime_auth_key_size() -> pos_integer().
 onetime_auth_key_size() -> enacl_nif:crypto_onetimeauth_KEYBYTES().
+
+%% Curve 25519 Crypto
+%% ------------------
+%% @doc curve25519_scalarmult/2 does a scalar multiplication between the Secret and the BasePoint.
+%% @end.
+-spec curve25519_scalarmult(Secret :: binary(), BasePoint :: binary()) -> binary().
+curve25519_scalarmult(Secret, BasePoint) ->
+	enacl_nif:crypto_curve25519_scalarmult(Secret, BasePoint).
 
 %% Obtaining random bytes
 

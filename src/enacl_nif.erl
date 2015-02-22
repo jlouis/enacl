@@ -71,6 +71,11 @@
 	crypto_onetimeauth_verify_b/3
 ]).
 
+%% Curve25519
+-export([
+	crypto_curve25519_scalarmult/2
+]).
+
 %% Miscellaneous helper functions
 -export([
 	crypto_hash/1,
@@ -160,6 +165,8 @@ crypto_onetimeauth(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_onetimeauth_b(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_onetimeauth_verify(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_onetimeauth_verify_b(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
+
+crypto_curve25519_scalarmult(_Secret, _BasePoint) -> erlang:nif_error(nif_not_loaded).
 
 crypto_hash(Input) when is_binary(Input) -> erlang:nif_error(nif_not_loaded).
 crypto_hash_b(Input) when is_binary(Input) -> erlang:nif_error(nif_not_loaded).
