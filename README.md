@@ -54,7 +54,11 @@ In general, the primitives provided by NaCl are intermediate-level primitives. R
 
 # Versions
 
-## v0.11.x
+### v0.12.0
+
+* Introduce an extension interface for various necessary extensions to the eNaCl system for handling the Tor network, thanks to Alexander Fæhrøy (ahf).
+* Introduce Curve25519 manipulations into the extension interface.
+* Write (rudimentary) QuickCheck tests for the new interface, to verify its correctness.
 
 ### v0.11.0
 
@@ -62,8 +66,6 @@ In general, the primitives provided by NaCl are intermediate-level primitives. R
 * Introduce the API for precomputed keys (beforenm/afternm calls).
 * Use test cases which tries to inject `iodata()` rather than binaries in all places where `iodata()` tend to be accepted.
 * Fix type for `enacl:box_open/4`. The specification was wrong which results in errors in other applications using enacl.
-
-## v0.10.x
 
 ### v0.10.2
 
@@ -88,11 +90,9 @@ Ultra-late beta; tuning for the last couple of functions which could be nice to 
 
 Do note that on Linux and FreeBSD at the *least*, this is the best thing you can do. Relying on `/dev/random` is almost always wrong and gives no added security benefit. Key generation in NaCl relies on `/dev/urandom`. Go relies on `/dev/urandom`. It is about time Erlang does as well.
 
-## v0.9.x
+### v0.9.0
 
 Ultra-late beta. Code probably works, but it requires some real-world use before it is deemed entirely stable.
-
-### v0.9.0
 
 Initial release.
 
