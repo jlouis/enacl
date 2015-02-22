@@ -82,6 +82,7 @@ ERL_NIF_TERM enif_crypto_verify_32(ErlNifEnv *env, int argc, ERL_NIF_TERM const 
 /* Curve 25519 */
 static
 ERL_NIF_TERM enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ERL_NIF_TERM result;
 	ErlNifBinary secret, basepoint, output;
 	uint8_t bp[crypto_scalarmult_curve25519_BYTES];
 
@@ -97,15 +98,24 @@ ERL_NIF_TERM enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc, ERL_NIF
 	/* Clear the high-bit. Better safe than sorry. */
 	bp[31] &= 0x7f;
 
-	if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
-		return nacl_error_tuple(env, "alloc_failed");
-	}
+	do
+	{
+		if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
+			result = nacl_error_tuple(env, "alloc_failed");
+			continue;
+		}
 
-	if (crypto_scalarmult_curve25519(output.data, secret.data, bp) < 0) {
-		return nacl_error_tuple(env, "scalarmult_curve25519_failed");
-	}
+		if (crypto_scalarmult_curve25519(output.data, secret.data, bp) < 0) {
+			result = nacl_error_tuple(env, "scalarmult_curve25519_failed");
+			continue;
+		}
 
-	return enif_make_binary(env, &output);
+		result = enif_make_binary(env, &output);
+	} while (0);
+
+	sodium_memzero(bp, crypto_scalarmult_curve25519_BYTES);
+
+	return result;
 }
 
 /* Public-key cryptography */
