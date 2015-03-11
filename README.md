@@ -54,6 +54,10 @@ In general, the primitives provided by NaCl are intermediate-level primitives. R
 
 # Versions
 
+### v0.12.1
+
+* Provide the `priv` directory for being able to properly build without manual intervention.
+
 ### v0.12.0
 
 * Introduce an extension interface for various necessary extensions to the eNaCl system for handling the Tor network, thanks to Alexander Færøy (ahf).
