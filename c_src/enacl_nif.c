@@ -1,5 +1,7 @@
 #include "erl_nif.h"
 
+#include <string.h>
+
 #include <sodium.h>
 
 #ifndef ERL_NIF_DIRTY_SCHEDULER_SUPPORT
