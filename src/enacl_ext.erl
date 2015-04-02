@@ -37,7 +37,7 @@ scramble_block_16(Block, Key) ->
 %%
 %% Generates and returns a new key pair for the Curve 25519 encryption scheme. The return value is a
 %% map in order to avoid using the public key as a secret key and vice versa.
-%% @end.
+%% @end
 -spec curve25519_keypair() -> #{ atom() => binary() }.
 curve25519_keypair() ->
 	<<B0:8/integer, B1:30/binary, B2:8/integer>> = enacl:randombytes(32),
