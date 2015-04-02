@@ -1,5 +1,7 @@
 #include "erl_nif.h"
 
+#include <string.h>
+
 #include <sodium.h>
 
 #ifndef ERL_NIF_DIRTY_SCHEDULER_SUPPORT
@@ -116,6 +118,80 @@ ERL_NIF_TERM enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc, ERL_NIF
 	sodium_memzero(bp, crypto_scalarmult_curve25519_BYTES);
 
 	return result;
+}
+
+/* Ed 25519 */
+static
+ERL_NIF_TERM enif_crypto_sign_ed25519_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary pk, sk;
+
+	if (argc != 0) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(crypto_sign_ed25519_PUBLICKEYBYTES, &pk)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	if (!enif_alloc_binary(crypto_sign_ed25519_SECRETKEYBYTES, &sk)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_sign_ed25519_keypair(pk.data, sk.data);
+
+	return enif_make_tuple2(env, enif_make_binary(env, &pk), enif_make_binary(env, &sk));
+}
+
+static
+ERL_NIF_TERM enif_crypto_sign_ed25519_public_to_curve25519(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary curve25519_pk, ed25519_pk;
+
+	if ((argc != 1)
+			|| (!enif_inspect_binary(env, argv[0], &ed25519_pk))
+			|| (ed25519_pk.size != crypto_sign_ed25519_PUBLICKEYBYTES)) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &curve25519_pk)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	if (crypto_sign_ed25519_pk_to_curve25519(curve25519_pk.data, ed25519_pk.data) != 0) {
+		return nacl_error_tuple(env, "ed25519_public_to_curve25519_failed");
+	}
+
+	return enif_make_binary(env, &curve25519_pk);
+}
+
+static
+ERL_NIF_TERM enif_crypto_sign_ed25519_secret_to_curve25519(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary curve25519_sk, ed25519_sk;
+
+	if ((argc != 1)
+			|| (!enif_inspect_binary(env, argv[0], &ed25519_sk))
+			|| (ed25519_sk.size != crypto_sign_ed25519_SECRETKEYBYTES)) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &curve25519_sk)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	if (crypto_sign_ed25519_sk_to_curve25519(curve25519_sk.data, ed25519_sk.data) != 0) {
+		return nacl_error_tuple(env, "ed25519_secret_to_curve25519_failed");
+	}
+
+	return enif_make_binary(env, &curve25519_sk);
+}
+
+static
+ERL_NIF_TERM enif_crypto_sign_ed25519_PUBLICKEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_sign_ed25519_PUBLICKEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_sign_ed25519_SECRETKEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_sign_ed25519_SECRETKEYBYTES);
 }
 
 /* Public-key cryptography */
@@ -846,6 +922,12 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_verify_32", 2, enif_crypto_verify_32},
 
 	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult},
+
+	{"crypto_sign_ed25519_keypair", 0, enif_crypto_sign_ed25519_keypair},
+	{"crypto_sign_ed25519_public_to_curve25519", 1, enif_crypto_sign_ed25519_public_to_curve25519},
+	{"crypto_sign_ed25519_secret_to_curve25519", 1, enif_crypto_sign_ed25519_secret_to_curve25519},
+	{"crypto_sign_ed25519_PUBLICKEYBYTES", 0, enif_crypto_sign_ed25519_PUBLICKEYBYTES},
+	{"crypto_sign_ed25519_SECRETKEYBYTES", 0, enif_crypto_sign_ed25519_SECRETKEYBYTES},
 
 	{"randombytes_b", 1, enif_randombytes},
 	{"randombytes", 1, enif_randombytes, ERL_NIF_DIRTY_JOB_CPU_BOUND},

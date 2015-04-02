@@ -65,6 +65,15 @@
 	curve25519_scalarmult/2
 ]).
 
+%% Ed 25519.
+-export([
+	crypto_sign_ed25519_keypair/0,
+	crypto_sign_ed25519_public_to_curve25519/1,
+	crypto_sign_ed25519_secret_to_curve25519/1,
+	crypto_sign_ed25519_public_size/0,
+	crypto_sign_ed25519_secret_size/0
+]).
+
 %% Low-level functions
 -export([
 	hash/1,
@@ -603,6 +612,40 @@ onetime_auth_key_size() -> enacl_nif:crypto_onetimeauth_KEYBYTES().
 -spec curve25519_scalarmult(Secret :: binary(), BasePoint :: binary()) -> binary().
 curve25519_scalarmult(Secret, BasePoint) ->
 	enacl_nif:crypto_curve25519_scalarmult(Secret, BasePoint).
+
+%% Ed 25519 Crypto
+%% ---------------
+%% @doc crypto_sign_ed25519_keypair/0 creates a new Ed 25519 Public/Secret keypair.
+%%
+%% Generates and returns a new key pair for the Ed 25519 signature scheme. The return value is a
+%% map in order to avoid using the public key as a secret key and vice versa.
+%% @end
+-spec crypto_sign_ed25519_keypair() -> #{ atom() => binary() }.
+crypto_sign_ed25519_keypair() ->
+	{PK, SK} = enacl_nif:crypto_sign_ed25519_keypair(),
+	#{ public => PK, secret => SK }.
+
+%% @doc crypto_sign_ed25519_public_to_curve25519/1 converts a given Ed 25519 public
+%% key to a Curve 25519 public key.
+%% @end
+-spec crypto_sign_ed25519_public_to_curve25519(PublicKey :: binary()) -> binary().
+crypto_sign_ed25519_public_to_curve25519(PublicKey) ->
+	enacl_nif:crypto_sign_ed25519_public_to_curve25519(PublicKey).
+
+%% @doc crypto_sign_ed25519_secret_to_curve25519/1 converts a given Ed 25519 secret
+%% key to a Curve 25519 secret key.
+%% @end
+-spec crypto_sign_ed25519_secret_to_curve25519(SecretKey :: binary()) -> binary().
+crypto_sign_ed25519_secret_to_curve25519(SecretKey) ->
+	enacl_nif:crypto_sign_ed25519_secret_to_curve25519(SecretKey).
+
+-spec crypto_sign_ed25519_public_size() -> pos_integer().
+crypto_sign_ed25519_public_size() ->
+	enacl_nif:crypto_sign_ed25519_PUBLICKEYBYTES().
+
+-spec crypto_sign_ed25519_secret_size() -> pos_integer().
+crypto_sign_ed25519_secret_size() ->
+	enacl_nif:crypto_sign_ed25519_SECRETKEYBYTES().
 
 %% Obtaining random bytes
 
