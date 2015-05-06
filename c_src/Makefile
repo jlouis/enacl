@@ -19,8 +19,9 @@ ifeq ($(UNAME_SYS), Darwin)
 	LDFLAGS ?= -arch x86_64 -flat_namespace -undefined suppress
 else ifeq ($(UNAME_SYS), FreeBSD)
 	CC ?= cc
-	CFLAGS ?= -O3 -std=c99 -finline-functions -Wall -Wmissing-prototypes
+	CFLAGS ?= -O3 -std=c99 -finline-functions -Wall -Wmissing-prototypes -I /usr/local/include
 	CXXFLAGS ?= -O3 -finline-functions -Wall
+	LDFLAGS ?= -fPIC -L /usr/local/lib
 else ifeq ($(UNAME_SYS), Linux)
 	CC ?= gcc
 	CFLAGS ?= -O3 -std=c99 -finline-functions -Wall -Wmissing-prototypes
