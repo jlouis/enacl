@@ -785,7 +785,7 @@ ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[
 }
 
 /* Various other helper functions */
-
+static
 void uint64_pack(unsigned char *y, ErlNifUInt64 x)
 {
 	*y++ = x; x >>= 8;
@@ -798,8 +798,8 @@ void uint64_pack(unsigned char *y, ErlNifUInt64 x)
 	*y++ = x; x >>= 8;
 }
 
-ErlNifUInt64
-uint64_unpack(const unsigned char *x)
+static
+ErlNifUInt64 uint64_unpack(const unsigned char *x)
 {
 	ErlNifUInt64 result;
 
@@ -814,8 +814,8 @@ uint64_unpack(const unsigned char *x)
 	return result;
 }
 
-int
-crypto_block(unsigned char *out, const unsigned char *in, const unsigned char *k)
+static
+int crypto_block(unsigned char *out, const unsigned char *in, const unsigned char *k)
 {
 	ErlNifUInt64 v0 = uint64_unpack(in + 0);
 	ErlNifUInt64 v1 = uint64_unpack(in + 8);
