@@ -54,6 +54,12 @@ In general, the primitives provided by NaCl are intermediate-level primitives. R
 
 # Versions
 
+### v0.13.0
+
+* Quell warnings from the C code
+* Add Ed 25519 utility API (Alexander Færøy)
+* Add FreeBSD support for the NIF compilation (Ricardo Lanziano)
+
 ### v0.12.1
 
 * Provide the `priv` directory for being able to properly build without manual intervention.
