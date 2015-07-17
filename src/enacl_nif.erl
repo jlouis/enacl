@@ -31,7 +31,11 @@
 	crypto_sign_b/2,
 	crypto_sign_keypair/0,
 	crypto_sign_open/2,
-	crypto_sign_open_b/2
+	crypto_sign_open_b/2,
+
+        crypto_sign_detached/2,
+        crypto_sign_verify_detached/3
+
 ]).
 
 %% Secret key crypto
@@ -143,6 +147,9 @@ crypto_sign(_M, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_b(_M, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_open(_SignedMessage, _PK) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_open_b(_SignedMessage, _PK) -> erlang:nif_error(nif_not_loaded).
+
+crypto_sign_detached(_M, _SK) -> erlang:nif_error(nif_not_loaded).
+crypto_sign_verify_detached(_SIG, _M, _PK) -> erlang:nif_error(nif_not_loaded).
 
 crypto_secretbox_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_secretbox_ZEROBYTES() -> erlang:nif_error(nif_not_loaded).

@@ -29,12 +29,14 @@
 	box_public_key_bytes/0,
 	box_secret_key_bytes/0,
 	box_beforenm_bytes/0,
-	
+
 	sign_keypair_public_size/0,
 	sign_keypair_secret_size/0,
 	sign_keypair/0,
 	sign/2,
-	sign_open/2
+	sign_open/2,
+        sign_detached/2,
+        sign_verify_detached/3
 ]).
 
 %% Secret key crypto
@@ -251,7 +253,7 @@ box_beforenm(PK, SK) ->
     R = enacl_nif:crypto_box_beforenm(PK, SK),
     erlang:bump_reductions(?BOX_BEFORENM_REDUCTIONS),
     R.
-    
+
 %% @doc box_afternm/3 works like `box/4' but uses a precomputed key
 %%
 %% Calling `box_afternm(M, Nonce, K)' for a precomputed key `K = box_beforenm(PK, SK)' works exactly as
@@ -323,7 +325,7 @@ box_beforenm_bytes() ->
 %% @private
 sign_keypair_public_size() ->
     enacl_nif:crypto_sign_PUBLICKEYBYTES().
-    
+
 %% @private
 sign_keypair_secret_size() ->
     enacl_nif:crypto_sign_SECRETKEYBYTES().
@@ -380,6 +382,29 @@ sign_open(SM, PK) ->
           end
     end.
 
+%% @doc sign_detached/2 computes a digital signature given a message and a secret key.
+%%
+%% Given a message `M' and a secret key `SK' the function will compute the digital signature `DS'.
+%% @end
+-spec sign_detached(M, SK) -> DS
+  when
+    M  :: iodata(),
+    SK :: binary(),
+    DS :: binary().
+sign_detached(M, SK) -> enacl_nif:crypto_sign_detached(M, SK).
+
+%% @doc sign_verify_detached/3 verifies the given signature against the given
+%% message for the given public key.
+%%
+%% Given a signature `SIG', a message `M', and a public key `PK', the function computes
+%% true iff the `SIG' is valid for `M' and `PK'.
+-spec sign_verify_detached(SIG, M, PK) -> boolean()
+  when
+    SIG :: binary(),
+    M   :: iodata(),
+    PK  :: binary().
+sign_verify_detached(SIG, M, PK) -> enacl_nif:crypto_sign_verify_detached(SIG, M, PK).
+
 %% @private
 -spec box_secret_key_bytes() -> pos_integer().
 box_secret_key_bytes() ->
@@ -433,7 +458,7 @@ secretbox_open(CipherText, Nonce, Key) ->
               Bin when is_binary(Bin) -> {ok, Bin}
           end
    end.
-       
+
 %% @doc secretbox_nonce_size/0 returns the size of the secretbox nonce
 %%
 %% When encrypting with a secretbox, the nonce must have this size
