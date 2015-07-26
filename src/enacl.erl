@@ -398,12 +398,16 @@ sign_detached(M, SK) -> enacl_nif:crypto_sign_detached(M, SK).
 %%
 %% Given a signature `SIG', a message `M', and a public key `PK', the function computes
 %% true iff the `SIG' is valid for `M' and `PK'.
--spec sign_verify_detached(SIG, M, PK) -> boolean()
+-spec sign_verify_detached(SIG, M, PK) -> {ok, M} | {error, failed_verification}
   when
     SIG :: binary(),
     M   :: iodata(),
     PK  :: binary().
-sign_verify_detached(SIG, M, PK) -> enacl_nif:crypto_sign_verify_detached(SIG, M, PK).
+sign_verify_detached(SIG, M, PK) ->
+    case enacl_nif:crypto_sign_verify_detached(SIG, M, PK) of
+        true  -> {ok, M};
+        false -> {error, failed_verification}
+    end.
 
 %% @private
 -spec box_secret_key_bytes() -> pos_integer().

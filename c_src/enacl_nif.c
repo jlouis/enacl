@@ -522,7 +522,7 @@ ERL_NIF_TERM enif_crypto_sign_detached(ErlNifEnv* env, int argc, ERL_NIF_TERM co
 
         crypto_sign_detached(sig.data, &siglen, m.data, m.size, sk.data);
 
-        return enif_make_sub_binary(env, enif_make_binary(env, &sig), 0, siglen);
+        return enif_make_binary(env, &sig);
 }
 
 /*
@@ -955,8 +955,8 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_sign_open_b", 2, enif_crypto_sign_open},
 	{"crypto_sign_open", 2, enif_crypto_sign_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
-        {"crypto_sign_detached", 2, enif_crypto_sign_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-        {"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+    {"crypto_sign_detached", 2, enif_crypto_sign_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+    {"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_secretbox_NONCEBYTES", 0, enif_crypto_secretbox_NONCEBYTES},
 	{"crypto_secretbox_ZEROBYTES", 0, enif_crypto_secretbox_ZEROBYTES},
