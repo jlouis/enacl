@@ -2,6 +2,13 @@
 -include_lib("eqc/include/eqc.hrl").
 -compile(export_all).
 
+%% dummy test property
+prop_append() ->
+    ?FORALL({Xs,Ys},{list(int()),list(int())},
+            lists:reverse(Xs++Ys)
+            ==
+            lists:reverse(Ys) ++ lists:reverse(Xs)).
+
 non_byte_int() ->
     oneof([
         ?LET(N, nat(), -(N+1)),
@@ -10,7 +17,7 @@ non_byte_int() ->
 
 g_iolist() ->
     ?SIZED(Sz, g_iolist(Sz)).
-    
+
 g_iolist(0) ->
     fault(
         oneof([
@@ -30,7 +37,7 @@ g_iolist(N) ->
             {1, g_iolist(0)},
             {N, ?LAZY(list(oneof([char(), binary(), g_iolist(N div 4)])))}
         ])).
-                    
+
 g_iodata() ->
     fault(
       oneof([elements([a,b,c]), real()]),
@@ -60,12 +67,12 @@ g_binary_bad(Sz) ->
         {1, int()},
         {1, g_iodata()}
     ]).
-    
+
 v_binary(Sz, N) when is_binary(N) ->
     byte_size(N) == Sz;
 v_binary(_, _) -> false.
 
-                  
+
 %% Typical generators based on the binaries
 nonce() -> g_binary(enacl:box_nonce_size()).
 nonce_valid(N) -> v_binary(enacl:box_nonce_size(), N).
@@ -73,7 +80,7 @@ nonce_valid(N) -> v_binary(enacl:box_nonce_size(), N).
 %% Generator of natural numbers
 g_nat() ->
     fault(g_nat_bad(), nat()).
-    
+
 g_nat_bad() ->
     oneof([
         elements([a,b,c]),
@@ -242,7 +249,7 @@ prop_afternm_correct() ->
                   end
           end
       end).
-                  
+
 %% SIGNATURES
 %% ----------
 
@@ -279,12 +286,12 @@ sign_keypair_public_valid(#{ public := Public })
   when is_binary(Public) ->
     byte_size(Public) == enacl:sign_keypair_public_size();
 sign_keypair_public_valid(_) -> false.
-    
+
 sign_keypair_secret_valid(#{ secret := Secret })
   when is_binary(Secret) ->
     byte_size(Secret) == enacl:sign_keypair_secret_size();
 sign_keypair_secret_valid(_) -> false.
-    
+
 sign_keypair_valid(KP) ->
   sign_keypair_public_valid(KP) andalso sign_keypair_secret_valid(KP).
 
@@ -340,7 +347,7 @@ prop_sign_open() ->
               false ->
                   badargs(fun() -> enacl:sign_open(SignMsg, PK) end)
           end)).
-     
+
 %% CRYPTO SECRET BOX
 %% -------------------------------
 
@@ -667,3 +674,32 @@ badargs(Thunk) ->
   catch
     error:badarg -> true
   end.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Joel Test Blobs
+
+test_basic_signing() ->
+  #{ public := PK0, secret := SK0 } = enacl:sign_keypair(),
+  #{ public := PK1, secret := SK1 } = enacl:sign_keypair(),
+  MSG0 = <<"This is super s3Kr3t, srsly!">>,
+  [
+    %% (+) Sign and open using valid keypair
+    case enacl:sign_open(enacl:sign(MSG0, SK0), PK0) of
+        {ok,MSG1} -> MSG0==MSG1;
+        _         -> false
+    end
+  , %% (-) Sign and open using invalid keypair
+    case enacl:sign_open(enacl:sign(MSG0, SK0), PK1) of
+        {error,failed_verification} -> true;
+        _                           -> false
+    end
+  , %% (+) Detached mode sig and verify
+    { enacl:sign_verify_detached(enacl:sign_detached(MSG0, SK0), MSG0, PK0)
+    , enacl:sign_verify_detached(enacl:sign_detached(MSG0, SK1), MSG0, PK1)
+    }
+  , %% (-) Incorrect sigs/PKs/messages given during verify
+    { false == enacl:sign_verify_detached(enacl:sign_detached(MSG0, SK0), MSG0, PK1)
+    , false == enacl:sign_verify_detached(enacl:sign_detached(MSG0, SK1), MSG0, PK0)
+    , false == enacl:sign_verify_detached(enacl:sign_detached(MSG0, SK0), <<"bzzt">>, PK0)
+    }
+  ].
