@@ -35,8 +35,11 @@
 	sign_keypair/0,
 	sign/2,
 	sign_open/2,
-        sign_detached/2,
-        sign_verify_detached/3
+	sign_detached/2,
+	sign_verify_detached/3,
+
+	seal_box/2,
+	seal_box_open/3
 ]).
 
 %% Secret key crypto
@@ -195,6 +198,7 @@ verify_32(_, _) -> error(badarg).
 box_keypair() ->
 	{PK, SK} = enacl_nif:crypto_box_keypair(),
 	#{ public => PK, secret => SK}.
+
 
 %% @doc box/4 encrypts+authenticates a message to another party.
 %%
@@ -413,6 +417,33 @@ sign_verify_detached(SIG, M, PK) ->
 -spec box_secret_key_bytes() -> pos_integer().
 box_secret_key_bytes() ->
 	enacl_nif:crypto_box_SECRETKEYBYTES().
+
+%% @doc seal_box/2 encrypts an anonymous message to another party.
+%%
+%% Encrypt a `Msg' to a party using his public key, `PK'. This generates an ephemeral
+%% keypair and then uses `box'. Ephemeral public key will sent to other party. Returns the 
+%% enciphered message `SealedCipherText' which includes ephemeral public key at head.
+%% @end
+-spec seal_box(Msg, PK) -> SealedCipherText
+  when Msg :: iodata(),
+       PK :: binary(),
+       SealedCipherText :: binary().
+seal_box(Msg, PK) ->
+      enacl_nif:crypto_box_seal(Msg, PK).
+
+%% @doc seal_box_open/3 decrypts+check message integrity from an unknown sender.
+%%
+%% Decrypt a `SealedCipherText' which contains an ephemeral public key from another party
+%% into a `Msg' using that key and your public and secret keys, `PK' and `SK'. Returns the
+%% plaintext message.
+%% @end
+-spec seal_box_open(SealedCipherText, PK, SK) -> {ok, Msg} | {error, failed_verification}
+  when SealedCipherText :: iodata(),
+      PK :: binary(),
+      SK :: binary(),
+      Msg :: binary().
+seal_box_open(SealedCipherText, PK, SK) ->
+  enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK).
 
 %% @doc secretbox/3 encrypts a message with a key
 %%
