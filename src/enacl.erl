@@ -429,8 +429,8 @@ box_secret_key_bytes() ->
        PK :: binary(),
        SealedCipherText :: binary().
 seal_box(Msg, PK) ->
-      enacl_nif:crypto_box_seal(Msg, PK).
-
+  enacl_nif:crypto_box_seal(Msg, PK).
+ 
 %% @doc seal_box_open/3 decrypts+check message integrity from an unknown sender.
 %%
 %% Decrypt a `SealedCipherText' which contains an ephemeral public key from another party
@@ -443,7 +443,10 @@ seal_box(Msg, PK) ->
       SK :: binary(),
       Msg :: binary().
 seal_box_open(SealedCipherText, PK, SK) ->
-  enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK).
+  case enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK) of
+    {error, Err} -> {error, Err};
+    Bin when is_binary(Bin) -> Bin
+  end.
 
 %% @doc secretbox/3 encrypts a message with a key
 %%
