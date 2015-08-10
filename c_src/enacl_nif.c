@@ -554,6 +554,71 @@ ERL_NIF_TERM enif_crypto_sign_verify_detached(ErlNifEnv* env, int argc, ERL_NIF_
         }
 }
 
+/* Sealed box functions */
+
+static
+ERL_NIF_TERM enif_crypto_box_SEALBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_box_SEALBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_box_seal(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary key, msg, ciphertext;
+
+	if (
+	  (argc != 2) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &msg)) ||
+	  (!enif_inspect_binary(env, argv[1], &key))) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(msg.size + crypto_box_SEALBYTES, &ciphertext)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_box_seal(
+	  ciphertext.data,
+	  msg.data,
+	  msg.size,
+	  key.data);
+
+	return enif_make_binary(env, &ciphertext);
+}
+
+
+static
+ERL_NIF_TERM enif_crypto_box_seal_open(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary pk, sk, ciphertext, msg;
+
+	if (
+	  (argc != 3) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &ciphertext)) ||
+	  (!enif_inspect_binary(env, argv[1], &pk)) ||
+	  (!enif_inspect_binary(env, argv[2], &sk))) {
+		return enif_make_badarg(env);
+	}
+
+	if (ciphertext.size <= crypto_box_SEALBYTES) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(ciphertext.size - crypto_box_SEALBYTES, &msg)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	if (crypto_box_seal_open(
+	    msg.data,
+	    ciphertext.data,
+	    ciphertext.size,
+	    pk.data,
+	    sk.data) != 0) {
+		enif_release_binary(&msg);
+		return nacl_error_tuple(env, "failed_verification");
+	}
+
+	return enif_make_binary(env, &msg);
+}
+
 /* Secret key cryptography */
 
 static
@@ -957,6 +1022,10 @@ static ErlNifFunc nif_funcs[] = {
 
     {"crypto_sign_detached", 2, enif_crypto_sign_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
     {"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
+	{"crypto_box_SEALBYTES", 0, enif_crypto_box_SEALBYTES},
+	{"crypto_box_seal", 2, enif_crypto_box_seal, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_box_seal_open", 3, enif_crypto_box_seal_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_secretbox_NONCEBYTES", 0, enif_crypto_secretbox_NONCEBYTES},
 	{"crypto_secretbox_ZEROBYTES", 0, enif_crypto_secretbox_ZEROBYTES},
