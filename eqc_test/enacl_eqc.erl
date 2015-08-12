@@ -2,13 +2,6 @@
 -include_lib("eqc/include/eqc.hrl").
 -compile(export_all).
 
-%% dummy test property
-prop_append() ->
-    ?FORALL({Xs,Ys},{list(int()),list(int())},
-            lists:reverse(Xs++Ys)
-            ==
-            lists:reverse(Ys) ++ lists:reverse(Xs)).
-
 non_byte_int() ->
     oneof([
         ?LET(N, nat(), -(N+1)),
@@ -295,6 +288,22 @@ sign_keypair_secret_valid(_) -> false.
 sign_keypair_valid(KP) ->
   sign_keypair_public_valid(KP) andalso sign_keypair_secret_valid(KP).
 
+prop_sign_detached() ->
+    ?FORALL({Msg, KeyPair},
+        {fault_rate(1, 40, g_iodata()),
+         fault_rate(1, 40, sign_keypair())},
+      begin
+          case v_iodata(Msg) andalso sign_keypair_secret_valid(KeyPair) of
+            true ->
+                #{ secret := Secret } = KeyPair,
+                enacl:sign_detached(Msg, Secret),
+                true;
+            false ->
+                #{ secret := Secret } = KeyPair,
+                badargs(fun() -> enacl:sign_detached(Msg, Secret) end)
+          end
+      end).
+
 prop_sign() ->
     ?FORALL({Msg, KeyPair},
           {fault_rate(1, 40, g_iodata()),
@@ -322,16 +331,49 @@ signed_message_good(M) ->
                  pk -> {{invalid, SM}, binary(byte_size(PK))}
                end)}]).
 
+signed_message_good_d(M) ->
+    #{ public := PK, secret := SK} = enacl:sign_keypair(),
+    Sig = enacl:sign_detached(M, SK),
+    frequency([
+        {3, return({{valid, Sig}, PK})},
+        {1, ?LET(X, elements([sm, pk]),
+               case X of
+                 sm -> {{invalid, binary(byte_size(Sig))}, PK};
+                 pk -> {{invalid, Sig}, binary(byte_size(PK))}
+               end)}]).
+
 signed_message_bad() ->
+    Sz = enacl:sign_keypair_public_size(),
+    {binary(), oneof([a, int(), ?SUCHTHAT(B, binary(Sz), byte_size(B) /= Sz)])}.
+
+signed_message_bad_d() ->
     Sz = enacl:sign_keypair_public_size(),
     {binary(), oneof([a, int(), ?SUCHTHAT(B, binary(Sz), byte_size(B) /= Sz)])}.
 
 signed_message(M) ->
     fault(signed_message_bad(), signed_message_good(M)).
 
+signed_message_d(M) ->
+    fault(signed_message_bad(), signed_message_good(M)).
+
 signed_message_valid({valid, _}, _) -> true;
 signed_message_valid({invalid, _}, _) -> true;
 signed_message_valid(_, _) -> false.
+
+prop_sign_detached_open() ->
+    ?FORALL(Msg, g_iodata(),
+      ?FORALL({SignMsg, PK}, signed_message_d(Msg),
+          case v_iodata(Msg) andalso signed_message_valid(SignMsg, PK) of
+              true ->
+                  case SignMsg of
+                    {valid, Sig} ->
+                        equals({ok, Msg}, enacl:sign_verify_detached(Sig, Msg, PK));
+                    {invalid, Sig} ->
+                        equals({error, failed_verification}, enacl:sign_verify_detached(Sig, Msg, PK))
+                  end;
+              false ->
+                  badargs(fun() -> enacl:sign_verify_detached(SignMsg, Msg, PK) end)
+          end)).
 
 prop_sign_open() ->
     ?FORALL(Msg, g_iodata(),

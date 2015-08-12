@@ -1020,8 +1020,11 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_sign_open_b", 2, enif_crypto_sign_open},
 	{"crypto_sign_open", 2, enif_crypto_sign_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
-    {"crypto_sign_detached", 2, enif_crypto_sign_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-    {"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
+	{"crypto_sign_detached_b", 2, enif_crypto_sign_detached},
+	{"crypto_sign_detached", 2, enif_crypto_sign_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_sign_verify_detached_b", 3, enif_crypto_sign_verify_detached},
+	{"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_box_SEALBYTES", 0, enif_crypto_box_SEALBYTES},
 	{"crypto_box_seal", 2, enif_crypto_box_seal, ERL_NIF_DIRTY_JOB_CPU_BOUND},
