@@ -54,6 +54,13 @@ In general, the primitives provided by NaCl are intermediate-level primitives. R
 
 # Versions
 
+### v0.14.0
+
+* Add support for libsodiums `box_seal` functions (Amir Ghassemi Nasr)
+* Add support for libsodiums `crypto_sign_detached` (Joel Stanley, Parnell Springmeyer)
+* Switch the tag names to the form `0.14.0` rather than `v0.14.0`. For this release both tags are present, but
+  from the next release on, it won't be the case.
+
 ### v0.13.0
 
 * Quell warnings from the C code
