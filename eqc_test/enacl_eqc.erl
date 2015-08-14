@@ -129,6 +129,20 @@ box(Msg, Nonce , PK, SK) ->
         error:badarg -> badarg
     end.
 
+box_seal(Msg, PK) ->
+    try
+        enacl:box_seal(Msg, PK)
+    catch
+       error:badarg -> badarg
+    end.
+
+box_seal_open(Cph, PK, SK) ->
+    try
+        enacl:box_seal_open(Cph, PK, SK)
+    catch
+        error:badarg -> badarg
+    end.
+
 box_open(CphText, Nonce, PK, SK) ->
     try
         enacl:box_open(CphText, Nonce, PK, SK)
@@ -137,7 +151,8 @@ box_open(CphText, Nonce, PK, SK) ->
     end.
 
 failure(badarg) -> true;
-failure(_) -> false.
+failure({error, failed_verification}) -> true;
+failure(X) -> {failure, X}.
 
 prop_box_correct() ->
     ?FORALL({Msg, Nonce, {PK1, SK1}, {PK2, SK2}},
@@ -188,6 +203,41 @@ prop_box_failure_integrity() ->
                     end
             end
         end).
+        
+prop_seal_box_failure_integrity() ->
+    ?FORALL({Msg, {PK1, SK1}}, {fault_rate(1,40,g_iodata()), fault_rate(1,40,keypair())},
+      begin
+         case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
+           true ->
+             CT = enacl:box_seal(Msg, PK1),
+             Err = enacl:box_seal_open([<<"x">>, CT], PK1, SK1),
+             equals(Err, {error, failed_verification});
+           false ->
+             case box_seal(Msg, PK1) of
+                 badarg -> true;
+                 Res ->
+                    failure(box_seal_open(Res, PK1, SK1))
+            end
+        end
+    end).
+
+prop_seal_box_correct() ->
+    ?FORALL({Msg, {PK1, SK1}},
+        {fault_rate(1, 40, g_iodata()),
+         fault_rate(1, 40, keypair())},
+     begin
+         case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
+             true ->
+                 SealedCipherText = enacl:box_seal(Msg, PK1),
+                 {ok, DecodedMsg} = enacl:box_seal_open(SealedCipherText, PK1, SK1),
+                 equals(iolist_to_binary(Msg), DecodedMsg);
+             false ->
+                case box_seal(Msg, PK1) of
+                    badarg -> true;
+                    Res -> failure(box_seal_open(Res, PK1, SK1))
+                end
+         end
+     end).
 
 %% PRECOMPUTATIONS
 beforenm_key() ->

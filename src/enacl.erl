@@ -38,8 +38,8 @@
 	sign_detached/2,
 	sign_verify_detached/3,
 
-	seal_box/2,
-	seal_box_open/3
+	box_seal/2,
+	box_seal_open/3
 ]).
 
 %% Secret key crypto
@@ -436,12 +436,17 @@ box_secret_key_bytes() ->
 %% keypair and then uses `box'. Ephemeral public key will sent to other party. Returns the 
 %% enciphered message `SealedCipherText' which includes ephemeral public key at head.
 %% @end
--spec seal_box(Msg, PK) -> SealedCipherText
+-spec box_seal(Msg, PK) -> SealedCipherText
   when Msg :: iodata(),
        PK :: binary(),
        SealedCipherText :: binary().
-seal_box(Msg, PK) ->
-  enacl_nif:crypto_box_seal(Msg, PK).
+box_seal(Msg, PK) ->
+    case iolist_size(Msg) of
+        K when K =< ?BOX_SIZE ->
+          bump(enacl_nif:crypto_box_seal_b(Msg, PK), ?BOX_REDUCTIONS, ?BOX_SIZE, K);
+        _ ->
+          enacl_nif:crypto_box_seal(Msg, PK)
+    end.
  
 %% @doc seal_box_open/3 decrypts+check message integrity from an unknown sender.
 %%
@@ -449,16 +454,25 @@ seal_box(Msg, PK) ->
 %% into a `Msg' using that key and your public and secret keys, `PK' and `SK'. Returns the
 %% plaintext message.
 %% @end
--spec seal_box_open(SealedCipherText, PK, SK) -> {ok, Msg} | {error, failed_verification}
+-spec box_seal_open(SealedCipherText, PK, SK) -> {ok, Msg} | {error, failed_verification}
   when SealedCipherText :: iodata(),
       PK :: binary(),
       SK :: binary(),
       Msg :: binary().
-seal_box_open(SealedCipherText, PK, SK) ->
-  case enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK) of
-    {error, Err} -> {error, Err};
-    Bin when is_binary(Bin) -> Bin
-  end.
+box_seal_open(SealedCipherText, PK, SK) ->
+    case iolist_size(SealedCipherText) of
+        K when K =< ?BOX_SIZE ->
+            R = case enacl_nif:crypto_box_seal_open_b(SealedCipherText, PK, SK) of
+                {error, Err} -> {error, Err};
+                Bin when is_binary(Bin) -> {ok, Bin}
+            end,
+            bump(R, ?BOX_REDUCTIONS, ?BOX_SIZE, K);
+        _ ->
+            case enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK) of
+                {error, Err} -> {error, Err};
+                Bin when is_binary(Bin) -> {ok, Bin}
+            end
+    end.
 
 %% @doc secretbox/3 encrypts a message with a key
 %%

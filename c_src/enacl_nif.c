@@ -598,7 +598,7 @@ ERL_NIF_TERM enif_crypto_box_seal_open(ErlNifEnv *env, int argc, ERL_NIF_TERM co
 		return enif_make_badarg(env);
 	}
 
-	if (ciphertext.size <= crypto_box_SEALBYTES) {
+	if (ciphertext.size < crypto_box_SEALBYTES) {
 		return enif_make_badarg(env);
 	}
 
@@ -1027,7 +1027,10 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_box_SEALBYTES", 0, enif_crypto_box_SEALBYTES},
+
+	{"crypto_box_seal_b", 2, enif_crypto_box_seal},
 	{"crypto_box_seal", 2, enif_crypto_box_seal, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_box_seal_open_b", 3, enif_crypto_box_seal_open},
 	{"crypto_box_seal_open", 3, enif_crypto_box_seal_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_secretbox_NONCEBYTES", 0, enif_crypto_secretbox_NONCEBYTES},
