@@ -11,3 +11,4 @@ doc/edoc-info
 doc/*.html
 doc/*.png
 doc/*.css
+_build
