@@ -91,18 +91,15 @@
 	randombytes/1
 ]).
 
-%% Other helper functions
 -export([
-	reds/1
+	verify/0
 ]).
 
 %% Definitions of system budgets
 %% To get a grip for these, call `enacl_timing:all/0' on your system. The numbers here are
 %% described in the README.md file.
--define(HASH_SIZE, 32 * 1024).
--define(HASH_REDUCTIONS, 104 * 2).
--define(BOX_SIZE, 32 * 1024).
--define(BOX_REDUCTIONS, 115 * 2).
+-define(HASH_SIZE, 4 * 1024).
+-define(HASH_REDUCTIONS, 66).
 -define(BOX_BEFORENM_REDUCTIONS, 60).
 -define(BOX_AFTERNM_SIZE, 64 * 1024).
 -define(BOX_AFTERNM_REDUCTIONS, 110 * 2).
@@ -118,29 +115,37 @@
 -define(ONETIME_AUTH_SIZE, 128 * 1024).
 -define(ONETIME_AUTH_REDUCTIONS, 105 * 2).
 -define(RANDOMBYTES_SIZE, 1024).
--define(RANDOMBYTES_REDUCTIONS, 200).
+-define(RANDOMBYTES_REDUCTIONS, 66).
 
-%% @doc reds/1 counts the number of reductions and scheduler yields for a thunk
-%%
-%% Count reductions and number of scheduler yields for Fun. Fun is assumed
-%% to be one of the above exor variants.
-%% @end
--spec reds(fun (() -> any())) -> #{ atom() => any() }.
-reds(Fun) ->
-    Parent = self(),
-    Pid = spawn(fun() ->
-                        Self = self(),
-                        Start = os:timestamp(),
-                        R0 = process_info(Self, reductions),
-                        Fun(),
-                        R1 = process_info(Self, reductions),
-                        T = timer:now_diff(os:timestamp(), Start),
-                        Parent ! {Self,#{ time_diff => T, after_reductions => R1, before_reductions => R0}}
-                    end),
-    receive
-        {Pid,Result} ->
-            Result
+%% Constants used throughout the code base
+-define(CRYPTO_BOX_ZEROBYTES, 32).
+-define(P_ZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>). %% 32 bytes of 0
+-define(CRYPTO_BOX_BOXZEROBYTES, 16).
+-define(P_BOXZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>).
+
+-define(CRYPTO_STREAM_KEYBYTES, 32).
+-define(CRYPTO_STREAM_NONCEBYTES, 24).
+
+%% @doc Verify makes sure the constants defined in libsodium matches ours
+verify() ->
+    true = equals(binary:copy(<<0>>, enacl_nif:crypto_box_ZEROBYTES()), ?P_ZEROBYTES),
+    true = equals(binary:copy(<<0>>, enacl_nif:crypto_box_BOXZEROBYTES()), ?P_BOXZEROBYTES),
+    Verifiers = [
+        {crypto_stream_KEYBYTES, ?CRYPTO_STREAM_KEYBYTES},
+        {crypto_stream_NONCEBYTES, ?CRYPTO_STREAM_NONCEBYTES},
+        {crypto_box_ZEROBYTES, ?CRYPTO_BOX_ZEROBYTES},
+        {crypto_box_BOXZEROBYTES, ?CRYPTO_BOX_BOXZEROBYTES}],
+    run_verifiers(Verifiers).
+    
+run_verifiers([]) -> ok;
+run_verifiers([{V, R} | Vs]) ->
+    case enacl_nif:V() of
+        R -> run_verifiers(Vs);
+        Other -> {error, {verifier, V, {R, '/=', Other}}}
     end.
+
+equals(X,X) -> true;
+equals(X,Y) -> {X, '/=', Y}.
 
 %% Low level helper functions
 %% -----------------
@@ -212,12 +217,7 @@ box_keypair() ->
        SK :: binary(),
        CipherText :: binary().
 box(Msg, Nonce, PK, SK) ->
-    case iolist_size(Msg) of
-        K when K =< ?BOX_SIZE ->
-            bump(enacl_nif:crypto_box_b([p_zerobytes(), Msg], Nonce, PK, SK), ?BOX_REDUCTIONS, ?BOX_SIZE, K);
-        _ ->
-            enacl_nif:crypto_box([p_zerobytes(), Msg], Nonce, PK, SK)
-    end.
+    enacl_nif:crypto_box([?P_ZEROBYTES, Msg], Nonce, PK, SK).
 
 %% @doc box_open/4 decrypts+verifies a message from another party.
 %%
@@ -232,19 +232,9 @@ box(Msg, Nonce, PK, SK) ->
        SK :: binary(),
        Msg :: binary().
 box_open(CipherText, Nonce, PK, SK) ->
-    case iolist_size(CipherText) of
-        K when K =< ?BOX_SIZE ->
-           R =
-            case enacl_nif:crypto_box_open_b([p_box_zerobytes(), CipherText], Nonce, PK, SK) of
-              {error, Err} -> {error, Err};
-              Bin when is_binary(Bin) -> {ok, Bin}
-            end,
-           bump(R, ?BOX_REDUCTIONS, ?BOX_SIZE, K);
-        _ ->
-            case enacl_nif:crypto_box_open([p_box_zerobytes(), CipherText], Nonce, PK, SK) of
-              {error, Err} -> {error, Err};
-              Bin when is_binary(Bin) -> {ok, Bin}
-            end
+    case enacl_nif:crypto_box_open([?P_BOXZEROBYTES, CipherText], Nonce, PK, SK) of
+        {error, Err} -> {error, Err};
+        Bin when is_binary(Bin) -> {ok, Bin}
     end.
 
 %% @doc box_beforenm/2 precomputes a box shared key for a PK/SK keypair
@@ -441,12 +431,7 @@ box_secret_key_bytes() ->
        PK :: binary(),
        SealedCipherText :: binary().
 box_seal(Msg, PK) ->
-    case iolist_size(Msg) of
-        K when K =< ?BOX_SIZE ->
-          bump(enacl_nif:crypto_box_seal_b(Msg, PK), ?BOX_REDUCTIONS, ?BOX_SIZE, K);
-        _ ->
-          enacl_nif:crypto_box_seal(Msg, PK)
-    end.
+    enacl_nif:crypto_box_seal(Msg, PK).
  
 %% @doc seal_box_open/3 decrypts+check message integrity from an unknown sender.
 %%
@@ -460,18 +445,9 @@ box_seal(Msg, PK) ->
       SK :: binary(),
       Msg :: binary().
 box_seal_open(SealedCipherText, PK, SK) ->
-    case iolist_size(SealedCipherText) of
-        K when K =< ?BOX_SIZE ->
-            R = case enacl_nif:crypto_box_seal_open_b(SealedCipherText, PK, SK) of
-                {error, Err} -> {error, Err};
-                Bin when is_binary(Bin) -> {ok, Bin}
-            end,
-            bump(R, ?BOX_REDUCTIONS, ?BOX_SIZE, K);
-        _ ->
-            case enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK) of
-                {error, Err} -> {error, Err};
-                Bin when is_binary(Bin) -> {ok, Bin}
-            end
+    case enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK) of
+        {error, Err} -> {error, Err};
+        Bin when is_binary(Bin) -> {ok, Bin}
     end.
 
 %% @doc secretbox/3 encrypts a message with a key
@@ -540,12 +516,12 @@ secretbox_key_size() ->
 %% @doc stream_nonce_size/0 returns the byte size of the nonce for streams
 %% @end
 -spec stream_nonce_size() -> pos_integer().
-stream_nonce_size() -> enacl_nif:crypto_stream_NONCEBYTES().
+stream_nonce_size() -> ?CRYPTO_STREAM_NONCEBYTES.
 
 %% @doc stream_key_size/0 returns the byte size of the key for streams
 %% @end
 -spec stream_key_size() -> pos_integer().
-stream_key_size() -> enacl_nif:crypto_stream_KEYBYTES().
+stream_key_size() -> ?CRYPTO_STREAM_KEYBYTES.
 
 %% @doc stream/3 produces a cryptographic stream suitable for secret-key encryption
 %%

@@ -1001,11 +1001,12 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_PUBLICKEYBYTES", 0, enif_crypto_box_PUBLICKEYBYTES},
 	{"crypto_box_SECRETKEYBYTES", 0, enif_crypto_box_SECRETKEYBYTES},
 	{"crypto_box_BEFORENMBYTES", 0, enif_crypto_box_BEFORENMBYTES},
-	{"crypto_box_keypair", 0, enif_crypto_box_keypair},
-	{"crypto_box_b", 4, enif_crypto_box},
+
+	{"crypto_box_keypair", 0, enif_crypto_box_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
 	{"crypto_box", 4, enif_crypto_box, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-	{"crypto_box_open_b", 4, enif_crypto_box_open},
 	{"crypto_box_open", 4, enif_crypto_box_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
 	{"crypto_box_beforenm", 2, enif_crypto_box_beforenm},
 	{"crypto_box_afternm_b", 3, enif_crypto_box_afternm},
 	{"crypto_box_afternm", 3, enif_crypto_box_afternm, ERL_NIF_DIRTY_JOB_CPU_BOUND},
@@ -1028,9 +1029,7 @@ static ErlNifFunc nif_funcs[] = {
 
 	{"crypto_box_SEALBYTES", 0, enif_crypto_box_SEALBYTES},
 
-	{"crypto_box_seal_b", 2, enif_crypto_box_seal},
 	{"crypto_box_seal", 2, enif_crypto_box_seal, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-	{"crypto_box_seal_open_b", 3, enif_crypto_box_seal_open},
 	{"crypto_box_seal_open", 3, enif_crypto_box_seal_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_secretbox_NONCEBYTES", 0, enif_crypto_secretbox_NONCEBYTES},

@@ -12,11 +12,10 @@
 	crypto_box_ZEROBYTES/0,
 	crypto_box_BEFORENMBYTES/0,
 
-	crypto_box/4,
-	crypto_box_b/4,
 	crypto_box_keypair/0,
+
+	crypto_box/4,
 	crypto_box_open/4,
-	crypto_box_open_b/4,
 
 	crypto_box_beforenm/2,
 	crypto_box_afternm/3,
@@ -39,8 +38,6 @@
 	crypto_sign_verify_detached_b/3,
 
 	crypto_box_seal/2,
-	crypto_box_seal_b/2,
-	crypto_box_seal_open_b/3,
 	crypto_box_seal_open/3,
 	crypto_box_SEALBYTES/0
 
@@ -137,9 +134,7 @@ crypto_box_BEFORENMBYTES() -> erlang:nif_error(nif_not_loaded).
 
 crypto_box_keypair() -> erlang:nif_error(nif_not_loaded).
 crypto_box(_PaddedMsg, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
-crypto_box_b(_PaddedMsg, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_box_open(_CipherText, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
-crypto_box_open_b(_CipherText, _Nonce, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
 
 crypto_box_beforenm(_PK, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_box_afternm(_M, _Nonce, _K) -> erlang:nif_error(nif_not_loaded).
@@ -162,9 +157,7 @@ crypto_sign_detached_b(_M, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_verify_detached(_Sig, _M, _PK) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_verify_detached_b(_Sig, _M, _PK) -> erlang:nif_error(nif_not_loaded).
 
-crypto_box_seal_b(_Msg, _PK) -> erlang:nif_error(nif_not_loaded).
 crypto_box_seal(_Msg, _PK) -> erlang:nif_error(nif_not_loaded).
-crypto_box_seal_open_b(_CipherText, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_box_seal_open(_CipherText, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_box_SEALBYTES() -> erlang:nif_error(nif_not_loaded).
 
