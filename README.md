@@ -152,19 +152,11 @@ Also, while the standard `crypto` bindings in Erlang does a great job at providi
 
 ## Scheduler handling
 
-To avoid long running NIFs, the library switches to the use of dirty schedulers for large encryption tasks. The target is roughly set at 1/10th of the 1ms budget at 100μs. That is, we have a threshold set such that work taking more than roughly 100μs will invoke the dirty scheduler. We currently care much more about the *progress* of the system rather than the *precision*. We care that another Erlang process gets to use the core so one process is unable to monopolize the scheduler thread. On the other hand, the price that a process pays to use encryption is something we care less about. A process may get a free ride or it may get penalized more than it should if it invokes crypto-code.
+To avoid long running NIFs, the library switches to the use of dirty schedulers for large encryption tasks. We investigated the Dirty Scheduler switch overhead with DTrace on FreeBSD and found it to be roughly 5μs in typical cases. Thus, we target calls taking at least 35μs is being easier to run directly on the dirty scheduler, as the overhead for switching is thus going to be less than 15%. This means very small operations are run directly on the BEAM scheduler, but as soon as the operation takes a little longer, the switch overhead is not large enough to warrant the current schedulers involvement.
 
-We currently use measurements to obtain some rough figures on the reduction counts different operations take. You can run these measurements by invoking:
+In turn, some operations are *always* run on the dirty scheduler because they take a long time in every case. This setup is far simpler for most operations, unless the operation is performance sensitive and allows small messages.
 
-	enacl_timing:all().
-	
-The current "typical modern machine" is:
-
-	Intel Core i7-4900QM
-	
-When running benchmarks, we warm the CPU a bit before conducting the benchmark. Also, the script `benchmark.sh` can be used (altered to your CPU type), to disable the powersave mode of CPUs in order to obtain realistic benchmarks. Do note nothing was done to get a realistic disable of Intel's Turbo Boost functionality and this is a one-core benchmark. The numbers given are used as an input to the reduction budget. If a task takes roughly 134μs we assume it costs `134*2` reductions.
-
-I'm interested in machines for which the schedules end up being far off. That is, machines for which the current CPU schedule takes more than 250μs. This is especially interesting for virtual machines, and machines with ARM cores. If you are running on very slow machines, you may have to tune the reduction counts and threshold sizes to get good latency on the system.
+The tests were conducted on a Core 2 Duo machine, with newer machines perhaps being able to switch faster. There are plans to rerun these tests on OSX and Illumos as well, in order to investigate the numbers on more platforms.
 
 # Testing
 
