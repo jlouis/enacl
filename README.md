@@ -53,6 +53,20 @@ In general, the primitives provided by NaCl are intermediate-level primitives. R
 
 # Versions
 
+### v0.15.0
+
+Bug fixes:
+
+* Using `enacl:sign_verify_detacted` on large iolists would fail to do the correct thing due to a typo. This has been corrected. Also the EQC tests have been extended to include large binary support to capture these kinds of errors in the future.
+
+Features:
+
+* Many dirty-scheduler tunings have been performed to make sure we won't block a scheduler ever.
+* New benchmarks: `bench/timing.erl` together with DTrace scripts `bench/*.d`
+* Interface simplification toward the NIF api. Only execute instructions directly on the scheduler if the operation *really* benefits from doing so.
+
+No functional change, but the above characteristic change may mean the library now behaves differently from what it did before. It should be a better citizen to other libraries and other parts of the system.
+
 ### v0.14.0
 
 * Add support for libsodiums `box_seal` functions (Amir Ghassemi Nasr)
