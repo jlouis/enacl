@@ -26,6 +26,11 @@ else ifeq ($(UNAME_SYS), Linux)
 	CC ?= gcc
 	CFLAGS ?= -O3 -std=c99 -finline-functions -Wall -Wmissing-prototypes
 	CXXFLAGS ?= -O3 -finline-functions -Wall
+else ifeq ($(UNAME_SYS), SunOS)
+	CC = gcc
+	CFLAGS ?= -m64 -I/opt/local/include -O2 -std=c99 -finline-functions -Wall -Wmissing-prototypes
+	CXXFALGS ?= -O2 -finline-function -Wall
+	LDFLAGS ?= -m64 -fPIC -L /opt/local/lib
 endif
 
 CFLAGS += -fPIC -I $(ERTS_INCLUDE_DIR) -I $(ERL_INTERFACE_INCLUDE_DIR)
