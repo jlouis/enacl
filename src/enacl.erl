@@ -67,7 +67,7 @@
 
 %% Curve 25519.
 -export([
-	curve25519_scalarmult/2
+	curve25519_scalarmult/1, curve25519_scalarmult/2
 ]).
 
 %% Ed 25519.
@@ -688,6 +688,13 @@ onetime_auth_key_size() -> enacl_nif:crypto_onetimeauth_KEYBYTES().
 -spec curve25519_scalarmult(Secret :: binary(), BasePoint :: binary()) -> binary().
 curve25519_scalarmult(Secret, BasePoint) ->
 	enacl_nif:crypto_curve25519_scalarmult(Secret, BasePoint).
+
+%% @doc curve25519_scalarmult/1 avoids messing up arguments.
+%% Takes as input a map `#{ secret := Secret, base_point := BasePoint }' in order to avoid
+%% messing up the calling order.
+%% @end
+curve25519_scalarmult(#{ secret := Secret, base_point := BasePoint }) ->
+    curve25519_scalarmult(Secret, BasePoint).
 
 %% Ed 25519 Crypto
 %% ---------------
