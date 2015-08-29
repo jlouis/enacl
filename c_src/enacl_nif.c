@@ -1015,16 +1015,12 @@ static ErlNifFunc nif_funcs[] = {
 
 	{"crypto_sign_PUBLICKEYBYTES", 0, enif_crypto_sign_PUBLICKEYBYTES},
 	{"crypto_sign_SECRETKEYBYTES", 0, enif_crypto_sign_SECRETKEYBYTES},
-	{"crypto_sign_keypair", 0, enif_crypto_sign_keypair},
-	{"crypto_sign_b", 2, enif_crypto_sign},
+	{"crypto_sign_keypair", 0, enif_crypto_sign_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
 	{"crypto_sign", 2, enif_crypto_sign, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-	{"crypto_sign_open_b", 2, enif_crypto_sign_open},
 	{"crypto_sign_open", 2, enif_crypto_sign_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
-
-	{"crypto_sign_detached_b", 2, enif_crypto_sign_detached},
 	{"crypto_sign_detached", 2, enif_crypto_sign_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-	{"crypto_sign_verify_detached_b", 3, enif_crypto_sign_verify_detached},
 	{"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_box_SEALBYTES", 0, enif_crypto_box_SEALBYTES},
@@ -1069,7 +1065,7 @@ static ErlNifFunc nif_funcs[] = {
 
 	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult},
 
-	{"crypto_sign_ed25519_keypair", 0, enif_crypto_sign_ed25519_keypair},
+	{"crypto_sign_ed25519_keypair", 0, enif_crypto_sign_ed25519_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_sign_ed25519_public_to_curve25519", 1, enif_crypto_sign_ed25519_public_to_curve25519},
 	{"crypto_sign_ed25519_secret_to_curve25519", 1, enif_crypto_sign_ed25519_secret_to_curve25519},
 	{"crypto_sign_ed25519_PUBLICKEYBYTES", 0, enif_crypto_sign_ed25519_PUBLICKEYBYTES},
@@ -1080,7 +1076,5 @@ static ErlNifFunc nif_funcs[] = {
 
 	{"scramble_block_16", 2, enif_scramble_block_16}
 };
-
-
 
 ERL_NIF_INIT(enacl_nif, nif_funcs, enif_crypto_load, NULL, NULL, NULL);

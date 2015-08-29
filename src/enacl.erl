@@ -99,23 +99,21 @@
 %% To get a grip for these, call `enacl_timing:all/0' on your system. The numbers here are
 %% described in the README.md file.
 -define(HASH_SIZE, 4 * 1024).
--define(HASH_REDUCTIONS, 66).
+-define(HASH_REDUCTIONS, 17 * 2).
 -define(BOX_BEFORENM_REDUCTIONS, 60).
--define(BOX_AFTERNM_SIZE, 64 * 1024).
--define(BOX_AFTERNM_REDUCTIONS, 110 * 2).
--define(SIGN_SIZE, 16 * 1024).
--define(SIGN_REDUCTIONS, 160 * 2).
--define(SECRETBOX_SIZE, 64 * 1024).
--define(SECRETBOX_REDUCTIONS, 107 * 2).
--define(SECRETBOX_OPEN_REDUCTIONS, 51 * 2).
--define(STREAM_SIZE, 128 * 1024).
--define(STREAM_REDUCTIONS, 120 * 2).
--define(AUTH_SIZE, 32 * 1024).
--define(AUTH_REDUCTIONS, 102 * 2).
--define(ONETIME_AUTH_SIZE, 128 * 1024).
--define(ONETIME_AUTH_REDUCTIONS, 105 * 2).
+-define(BOX_AFTERNM_SIZE, 8 * 1024).
+-define(BOX_AFTERNM_REDUCTIONS, 17 * 2).
+-define(SECRETBOX_SIZE, 8 * 1024).
+-define(SECRETBOX_REDUCTIONS, 17 * 2).
+-define(SECRETBOX_OPEN_REDUCTIONS, 17 * 2).
+-define(STREAM_SIZE, 16 * 1024).
+-define(STREAM_REDUCTIONS, 17 * 2).
+-define(AUTH_SIZE, 4 * 1024).
+-define(AUTH_REDUCTIONS, 17 * 2).
+-define(ONETIME_AUTH_SIZE, 16 * 1024).
+-define(ONETIME_AUTH_REDUCTIONS, 16 * 2).
 -define(RANDOMBYTES_SIZE, 1024).
--define(RANDOMBYTES_REDUCTIONS, 66).
+-define(RANDOMBYTES_REDUCTIONS, 4 * 2).
 
 %% Constants used throughout the code base
 -define(CRYPTO_BOX_ZEROBYTES, 32).
