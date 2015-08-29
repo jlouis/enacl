@@ -1,11 +1,13 @@
-# Erlang bindings for NaCl
+# Erlang bindings for NaCl/libsodium
 
-This library provides bindings for the NaCl cryptographic library for Erlang. Several such libraries exist, but this one is a re-write with a number of different requirements, and foci:
+This library provides bindings for the libsodium cryptographic library for Erlang. Originally called NaCl by Bernstein, Lange and Schwabe[0], Frank Denis took the source and made it far more portable in the libsodium library. The enacl project is somewhat misnamed, as it uses libsodium as the underlying driver.
 
-### INSTALL/Requirements:
+Several Erlang ports of NaCl/libsodium exists, but this one is a rewrite with the following foci:
 
-* Erlang/OTP 17.3. This library *needs* the newest dirty scheduler implementation.
-* *Requires* the libsodium library. *Note:* libsodium is not packaged in Debian/Ubuntu by default. You need to use something to handle the installation for you. E.g., `checkinstall` or `stow` are good tools for this. For other systems, consult your package manager on how to install the package. Make sure you also get "development" packages containing the header file `libsodium.h`.
+## INSTALL/Requirements:
+
+* Erlang/OTP 17.3. This library *needs* the newest dirty scheduler implementation. The library relies on dirty scheduler support in order to handle long-running cryptography jobs, by moving them off the main Erlang scheduler and letting the dirty schedulers handle the work. This keeps the Erlang VM responsive.
+* *Requires* the libsodium library, and at least in version 1.0.3. *Note:* libsodium is not packaged in Debian/Ubuntu by default. You need to use something to handle the installation for you. E.g., `checkinstall` or `stow` are good tools for this. For other systems, consult your package manager on how to install the package. Make sure you also get "development" packages containing the header file `libsodium.h`.
 
 To build the software execute:
 
@@ -15,12 +17,13 @@ or
 
 	rebar compile
 
-### Features:
+## Features:
 
 * Complete NaCl library, implementing all default functionality.
 * Implements a small set of additional functionality from libsodium. Most notably access to a proper CSPRNG random source
 * Tests created by aggressive use of Erlang QuickCheck.
 * NaCl is a very fast cryptographic library. That is, crypto-operations runs quickly on modern CPUs, with ample security margins. This makes it highly useful on the server-side, where simultaneous concurrent load on the system means encryption can have a considerable overhead.
+* Is tested on Linux, FreeBSD and Illumos (Omnios)
 
 This package draws heavy inspiration from "erlang-nacl" by Tony Garnock-Jones, and started its life with a gently nod in that direction. However, it is a rewrite and it alters lots of code from Tony's original work.
 
@@ -47,10 +50,6 @@ In general, the primitives provided by NaCl are intermediate-level primitives. R
 * Note that every "large" input to the library accepts `iodata()` rather than `binary()` data. The library itself will convert `iodata()` to binaries internally, so you don't have to do it at your end. It often yields simpler code since you can just build up an iolist of your data and shove it to the library. Key material, nonces and the like are generally *not* accepted as `iodata()` however but requires you to input binary data. This is a deliberate choice since most such material is not supposed to be broken up and constructed ever (except perhaps for the Nonce construction).
 * The `enacl:randombytes/1` function provides portable access to the CSPRNG of your kernel. It is an *excellent* source of CSPRNG random data. If you need PRNG data with a seed for testing purposes, use the `random` module of Erlang or Kenji Rikitake's `sfmt` bindings instead. But do note these do not provide cryptographically secure random numbers. The other alternative is the `crypto` module, which are bindings to OpenSSL with all its blessings and/or curses.
 * Beware of timing attacks against your code! A typical area is string comparison, where the comparator function exits early. In that case, an attacker can time the response in order to guess at how many bytes where matched. This in turn enables some attacks where you use a foreign system as an oracle in order to learn the structure of a string, breaking the cryptograhic system in the process.
-
-# TODO
-
-* Write simple correctness unit tests for the different NaCl primitives. This will verify the integrity towards the underlying NaCl system.
 
 # Versions
 
@@ -168,3 +167,10 @@ The problem however, is that while we are testing the API level, we can't really
 
 Also, in addition to correctness, testing the system like this makes sure we have no memory leaks as they will show themselves under the extensive QuickCheck test cases we run. It has been verified there are no leaks in the code.
 
+# Notes
+
+[0] Other people have worked on bits and pieces of NaCl. These are just the 3 main authors. Please see the page
+
+	http://nacl.cr.yp.to
+	
+for the full list of authors.
