@@ -396,13 +396,7 @@ sign_detached(M, SK) ->
     M   :: iodata(),
     PK  :: binary().
 sign_verify_detached(SIG, M, PK) ->
-    SignRes = case iolist_size(M) of
-        K when K =< ?SIGN_SIZE ->
-            bump(enacl_nif:crypto_sign_verify_detached_b(SIG, M, PK), ?SIGN_REDUCTIONS, ?SIGN_SIZE, K);
-        _ ->
-            enacl_nif:crypto_sign_detached(SIG, M, PK)
-    end,
-    case SignRes of
+    case enacl_nif:crypto_sign_verify_detached(SIG, M, PK) of
         true -> {ok, M};
         false -> {error, failed_verification}
     end.
