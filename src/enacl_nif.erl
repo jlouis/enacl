@@ -101,8 +101,7 @@
 
 %% Access to the RNG
 -export([
-	randombytes/1,
-	randombytes_b/1
+	randombytes/1
 ]).
 
 %% Undocumented features :>
@@ -199,6 +198,5 @@ crypto_verify_16(_X, _Y) -> erlang:nif_error(nif_not_loaded).
 crypto_verify_32(_X, _Y) -> erlang:nif_error(nif_not_loaded).
 
 randombytes(_RequestedSize) -> erlang:nif_error(nif_not_loaded).
-randombytes_b(_RequestedSize) -> erlang:nif_error(nif_not_loaded).
 
 scramble_block_16(_Block, _Key) -> erlang:nif_error(nif_not_loaded).

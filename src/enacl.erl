@@ -722,8 +722,6 @@ crypto_sign_ed25519_secret_size() ->
 %% you to the underlying system implementations for random data.
 %% @end
 -spec randombytes(non_neg_integer()) -> binary().
-randombytes(N) when N =< ?RANDOMBYTES_SIZE ->
-    bump(enacl_nif:randombytes_b(N), ?RANDOMBYTES_REDUCTIONS, ?RANDOMBYTES_SIZE, N);
 randombytes(N) ->
     enacl_nif:randombytes(N).
 
