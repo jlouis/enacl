@@ -121,8 +121,12 @@
 -define(CRYPTO_BOX_ZEROBYTES, 32).
 -define(P_ZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>). %% 32 bytes of 0
 -define(CRYPTO_BOX_BOXZEROBYTES, 16).
--define(P_BOXZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>).
+-define(P_BOXZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>).  %% 16 bytes
 
+-define(CRYPTO_SECRETBOX_ZEROBYTES, 32).
+-define(S_ZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>). %% 32 bytes
+-define(CRYPTO_SECRETBOX_BOXZEROBYTES, 16).
+-define(S_BOXZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>). %% 16 bytes
 -define(CRYPTO_STREAM_KEYBYTES, 32).
 -define(CRYPTO_STREAM_NONCEBYTES, 24).
 
@@ -130,11 +134,18 @@
 verify() ->
     true = equals(binary:copy(<<0>>, enacl_nif:crypto_box_ZEROBYTES()), ?P_ZEROBYTES),
     true = equals(binary:copy(<<0>>, enacl_nif:crypto_box_BOXZEROBYTES()), ?P_BOXZEROBYTES),
+    true = equals(binary:copy(<<0>>, enacl_nif:crypto_secretbox_ZEROBYTES()), ?S_ZEROBYTES),
+    true = equals(binary:copy(<<0>>, enacl_nif:crypto_secretbox_BOXZEROBYTES()),
+    	?S_BOXZEROBYTES),
+    
     Verifiers = [
         {crypto_stream_KEYBYTES, ?CRYPTO_STREAM_KEYBYTES},
         {crypto_stream_NONCEBYTES, ?CRYPTO_STREAM_NONCEBYTES},
         {crypto_box_ZEROBYTES, ?CRYPTO_BOX_ZEROBYTES},
-        {crypto_box_BOXZEROBYTES, ?CRYPTO_BOX_BOXZEROBYTES}],
+        {crypto_box_BOXZEROBYTES, ?CRYPTO_BOX_BOXZEROBYTES},
+        {crypto_secretbox_ZEROBYTES, ?CRYPTO_SECRETBOX_ZEROBYTES},
+        {crypto_secretbox_BOXZEROBYTES, ?CRYPTO_SECRETBOX_BOXZEROBYTES}
+    ],
     run_verifiers(Verifiers).
     
 run_verifiers([]) -> ok;
@@ -263,10 +274,10 @@ box_beforenm(PK, SK) ->
 box_afternm(Msg, Nonce, Key) ->
     case iolist_size(Msg) of
         K when K =< ?BOX_AFTERNM_SIZE ->
-            bump(enacl_nif:crypto_box_afternm_b([p_zerobytes(), Msg], Nonce, Key),
+            bump(enacl_nif:crypto_box_afternm_b([?P_ZEROBYTES, Msg], Nonce, Key),
             	?BOX_AFTERNM_REDUCTIONS, ?BOX_AFTERNM_SIZE, K);
         _ ->
-            enacl_nif:crypto_box_afternm([p_zerobytes(), Msg], Nonce, Key)
+            enacl_nif:crypto_box_afternm([?P_ZEROBYTES, Msg], Nonce, Key)
     end.
 
 %% @doc box_open_afternm/3 works like `box_open/4` but uses a precomputed key
@@ -285,13 +296,13 @@ box_open_afternm(CipherText, Nonce, Key) ->
     case iolist_size(CipherText) of
         K when K =< ?BOX_AFTERNM_SIZE ->
            R =
-            case enacl_nif:crypto_box_open_afternm_b([p_box_zerobytes(), CipherText], Nonce, Key) of
+            case enacl_nif:crypto_box_open_afternm_b([?P_BOXZEROBYTES, CipherText], Nonce, Key) of
               {error, Err} -> {error, Err};
               Bin when is_binary(Bin) -> {ok, Bin}
             end,
            bump(R, ?BOX_AFTERNM_REDUCTIONS, ?BOX_AFTERNM_SIZE, K);
         _ ->
-            case enacl_nif:crypto_box_open_afternm([p_box_zerobytes(), CipherText], Nonce, Key) of
+            case enacl_nif:crypto_box_open_afternm([?P_BOXZEROBYTES, CipherText], Nonce, Key) of
               {error, Err} -> {error, Err};
               Bin when is_binary(Bin) -> {ok, Bin}
             end
@@ -465,12 +476,12 @@ box_seal_open(SealedCipherText, PK, SK) ->
 secretbox(Msg, Nonce, Key) ->
     case iolist_size(Msg) of
         K when K =< ?SECRETBOX_SIZE ->
-          bump(enacl_nif:crypto_secretbox_b([s_zerobytes(), Msg], Nonce, Key),
+          bump(enacl_nif:crypto_secretbox_b([?S_ZEROBYTES, Msg], Nonce, Key),
                ?SECRETBOX_REDUCTIONS,
                ?SECRETBOX_SIZE,
                K);
         _ ->
-          enacl_nif:crypto_secretbox([s_zerobytes(), Msg], Nonce, Key)
+          enacl_nif:crypto_secretbox([?S_ZEROBYTES, Msg], Nonce, Key)
     end.
 %% @doc secretbox_open/3 opens a sealed box.
 %%
@@ -486,14 +497,14 @@ secretbox(Msg, Nonce, Key) ->
 secretbox_open(CipherText, Nonce, Key) ->
     case iolist_size(CipherText) of
         K when K =< ?SECRETBOX_SIZE ->
-          R = case enacl_nif:crypto_secretbox_open_b([s_box_zerobytes(), CipherText],
+          R = case enacl_nif:crypto_secretbox_open_b([?S_BOXZEROBYTES, CipherText],
                                                      Nonce, Key) of
                   {error, Err} -> {error, Err};
                   Bin when is_binary(Bin) -> {ok, Bin}
               end,
           bump(R, ?SECRETBOX_OPEN_REDUCTIONS, ?SECRETBOX_SIZE, K);
         _ ->
-          case enacl_nif:crypto_secretbox_open([s_box_zerobytes(), CipherText], Nonce, Key) of
+          case enacl_nif:crypto_secretbox_open([?S_BOXZEROBYTES, CipherText], Nonce, Key) of
               {error, Err} -> {error, Err};
               Bin when is_binary(Bin) -> {ok, Bin}
           end
@@ -733,18 +744,11 @@ randombytes(N) ->
     enacl_nif:randombytes(N).
 
 %% Helpers
-p_zerobytes() ->
-	binary:copy(<<0>>, enacl_nif:crypto_box_ZEROBYTES()).
 
-p_box_zerobytes() ->
-	binary:copy(<<0>>, enacl_nif:crypto_box_BOXZEROBYTES()).
-
-s_zerobytes() ->
-	binary:copy(<<0>>, enacl_nif:crypto_secretbox_ZEROBYTES()).
-
-s_box_zerobytes() ->
-	binary:copy(<<0>>, enacl_nif:crypto_secretbox_BOXZEROBYTES()).
-
+%% @doc bump/4 bumps a reduction budget linearly before returning the result
+%% It is used for the on-scheduler variants of functions in order to make sure there
+%% is a realistic apporach to handling the reduction counts of the system.
+%% @end
 bump(Res, Budget, Max, Sz) ->
     Reds =  (Budget * Sz) div Max,
     erlang:bump_reductions(max(1, Reds)),
