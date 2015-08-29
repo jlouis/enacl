@@ -34,7 +34,7 @@ g_iolist(N) ->
 g_iodata() ->
     fault(
       oneof([elements([a,b,c]), real()]),
-      oneof([binary(), g_iolist()])).
+      oneof([binary(), g_iolist(), eqc_gen:largebinary(64*1024)])).
 
 v_iolist([]) -> true;
 v_iolist([B|Xs]) when is_binary(B) -> v_iolist(Xs);
