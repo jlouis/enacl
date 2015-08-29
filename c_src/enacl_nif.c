@@ -1063,7 +1063,7 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_verify_16", 2, enif_crypto_verify_16},
 	{"crypto_verify_32", 2, enif_crypto_verify_32},
 
-	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult},
+	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_sign_ed25519_keypair", 0, enif_crypto_sign_ed25519_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_sign_ed25519_public_to_curve25519", 1, enif_crypto_sign_ed25519_public_to_curve25519},

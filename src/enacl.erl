@@ -112,8 +112,8 @@
 -define(AUTH_REDUCTIONS, 17 * 2).
 -define(ONETIME_AUTH_SIZE, 16 * 1024).
 -define(ONETIME_AUTH_REDUCTIONS, 16 * 2).
--define(RANDOMBYTES_SIZE, 1024).
--define(RANDOMBYTES_REDUCTIONS, 4 * 2).
+-define(ED25519_PUBLIC_TO_CURVE_REDS, 20 * 2).
+-define(ED25519_SECRET_TO_CURVE_REDS, 20 * 2).
 
 %% Constants used throughout the code base
 -define(CRYPTO_BOX_ZEROBYTES, 32).
@@ -686,14 +686,18 @@ crypto_sign_ed25519_keypair() ->
 %% @end
 -spec crypto_sign_ed25519_public_to_curve25519(PublicKey :: binary()) -> binary().
 crypto_sign_ed25519_public_to_curve25519(PublicKey) ->
-	enacl_nif:crypto_sign_ed25519_public_to_curve25519(PublicKey).
+	R = enacl_nif:crypto_sign_ed25519_public_to_curve25519(PublicKey),
+	erlang:bump_reductions(?ED25519_PUBLIC_TO_CURVE_REDS),
+	R.
 
 %% @doc crypto_sign_ed25519_secret_to_curve25519/1 converts a given Ed 25519 secret
 %% key to a Curve 25519 secret key.
 %% @end
 -spec crypto_sign_ed25519_secret_to_curve25519(SecretKey :: binary()) -> binary().
 crypto_sign_ed25519_secret_to_curve25519(SecretKey) ->
-	enacl_nif:crypto_sign_ed25519_secret_to_curve25519(SecretKey).
+	R = enacl_nif:crypto_sign_ed25519_secret_to_curve25519(SecretKey),
+	erlang:bump_reductions(?ED25519_SECRET_TO_CURVE_REDS),
+	R.
 
 -spec crypto_sign_ed25519_public_size() -> pos_integer().
 crypto_sign_ed25519_public_size() ->
