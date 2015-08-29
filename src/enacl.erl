@@ -354,12 +354,7 @@ sign_keypair() ->
     SK :: binary(),
     SM :: binary().
 sign(M, SK) ->
-    case iolist_size(M) of
-      K when K =< ?SIGN_SIZE ->
-        bump(enacl_nif:crypto_sign_b(M, SK), ?SIGN_REDUCTIONS, ?SIGN_SIZE, K);
-      _ ->
-        enacl_nif:crypto_sign(M, SK)
-    end.
+    enacl_nif:crypto_sign(M, SK).
 
 %% @doc sign_open/2 opens a digital signature
 %%
@@ -373,18 +368,9 @@ sign(M, SK) ->
     PK :: binary(),
     M :: binary().
 sign_open(SM, PK) ->
-    case iolist_size(SM) of
-        K when K =< ?SIGN_SIZE ->
-          R = case enacl_nif:crypto_sign_open_b(SM, PK) of
-                  M when is_binary(M) -> {ok, M};
-                  {error, Err} -> {error, Err}
-              end,
-          bump(R, ?SIGN_REDUCTIONS, ?SIGN_SIZE, byte_size(SM));
-        _ ->
-          case enacl_nif:crypto_sign_open(SM, PK) of
-              M when is_binary(M) -> {ok, M};
-              {error, Err} -> {error, Err}
-          end
+   case enacl_nif:crypto_sign_open(SM, PK) of
+       M when is_binary(M) -> {ok, M};
+       {error, Err} -> {error, Err}
     end.
 
 %% @doc sign_detached/2 computes a digital signature given a message and a secret key.
@@ -397,12 +383,7 @@ sign_open(SM, PK) ->
     SK :: binary(),
     DS :: binary().
 sign_detached(M, SK) ->
-    case iolist_size(M) of
-        K when K =< ?SIGN_SIZE ->
-            bump(enacl_nif:crypto_sign_detached_b(M, SK), ?SIGN_REDUCTIONS, ?SIGN_SIZE, K);
-        _ ->
-            enacl_nif:crypto_sign_detached(M, SK)
-    end.
+    enacl_nif:crypto_sign_detached(M, SK).
 
 %% @doc sign_verify_detached/3 verifies the given signature against the given
 %% message for the given public key.
