@@ -81,6 +81,21 @@ ERL_NIF_TERM enif_crypto_verify_32(ErlNifEnv *env, int argc, ERL_NIF_TERM const 
 	}
 }
 
+/* This is very unsafe. It will not affect things that have been binary_copy()'ed
+  Use this for destroying key material from ram but nothing more. Be careful! */
+static
+ERL_NIF_TERM enif_sodium_memzero(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary x;
+
+	if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &x))) {
+		return enif_make_badarg(env);
+	}
+
+	sodium_memzero(x.data,x.size);
+
+  return enif_make_atom(env, "ok");
+}
+
 /* Curve 25519 */
 static
 ERL_NIF_TERM enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
@@ -1172,6 +1187,7 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_verify_16", 2, enif_crypto_verify_16},
 	{"crypto_verify_32", 2, enif_crypto_verify_32},
+	{"sodium_memzero", 1, enif_sodium_memzero},
 
 	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 

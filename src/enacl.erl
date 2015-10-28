@@ -92,7 +92,8 @@
 -export([
 	hash/1,
 	verify_16/2,
-	verify_32/2
+	verify_32/2,
+  unsafe_memzero/1
 ]).
 
 %% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
@@ -213,6 +214,17 @@ verify_16(_, _) -> error(badarg).
 -spec verify_32(binary(), binary()) -> boolean().
 verify_32(X, Y) when is_binary(X), is_binary(Y) -> enacl_nif:crypto_verify_32(X, Y);
 verify_32(_, _) -> error(badarg).
+
+%% @doc unsafe_memzero/1 ipmlements guaranteed zero'ing of binary data.
+%%
+%% <p><bold>WARNING:</bold> Take great care. This way be dragons.</p>
+%% <p>This is verify unsafe. If any copies of the binary have been made they are unaffected.
+%% This is intended for use with cryptographic keys where they are only shared within
+%% a running process without copies. This allows removing, eg, symmetric session keys. </p>
+%% @end
+-spec unsafe_memzero(binary()) -> atom().
+unsafe_memzero(X) when is_binary(X) -> enacl_nif:sodium_memzero(X);
+unsafe_memzero(_) -> error(badarg).
 
 %% Public Key Crypto
 %% ---------------------
