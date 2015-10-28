@@ -52,6 +52,14 @@
 	crypto_secretbox_open/3,
 	crypto_secretbox_open_b/3,
 
+	crypto_stream_chacha20_KEYBYTES/0,
+	crypto_stream_chacha20_NONCEBYTES/0,
+
+	crypto_stream_chacha20/3,
+	crypto_stream_chacha20_b/3,
+	crypto_stream_chacha20_xor/3,
+	crypto_stream_chacha20_xor_b/3,
+
 	crypto_stream_KEYBYTES/0,
 	crypto_stream_NONCEBYTES/0,
 
@@ -167,6 +175,13 @@ crypto_secretbox(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_secretbox_b(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_secretbox_open(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_secretbox_open_b(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+
+crypto_stream_chacha20_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_stream_chacha20_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_stream_chacha20(_Bytes, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_stream_chacha20_b(_Bytes, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_stream_chacha20_xor(_M, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_stream_chacha20_xor_b(_M, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 
 crypto_stream_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_stream_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).

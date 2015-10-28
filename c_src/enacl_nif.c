@@ -642,6 +642,16 @@ ERL_NIF_TERM enif_crypto_secretbox_BOXZEROBYTES(ErlNifEnv *env, int argc, ERL_NI
 }
 
 static
+ERL_NIF_TERM enif_crypto_stream_chacha20_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_stream_chacha20_KEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_stream_chacha20_NONCEBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_stream_chacha20_NONCEBYTES);
+}
+
+static
 ERL_NIF_TERM enif_crypto_stream_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	return enif_make_int64(env, crypto_stream_KEYBYTES);
 }
@@ -754,6 +764,61 @@ ERL_NIF_TERM enif_crypto_secretbox_open(ErlNifEnv *env, int argc, ERL_NIF_TERM c
 	    enif_make_binary(env, &padded_msg),
 	    crypto_secretbox_ZEROBYTES,
 	    padded_ciphertext.size - crypto_secretbox_ZEROBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_stream_chacha20(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary c, n, k;
+	ErlNifUInt64 clen;
+
+	if (
+	  (argc != 3) ||
+	  (!enif_get_uint64(env, argv[0], &clen)) ||
+	  (!enif_inspect_binary(env, argv[1], &n)) ||
+	  (!enif_inspect_binary(env, argv[2], &k))) {
+		return enif_make_badarg(env);
+	}
+
+	if (
+	  (k.size != crypto_stream_chacha20_KEYBYTES) ||
+	  (n.size != crypto_stream_chacha20_NONCEBYTES)) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(clen, &c)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_stream_chacha20(c.data, c.size, n.data, k.data);
+
+	return enif_make_binary(env, &c);
+}
+
+static
+ERL_NIF_TERM enif_crypto_stream_chacha20_xor(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary c, m, n, k;
+
+	if (
+	  (argc != 3) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+	  (!enif_inspect_binary(env, argv[1], &n)) ||
+	  (!enif_inspect_binary(env, argv[2], &k))) {
+		return enif_make_badarg(env);
+	}
+
+	if (
+	  (k.size != crypto_stream_chacha20_KEYBYTES) ||
+	  (n.size != crypto_stream_chacha20_NONCEBYTES)) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(m.size, &c)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_stream_chacha20_xor(c.data, m.data, m.size, n.data, k.data);
+
+	return enif_make_binary(env, &c);
 }
 
 static
@@ -1070,6 +1135,13 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_secretbox", 3, enif_crypto_secretbox, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_secretbox_open_b", 3, enif_crypto_secretbox_open},
 	{"crypto_secretbox_open", 3, enif_crypto_secretbox_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
+	{"crypto_stream_chacha20_KEYBYTES", 0, enif_crypto_stream_chacha20_KEYBYTES},
+	{"crypto_stream_chacha20_NONCEBYTES", 0, enif_crypto_stream_chacha20_NONCEBYTES},
+	{"crypto_stream_chacha20_b", 3, enif_crypto_stream_chacha20},
+	{"crypto_stream_chacha20", 3, enif_crypto_stream_chacha20, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_stream_chacha20_xor_b", 3, enif_crypto_stream_chacha20_xor},
+	{"crypto_stream_chacha20_xor", 3, enif_crypto_stream_chacha20_xor, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_stream_KEYBYTES", 0, enif_crypto_stream_KEYBYTES},
 	{"crypto_stream_NONCEBYTES", 0, enif_crypto_stream_NONCEBYTES},

@@ -49,6 +49,11 @@
 	secretbox/3,
 	secretbox_open/3,
 
+	stream_chacha20_key_size/0,
+	stream_chacha20_nonce_size/0,
+	stream_chacha20/3,
+	stream_chacha20_xor/3,
+
 	stream_key_size/0,
 	stream_nonce_size/0,
 	stream/3,
@@ -129,6 +134,8 @@
 -define(S_ZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>). %% 32 bytes
 -define(CRYPTO_SECRETBOX_BOXZEROBYTES, 16).
 -define(S_BOXZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>). %% 16 bytes
+-define(CRYPTO_STREAM_CHACHA20_KEYBYTES, 32).
+-define(CRYPTO_STREAM_CHACHA20_NONCEBYTES, 8).
 -define(CRYPTO_STREAM_KEYBYTES, 32).
 -define(CRYPTO_STREAM_NONCEBYTES, 24).
 
@@ -141,6 +148,8 @@ verify() ->
     	?S_BOXZEROBYTES),
     
     Verifiers = [
+        {crypto_stream_chacha20_KEYBYTES, ?CRYPTO_STREAM_CHACHA20_KEYBYTES},
+        {crypto_stream_chacha20_NONCEBYTES, ?CRYPTO_STREAM_CHACHA20_NONCEBYTES},
         {crypto_stream_KEYBYTES, ?CRYPTO_STREAM_KEYBYTES},
         {crypto_stream_NONCEBYTES, ?CRYPTO_STREAM_NONCEBYTES},
         {crypto_box_ZEROBYTES, ?CRYPTO_BOX_ZEROBYTES},
@@ -501,6 +510,63 @@ secretbox_nonce_size() ->
 secretbox_key_size() ->
     enacl_nif:crypto_secretbox_KEYBYTES().
 
+%% @doc stream_chacha20_nonce_size/0 returns the byte size of the nonce for streams
+%% @end
+-spec stream_chacha20_nonce_size() -> pos_integer().
+stream_chacha20_nonce_size() -> ?CRYPTO_STREAM_CHACHA20_NONCEBYTES.
+
+%% @doc stream_key_size/0 returns the byte size of the key for streams
+%% @end
+-spec stream_chacha20_key_size() -> pos_integer().
+stream_chacha20_key_size() -> ?CRYPTO_STREAM_CHACHA20_KEYBYTES.
+
+%% @doc stream_chacha20/3 produces a cryptographic stream suitable for secret-key encryption
+%%
+%% <p>Given a positive `Len' a `Nonce' and a `Key', the stream_chacha20/3 function will return an unpredictable cryptographic stream of bytes
+%% based on this output. In other words, the produced stream is indistinguishable from a random stream. Using this stream one
+%% can XOR it with a message in order to produce a encrypted message.</p>
+%% <p><b>Note:</b>  You need to use different Nonce values for different messages. Otherwise the same stream is produced and thus
+%% the messages will have predictability which in turn makes the encryption scheme fail.</p>
+%% @end
+-spec stream_chacha20(Len, Nonce, Key) -> CryptoStream
+  when
+    Len :: non_neg_integer(),
+    Nonce :: binary(),
+    Key :: binary(),
+    CryptoStream :: binary().
+stream_chacha20(Len, Nonce, Key) when is_integer(Len), Len >= 0, Len =< ?STREAM_SIZE ->
+    bump(enacl_nif:crypto_stream_chacha20_b(Len, Nonce, Key),
+         ?STREAM_REDUCTIONS,
+         ?STREAM_SIZE,
+         Len);
+stream_chacha20(Len, Nonce, Key) when is_integer(Len), Len >= 0 ->
+    enacl_nif:crypto_stream_chacha20(Len, Nonce, Key);
+stream_chacha20(_, _, _) -> error(badarg).
+
+%% @doc stream_chacha20_xor/3 encrypts a plaintext message into ciphertext
+%%
+%% The stream_chacha20_xor/3 function works by using the {@link stream_chacha20/3} api to XOR a message with the cryptographic stream. The same
+%% caveat applies: the nonce must be new for each sent message or the system fails to work.
+%% @end
+-spec stream_chacha20_xor(Msg, Nonce, Key) -> CipherText
+  when
+    Msg :: iodata(),
+    Nonce :: binary(),
+    Key :: binary(),
+    CipherText :: binary().
+stream_chacha20_xor(Msg, Nonce, Key) ->
+    case iolist_size(Msg) of
+      K when K =< ?STREAM_SIZE ->
+        bump(enacl_nif:crypto_stream_chacha20_xor_b(Msg, Nonce, Key),
+             ?STREAM_REDUCTIONS,
+             ?STREAM_SIZE,
+             K);
+      _ ->
+        enacl_nif:crypto_stream_chacha20_xor(Msg, Nonce, Key)
+    end.
+
+%% @doc auth_key_size/0 returns the byte-size of the authentication key
+%% @end
 %% @doc stream_nonce_size/0 returns the byte size of the nonce for streams
 %% @end
 -spec stream_nonce_size() -> pos_integer().
