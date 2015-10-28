@@ -68,6 +68,11 @@
 	crypto_auth_verify/3,
 	crypto_auth_verify_b/3,
 
+	crypto_shorthash_BYTES/0,
+	crypto_shorthash_KEYBYTES/0,
+
+	crypto_shorthash/2,
+
 	crypto_onetimeauth_BYTES/0,
 	crypto_onetimeauth_KEYBYTES/0,
 
@@ -176,6 +181,10 @@ crypto_auth(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_auth_b(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_auth_verify(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_auth_verify_b(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
+
+crypto_shorthash_BYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_shorthash_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_shorthash(_Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 
 crypto_onetimeauth_BYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_onetimeauth_KEYBYTES() -> erlang:nif_error(nif_not_loaded).

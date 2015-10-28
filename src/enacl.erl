@@ -59,6 +59,10 @@
 	auth/2,
 	auth_verify/3,
 
+  shorthash_key_size/0,
+  shorthash_size/0,
+  shorthash/2,
+
 	onetime_auth_key_size/0,
 	onetime_auth_size/0,
 	onetime_auth/2,
@@ -600,6 +604,29 @@ auth_verify(A, M, K) ->
       _ ->
         enacl_nif:crypto_auth_verify(A, M, K)
     end.
+
+%% @doc shorthash_key_size/0 returns the byte-size of the authentication key
+%% @end
+-spec shorthash_key_size() -> pos_integer().
+shorthash_key_size() -> enacl_nif:crypto_shorthash_KEYBYTES().
+
+%% @doc shorthash_size/0 returns the byte-size of the authenticator
+%% @end
+-spec shorthash_size() -> pos_integer().
+shorthash_size() -> enacl_nif:crypto_shorthash_BYTES().
+
+%% @doc shorthash/2 produces a short authenticator (MAC) for a message suitable for hashtables and refs
+%%
+%% Given a `Msg' and a `Key' produce a MAC/Authenticator for that message. The key can be reused for several such Msg/Authenticator pairs.
+%% An eavesdropper will not learn anything extra about the message structure.
+%% @end
+-spec shorthash(Msg, Key) -> Authenticator
+  when
+    Msg :: iodata(),
+    Key :: binary(),
+    Authenticator :: binary().
+shorthash(Msg, Key) ->
+      enacl_nif:crypto_shorthash(Msg, Key).
 
 %% @doc onetime_auth/2 produces a ONE-TIME authenticator for a message
 %%

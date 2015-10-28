@@ -662,6 +662,16 @@ ERL_NIF_TERM enif_crypto_auth_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM co
 }
 
 static
+ERL_NIF_TERM enif_crypto_shorthash_BYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_shorthash_BYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_shorthash_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_shorthash_KEYBYTES);
+}
+
+static
 ERL_NIF_TERM enif_crypto_onetimeauth_BYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	return enif_make_int64(env, crypto_onetimeauth_BYTES);
 }
@@ -848,6 +858,30 @@ ERL_NIF_TERM enif_crypto_auth_verify(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 	} else {
 		return enif_make_atom(env, "false");
 	}
+}
+
+static
+ERL_NIF_TERM enif_crypto_shorthash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary a,m,k;
+
+	if (
+	  (argc != 2) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+	  (!enif_inspect_binary(env, argv[1], &k))) {
+		return enif_make_badarg(env);
+	}
+
+	if (k.size != crypto_shorthash_KEYBYTES) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(crypto_shorthash_BYTES, &a)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_shorthash(a.data, m.data, m.size, k.data);
+
+	return enif_make_binary(env, &a);
 }
 
 static
@@ -1050,6 +1084,10 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_auth", 2, enif_crypto_auth, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_auth_verify_b", 3, enif_crypto_auth_verify},
 	{"crypto_auth_verify", 3, enif_crypto_auth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
+  {"crypto_shorthash_BYTES", 0, enif_crypto_auth_BYTES},
+  {"crypto_shorthash_KEYBYTES", 0, enif_crypto_shorthash_KEYBYTES},
+  {"crypto_shorthash", 2, enif_crypto_shorthash},
 
 	{"crypto_onetimeauth_BYTES", 0, enif_crypto_onetimeauth_BYTES},
 	{"crypto_onetimeauth_KEYBYTES", 0, enif_crypto_onetimeauth_KEYBYTES},
