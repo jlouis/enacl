@@ -524,12 +524,12 @@ secretbox_key_size() ->
 
 %% @doc stream_chacha20_nonce_size/0 returns the byte size of the nonce for streams
 %% @end
--spec stream_chacha20_nonce_size() -> pos_integer().
+-spec stream_chacha20_nonce_size() -> ?CRYPTO_STREAM_CHACHA20_NONCEBYTES.
 stream_chacha20_nonce_size() -> ?CRYPTO_STREAM_CHACHA20_NONCEBYTES.
 
 %% @doc stream_key_size/0 returns the byte size of the key for streams
 %% @end
--spec stream_chacha20_key_size() -> pos_integer().
+-spec stream_chacha20_key_size() -> ?CRYPTO_STREAM_CHACHA20_KEYBYTES.
 stream_chacha20_key_size() -> ?CRYPTO_STREAM_CHACHA20_KEYBYTES.
 
 %% @doc stream_chacha20/3 produces a cryptographic stream suitable for secret-key encryption
@@ -581,12 +581,12 @@ stream_chacha20_xor(Msg, Nonce, Key) ->
 %% @end
 %% @doc stream_nonce_size/0 returns the byte size of the nonce for streams
 %% @end
--spec stream_nonce_size() -> pos_integer().
+-spec stream_nonce_size() -> ?CRYPTO_STREAM_NONCEBYTES.
 stream_nonce_size() -> ?CRYPTO_STREAM_NONCEBYTES.
 
 %% @doc stream_key_size/0 returns the byte size of the key for streams
 %% @end
--spec stream_key_size() -> pos_integer().
+-spec stream_key_size() -> ?CRYPTO_STREAM_KEYBYTES.
 stream_key_size() -> ?CRYPTO_STREAM_KEYBYTES.
 
 %% @doc stream/3 produces a cryptographic stream suitable for secret-key encryption
