@@ -77,6 +77,21 @@ ERL_NIF_TERM enif_crypto_verify_32(ErlNifEnv *env, int argc, ERL_NIF_TERM const 
 	}
 }
 
+/* This is very unsafe. It will not affect things that have been binary_copy()'ed
+  Use this for destroying key material from ram but nothing more. Be careful! */
+static
+ERL_NIF_TERM enif_sodium_memzero(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary x;
+
+	if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &x))) {
+		return enif_make_badarg(env);
+	}
+
+	sodium_memzero(x.data,x.size);
+
+  return enif_make_atom(env, "ok");
+}
+
 /* Curve 25519 */
 static
 ERL_NIF_TERM enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
@@ -638,6 +653,16 @@ ERL_NIF_TERM enif_crypto_secretbox_BOXZEROBYTES(ErlNifEnv *env, int argc, ERL_NI
 }
 
 static
+ERL_NIF_TERM enif_crypto_stream_chacha20_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_stream_chacha20_KEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_stream_chacha20_NONCEBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_stream_chacha20_NONCEBYTES);
+}
+
+static
 ERL_NIF_TERM enif_crypto_stream_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	return enif_make_int64(env, crypto_stream_KEYBYTES);
 }
@@ -655,6 +680,16 @@ ERL_NIF_TERM enif_crypto_auth_BYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const
 static
 ERL_NIF_TERM enif_crypto_auth_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	return enif_make_int64(env, crypto_auth_KEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_shorthash_BYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_shorthash_BYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_shorthash_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_shorthash_KEYBYTES);
 }
 
 static
@@ -740,6 +775,61 @@ ERL_NIF_TERM enif_crypto_secretbox_open(ErlNifEnv *env, int argc, ERL_NIF_TERM c
 	    enif_make_binary(env, &padded_msg),
 	    crypto_secretbox_ZEROBYTES,
 	    padded_ciphertext.size - crypto_secretbox_ZEROBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_stream_chacha20(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary c, n, k;
+	ErlNifUInt64 clen;
+
+	if (
+	  (argc != 3) ||
+	  (!enif_get_uint64(env, argv[0], &clen)) ||
+	  (!enif_inspect_binary(env, argv[1], &n)) ||
+	  (!enif_inspect_binary(env, argv[2], &k))) {
+		return enif_make_badarg(env);
+	}
+
+	if (
+	  (k.size != crypto_stream_chacha20_KEYBYTES) ||
+	  (n.size != crypto_stream_chacha20_NONCEBYTES)) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(clen, &c)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_stream_chacha20(c.data, c.size, n.data, k.data);
+
+	return enif_make_binary(env, &c);
+}
+
+static
+ERL_NIF_TERM enif_crypto_stream_chacha20_xor(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary c, m, n, k;
+
+	if (
+	  (argc != 3) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+	  (!enif_inspect_binary(env, argv[1], &n)) ||
+	  (!enif_inspect_binary(env, argv[2], &k))) {
+		return enif_make_badarg(env);
+	}
+
+	if (
+	  (k.size != crypto_stream_chacha20_KEYBYTES) ||
+	  (n.size != crypto_stream_chacha20_NONCEBYTES)) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(m.size, &c)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_stream_chacha20_xor(c.data, m.data, m.size, n.data, k.data);
+
+	return enif_make_binary(env, &c);
 }
 
 static
@@ -844,6 +934,30 @@ ERL_NIF_TERM enif_crypto_auth_verify(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 	} else {
 		return enif_make_atom(env, "false");
 	}
+}
+
+static
+ERL_NIF_TERM enif_crypto_shorthash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary a,m,k;
+
+	if (
+	  (argc != 2) ||
+	  (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+	  (!enif_inspect_binary(env, argv[1], &k))) {
+		return enif_make_badarg(env);
+	}
+
+	if (k.size != crypto_shorthash_KEYBYTES) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(crypto_shorthash_BYTES, &a)) {
+		return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_shorthash(a.data, m.data, m.size, k.data);
+
+	return enif_make_binary(env, &a);
 }
 
 static
@@ -1033,6 +1147,13 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_secretbox_open_b", 3, enif_crypto_secretbox_open},
 	{"crypto_secretbox_open", 3, enif_crypto_secretbox_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
+	{"crypto_stream_chacha20_KEYBYTES", 0, enif_crypto_stream_chacha20_KEYBYTES},
+	{"crypto_stream_chacha20_NONCEBYTES", 0, enif_crypto_stream_chacha20_NONCEBYTES},
+	{"crypto_stream_chacha20_b", 3, enif_crypto_stream_chacha20},
+	{"crypto_stream_chacha20", 3, enif_crypto_stream_chacha20, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_stream_chacha20_xor_b", 3, enif_crypto_stream_chacha20_xor},
+	{"crypto_stream_chacha20_xor", 3, enif_crypto_stream_chacha20_xor, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+
 	{"crypto_stream_KEYBYTES", 0, enif_crypto_stream_KEYBYTES},
 	{"crypto_stream_NONCEBYTES", 0, enif_crypto_stream_NONCEBYTES},
 	{"crypto_stream_b", 3, enif_crypto_stream},
@@ -1047,6 +1168,10 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_auth_verify_b", 3, enif_crypto_auth_verify},
 	{"crypto_auth_verify", 3, enif_crypto_auth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
+  {"crypto_shorthash_BYTES", 0, enif_crypto_auth_BYTES},
+  {"crypto_shorthash_KEYBYTES", 0, enif_crypto_shorthash_KEYBYTES},
+  {"crypto_shorthash", 2, enif_crypto_shorthash},
+
 	{"crypto_onetimeauth_BYTES", 0, enif_crypto_onetimeauth_BYTES},
 	{"crypto_onetimeauth_KEYBYTES", 0, enif_crypto_onetimeauth_KEYBYTES},
 	{"crypto_onetimeauth_b", 2, enif_crypto_onetimeauth},
@@ -1058,6 +1183,7 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_verify_16", 2, enif_crypto_verify_16},
 	{"crypto_verify_32", 2, enif_crypto_verify_32},
+	{"sodium_memzero", 1, enif_sodium_memzero},
 
 	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 

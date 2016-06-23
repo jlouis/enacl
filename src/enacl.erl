@@ -49,6 +49,11 @@
 	secretbox/3,
 	secretbox_open/3,
 
+	stream_chacha20_key_size/0,
+	stream_chacha20_nonce_size/0,
+	stream_chacha20/3,
+	stream_chacha20_xor/3,
+
 	stream_key_size/0,
 	stream_nonce_size/0,
 	stream/3,
@@ -58,6 +63,10 @@
 	auth_size/0,
 	auth/2,
 	auth_verify/3,
+
+  shorthash_key_size/0,
+  shorthash_size/0,
+  shorthash/2,
 
 	onetime_auth_key_size/0,
 	onetime_auth_size/0,
@@ -83,7 +92,8 @@
 -export([
 	hash/1,
 	verify_16/2,
-	verify_32/2
+	verify_32/2,
+  unsafe_memzero/1
 ]).
 
 %% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
@@ -125,6 +135,8 @@
 -define(S_ZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>). %% 32 bytes
 -define(CRYPTO_SECRETBOX_BOXZEROBYTES, 16).
 -define(S_BOXZEROBYTES, <<0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0>>). %% 16 bytes
+-define(CRYPTO_STREAM_CHACHA20_KEYBYTES, 32).
+-define(CRYPTO_STREAM_CHACHA20_NONCEBYTES, 8).
 -define(CRYPTO_STREAM_KEYBYTES, 32).
 -define(CRYPTO_STREAM_NONCEBYTES, 24).
 
@@ -137,6 +149,8 @@ verify() ->
     	?S_BOXZEROBYTES),
     
     Verifiers = [
+        {crypto_stream_chacha20_KEYBYTES, ?CRYPTO_STREAM_CHACHA20_KEYBYTES},
+        {crypto_stream_chacha20_NONCEBYTES, ?CRYPTO_STREAM_CHACHA20_NONCEBYTES},
         {crypto_stream_KEYBYTES, ?CRYPTO_STREAM_KEYBYTES},
         {crypto_stream_NONCEBYTES, ?CRYPTO_STREAM_NONCEBYTES},
         {crypto_box_ZEROBYTES, ?CRYPTO_BOX_ZEROBYTES},
@@ -200,6 +214,17 @@ verify_16(_, _) -> error(badarg).
 -spec verify_32(binary(), binary()) -> boolean().
 verify_32(X, Y) when is_binary(X), is_binary(Y) -> enacl_nif:crypto_verify_32(X, Y);
 verify_32(_, _) -> error(badarg).
+
+%% @doc unsafe_memzero/1 ipmlements guaranteed zero'ing of binary data.
+%%
+%% <p><bold>WARNING:</bold> Take great care. This way be dragons.</p>
+%% <p>This is verify unsafe. If any copies of the binary have been made they are unaffected.
+%% This is intended for use with cryptographic keys where they are only shared within
+%% a running process without copies. This allows removing, eg, symmetric session keys. </p>
+%% @end
+-spec unsafe_memzero(binary()) -> atom().
+unsafe_memzero(X) when is_binary(X) -> enacl_nif:sodium_memzero(X);
+unsafe_memzero(_) -> error(badarg).
 
 %% Public Key Crypto
 %% ---------------------
@@ -497,14 +522,71 @@ secretbox_nonce_size() ->
 secretbox_key_size() ->
     enacl_nif:crypto_secretbox_KEYBYTES().
 
+%% @doc stream_chacha20_nonce_size/0 returns the byte size of the nonce for streams
+%% @end
+-spec stream_chacha20_nonce_size() -> ?CRYPTO_STREAM_CHACHA20_NONCEBYTES.
+stream_chacha20_nonce_size() -> ?CRYPTO_STREAM_CHACHA20_NONCEBYTES.
+
+%% @doc stream_key_size/0 returns the byte size of the key for streams
+%% @end
+-spec stream_chacha20_key_size() -> ?CRYPTO_STREAM_CHACHA20_KEYBYTES.
+stream_chacha20_key_size() -> ?CRYPTO_STREAM_CHACHA20_KEYBYTES.
+
+%% @doc stream_chacha20/3 produces a cryptographic stream suitable for secret-key encryption
+%%
+%% <p>Given a positive `Len' a `Nonce' and a `Key', the stream_chacha20/3 function will return an unpredictable cryptographic stream of bytes
+%% based on this output. In other words, the produced stream is indistinguishable from a random stream. Using this stream one
+%% can XOR it with a message in order to produce a encrypted message.</p>
+%% <p><b>Note:</b>  You need to use different Nonce values for different messages. Otherwise the same stream is produced and thus
+%% the messages will have predictability which in turn makes the encryption scheme fail.</p>
+%% @end
+-spec stream_chacha20(Len, Nonce, Key) -> CryptoStream
+  when
+    Len :: non_neg_integer(),
+    Nonce :: binary(),
+    Key :: binary(),
+    CryptoStream :: binary().
+stream_chacha20(Len, Nonce, Key) when is_integer(Len), Len >= 0, Len =< ?STREAM_SIZE ->
+    bump(enacl_nif:crypto_stream_chacha20_b(Len, Nonce, Key),
+         ?STREAM_REDUCTIONS,
+         ?STREAM_SIZE,
+         Len);
+stream_chacha20(Len, Nonce, Key) when is_integer(Len), Len >= 0 ->
+    enacl_nif:crypto_stream_chacha20(Len, Nonce, Key);
+stream_chacha20(_, _, _) -> error(badarg).
+
+%% @doc stream_chacha20_xor/3 encrypts a plaintext message into ciphertext
+%%
+%% The stream_chacha20_xor/3 function works by using the {@link stream_chacha20/3} api to XOR a message with the cryptographic stream. The same
+%% caveat applies: the nonce must be new for each sent message or the system fails to work.
+%% @end
+-spec stream_chacha20_xor(Msg, Nonce, Key) -> CipherText
+  when
+    Msg :: iodata(),
+    Nonce :: binary(),
+    Key :: binary(),
+    CipherText :: binary().
+stream_chacha20_xor(Msg, Nonce, Key) ->
+    case iolist_size(Msg) of
+      K when K =< ?STREAM_SIZE ->
+        bump(enacl_nif:crypto_stream_chacha20_xor_b(Msg, Nonce, Key),
+             ?STREAM_REDUCTIONS,
+             ?STREAM_SIZE,
+             K);
+      _ ->
+        enacl_nif:crypto_stream_chacha20_xor(Msg, Nonce, Key)
+    end.
+
+%% @doc auth_key_size/0 returns the byte-size of the authentication key
+%% @end
 %% @doc stream_nonce_size/0 returns the byte size of the nonce for streams
 %% @end
--spec stream_nonce_size() -> pos_integer().
+-spec stream_nonce_size() -> ?CRYPTO_STREAM_NONCEBYTES.
 stream_nonce_size() -> ?CRYPTO_STREAM_NONCEBYTES.
 
 %% @doc stream_key_size/0 returns the byte size of the key for streams
 %% @end
--spec stream_key_size() -> pos_integer().
+-spec stream_key_size() -> ?CRYPTO_STREAM_KEYBYTES.
 stream_key_size() -> ?CRYPTO_STREAM_KEYBYTES.
 
 %% @doc stream/3 produces a cryptographic stream suitable for secret-key encryption
@@ -600,6 +682,29 @@ auth_verify(A, M, K) ->
       _ ->
         enacl_nif:crypto_auth_verify(A, M, K)
     end.
+
+%% @doc shorthash_key_size/0 returns the byte-size of the authentication key
+%% @end
+-spec shorthash_key_size() -> pos_integer().
+shorthash_key_size() -> enacl_nif:crypto_shorthash_KEYBYTES().
+
+%% @doc shorthash_size/0 returns the byte-size of the authenticator
+%% @end
+-spec shorthash_size() -> pos_integer().
+shorthash_size() -> enacl_nif:crypto_shorthash_BYTES().
+
+%% @doc shorthash/2 produces a short authenticator (MAC) for a message suitable for hashtables and refs
+%%
+%% Given a `Msg' and a `Key' produce a MAC/Authenticator for that message. The key can be reused for several such Msg/Authenticator pairs.
+%% An eavesdropper will not learn anything extra about the message structure.
+%% @end
+-spec shorthash(Msg, Key) -> Authenticator
+  when
+    Msg :: iodata(),
+    Key :: binary(),
+    Authenticator :: binary().
+shorthash(Msg, Key) ->
+      enacl_nif:crypto_shorthash(Msg, Key).
 
 %% @doc onetime_auth/2 produces a ONE-TIME authenticator for a message
 %%
