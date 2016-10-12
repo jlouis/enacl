@@ -1112,61 +1112,61 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_SECRETKEYBYTES", 0, enif_crypto_box_SECRETKEYBYTES},
 	{"crypto_box_BEFORENMBYTES", 0, enif_crypto_box_BEFORENMBYTES},
 
-	{"crypto_box_keypair", 0, enif_crypto_box_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_box_keypair", 0, enif_crypto_box_keypair},
 
-	{"crypto_box", 4, enif_crypto_box, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-	{"crypto_box_open", 4, enif_crypto_box_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_box", 4, enif_crypto_box},
+	{"crypto_box_open", 4, enif_crypto_box_open},
 
 	{"crypto_box_beforenm", 2, enif_crypto_box_beforenm},
 	{"crypto_box_afternm_b", 3, enif_crypto_box_afternm},
-	{"crypto_box_afternm", 3, enif_crypto_box_afternm, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_box_afternm", 3, enif_crypto_box_afternm},
 	{"crypto_box_open_afternm_b", 3, enif_crypto_box_open_afternm},
-	{"crypto_box_open_afternm", 3, enif_crypto_box_open_afternm, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_box_open_afternm", 3, enif_crypto_box_open_afternm},
 
 	{"crypto_sign_PUBLICKEYBYTES", 0, enif_crypto_sign_PUBLICKEYBYTES},
 	{"crypto_sign_SECRETKEYBYTES", 0, enif_crypto_sign_SECRETKEYBYTES},
-	{"crypto_sign_keypair", 0, enif_crypto_sign_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_sign_keypair", 0, enif_crypto_sign_keypair},
 
-	{"crypto_sign", 2, enif_crypto_sign, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-	{"crypto_sign_open", 2, enif_crypto_sign_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_sign", 2, enif_crypto_sign},
+	{"crypto_sign_open", 2, enif_crypto_sign_open},
 
-	{"crypto_sign_detached", 2, enif_crypto_sign_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-	{"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_sign_detached", 2, enif_crypto_sign_detached},
+	{"crypto_sign_verify_detached", 3, enif_crypto_sign_verify_detached},
 
 	{"crypto_box_SEALBYTES", 0, enif_crypto_box_SEALBYTES},
 
-	{"crypto_box_seal", 2, enif_crypto_box_seal, ERL_NIF_DIRTY_JOB_CPU_BOUND},
-	{"crypto_box_seal_open", 3, enif_crypto_box_seal_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_box_seal", 2, enif_crypto_box_seal},
+	{"crypto_box_seal_open", 3, enif_crypto_box_seal_open},
 
 	{"crypto_secretbox_NONCEBYTES", 0, enif_crypto_secretbox_NONCEBYTES},
 	{"crypto_secretbox_ZEROBYTES", 0, enif_crypto_secretbox_ZEROBYTES},
 	{"crypto_secretbox_BOXZEROBYTES", 0, enif_crypto_secretbox_BOXZEROBYTES},
 	{"crypto_secretbox_KEYBYTES", 0, enif_crypto_secretbox_KEYBYTES},
 	{"crypto_secretbox_b", 3, enif_crypto_secretbox},
-	{"crypto_secretbox", 3, enif_crypto_secretbox, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_secretbox", 3, enif_crypto_secretbox},
 	{"crypto_secretbox_open_b", 3, enif_crypto_secretbox_open},
-	{"crypto_secretbox_open", 3, enif_crypto_secretbox_open, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_secretbox_open", 3, enif_crypto_secretbox_open},
 
 	{"crypto_stream_chacha20_KEYBYTES", 0, enif_crypto_stream_chacha20_KEYBYTES},
 	{"crypto_stream_chacha20_NONCEBYTES", 0, enif_crypto_stream_chacha20_NONCEBYTES},
 	{"crypto_stream_chacha20_b", 3, enif_crypto_stream_chacha20},
-	{"crypto_stream_chacha20", 3, enif_crypto_stream_chacha20, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_stream_chacha20", 3, enif_crypto_stream_chacha20},
 	{"crypto_stream_chacha20_xor_b", 3, enif_crypto_stream_chacha20_xor},
-	{"crypto_stream_chacha20_xor", 3, enif_crypto_stream_chacha20_xor, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_stream_chacha20_xor", 3, enif_crypto_stream_chacha20_xor},
 
 	{"crypto_stream_KEYBYTES", 0, enif_crypto_stream_KEYBYTES},
 	{"crypto_stream_NONCEBYTES", 0, enif_crypto_stream_NONCEBYTES},
 	{"crypto_stream_b", 3, enif_crypto_stream},
-	{"crypto_stream", 3, enif_crypto_stream, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_stream", 3, enif_crypto_stream},
 	{"crypto_stream_xor_b", 3, enif_crypto_stream_xor},
-	{"crypto_stream_xor", 3, enif_crypto_stream_xor, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_stream_xor", 3, enif_crypto_stream_xor},
 
 	{"crypto_auth_BYTES", 0, enif_crypto_auth_BYTES},
 	{"crypto_auth_KEYBYTES", 0, enif_crypto_auth_KEYBYTES},
 	{"crypto_auth_b", 2, enif_crypto_auth},
-	{"crypto_auth", 2, enif_crypto_auth, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_auth", 2, enif_crypto_auth},
 	{"crypto_auth_verify_b", 3, enif_crypto_auth_verify},
-	{"crypto_auth_verify", 3, enif_crypto_auth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_auth_verify", 3, enif_crypto_auth_verify},
 
   {"crypto_shorthash_BYTES", 0, enif_crypto_auth_BYTES},
   {"crypto_shorthash_KEYBYTES", 0, enif_crypto_shorthash_KEYBYTES},
@@ -1175,25 +1175,25 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_onetimeauth_BYTES", 0, enif_crypto_onetimeauth_BYTES},
 	{"crypto_onetimeauth_KEYBYTES", 0, enif_crypto_onetimeauth_KEYBYTES},
 	{"crypto_onetimeauth_b", 2, enif_crypto_onetimeauth},
-	{"crypto_onetimeauth", 2, enif_crypto_onetimeauth, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_onetimeauth", 2, enif_crypto_onetimeauth},
 	{"crypto_onetimeauth_verify_b", 3, enif_crypto_onetimeauth_verify},
-	{"crypto_onetimeauth_verify", 3, enif_crypto_onetimeauth_verify, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_onetimeauth_verify", 3, enif_crypto_onetimeauth_verify},
 
 	{"crypto_hash_b", 1, enif_crypto_hash},
-	{"crypto_hash", 1, enif_crypto_hash, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_hash", 1, enif_crypto_hash},
 	{"crypto_verify_16", 2, enif_crypto_verify_16},
 	{"crypto_verify_32", 2, enif_crypto_verify_32},
 	{"sodium_memzero", 1, enif_sodium_memzero},
 
-	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult},
 
-	{"crypto_sign_ed25519_keypair", 0, enif_crypto_sign_ed25519_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_sign_ed25519_keypair", 0, enif_crypto_sign_ed25519_keypair},
 	{"crypto_sign_ed25519_public_to_curve25519", 1, enif_crypto_sign_ed25519_public_to_curve25519},
 	{"crypto_sign_ed25519_secret_to_curve25519", 1, enif_crypto_sign_ed25519_secret_to_curve25519},
 	{"crypto_sign_ed25519_PUBLICKEYBYTES", 0, enif_crypto_sign_ed25519_PUBLICKEYBYTES},
 	{"crypto_sign_ed25519_SECRETKEYBYTES", 0, enif_crypto_sign_ed25519_SECRETKEYBYTES},
 
-	{"randombytes", 1, enif_randombytes, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"randombytes", 1, enif_randombytes},
 
 	{"scramble_block_16", 2, enif_scramble_block_16}
 };
