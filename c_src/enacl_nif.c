@@ -399,10 +399,7 @@ ERL_NIF_TERM enif_crypto_box_beforenm(ErlNifEnv *env, int argc, ERL_NIF_TERM con
 		return nacl_error_tuple(env, "alloc_failed");
 	}
 
-	if( 0 != crypto_box_beforenm(k.data, pk.data, sk.data) ) {
-	  // error
-	  return nacl_error_tuple(env, "error_gen_shared_secret");
-	}
+	crypto_box_beforenm(k.data, pk.data, sk.data);
 
 	return enif_make_binary(env, &k);
 }
@@ -1067,10 +1064,10 @@ ERL_NIF_TERM enif_crypto_onetimeauth_verify(ErlNifEnv *env, int argc, ERL_NIF_TE
 static
 ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[])
 {
-	unsigned req_size;
+	size_t req_size;
 	ErlNifBinary result;
 
-	if ((argc != 1) || (!enif_get_uint(env, argv[0], &req_size))) {
+	if ((argc != 1) || (!enif_get_uint64(env, argv[0], &req_size))) {
 		return enif_make_badarg(env);
 	}
 
