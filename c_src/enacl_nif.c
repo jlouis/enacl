@@ -149,7 +149,7 @@ ERL_NIF_TERM enif_crypto_curve25519_scalarmult_base(ErlNifEnv *env, int argc, ER
 		}
 
 		if (crypto_scalarmult_curve25519_base(output.data, secret.data) < 0) {
-			result = nacl_error_tuple(env, "scalarmult_curve25519_failed");
+			result = nacl_error_tuple(env, "scalarmult_curve25519_base_failed");
 			continue;
 		}
 
