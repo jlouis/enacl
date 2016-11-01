@@ -131,6 +131,34 @@ ERL_NIF_TERM enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc, ERL_NIF
 	return result;
 }
 
+static
+ERL_NIF_TERM enif_crypto_curve25519_scalarmult_base(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ERL_NIF_TERM result;
+	ErlNifBinary secret, output;
+
+	if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &secret))
+	                || (secret.size != crypto_scalarmult_curve25519_BYTES)) {
+		return enif_make_badarg(env);
+	}
+
+	do
+	{
+		if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
+			result = nacl_error_tuple(env, "alloc_failed");
+			continue;
+		}
+
+		if (crypto_scalarmult_curve25519_base(output.data, secret.data) < 0) {
+			result = nacl_error_tuple(env, "scalarmult_curve25519_base_failed");
+			continue;
+		}
+
+		result = enif_make_binary(env, &output);
+	} while (0);
+
+	return result;
+}
+
 /* Ed 25519 */
 static
 ERL_NIF_TERM enif_crypto_sign_ed25519_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
@@ -1186,6 +1214,7 @@ static ErlNifFunc nif_funcs[] = {
 	{"sodium_memzero", 1, enif_sodium_memzero},
 
 	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+	{"crypto_curve25519_scalarmult_base", 1, enif_crypto_curve25519_scalarmult_base, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 
 	{"crypto_sign_ed25519_keypair", 0, enif_crypto_sign_ed25519_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 	{"crypto_sign_ed25519_public_to_curve25519", 1, enif_crypto_sign_ed25519_public_to_curve25519},

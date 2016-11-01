@@ -49,7 +49,7 @@ curve25519_keypair() ->
 %% @end
 -spec curve25519_public_key(SecretKey :: binary()) -> binary().
 curve25519_public_key(SecretKey) ->
-	enacl:curve25519_scalarmult(SecretKey, <<9, 0:248>>).
+	enacl:curve25519_scalarmult_base(SecretKey).
 
 %% @doc curve25519_shared/2 creates a new shared secret from a given SecretKey and PublicKey.
 %% @end.

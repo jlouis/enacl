@@ -92,7 +92,8 @@
 
 %% Curve25519
 -export([
-	crypto_curve25519_scalarmult/2
+	crypto_curve25519_scalarmult/2,
+	crypto_curve25519_scalarmult_base/1
 ]).
 
 %% Ed 25519
@@ -210,6 +211,7 @@ crypto_onetimeauth_verify(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_no
 crypto_onetimeauth_verify_b(_Authenticator, _Msg, _Key) -> erlang:nif_error(nif_not_loaded).
 
 crypto_curve25519_scalarmult(_Secret, _BasePoint) -> erlang:nif_error(nif_not_loaded).
+crypto_curve25519_scalarmult_base(_Secret) -> erlang:nif_error(nif_not_loaded).
 
 crypto_sign_ed25519_keypair() -> erlang:nif_error(nif_not_loaded).
 crypto_sign_ed25519_public_to_curve25519(_PublicKey) -> erlang:nif_error(nif_not_loaded).
