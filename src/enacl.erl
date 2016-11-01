@@ -76,7 +76,9 @@
 
 %% Curve 25519.
 -export([
-	curve25519_scalarmult/1, curve25519_scalarmult/2
+	curve25519_scalarmult/1,
+	curve25519_scalarmult/2,
+	curve25519_scalarmult_base/1
 ]).
 
 %% Ed 25519.
@@ -773,6 +775,11 @@ curve25519_scalarmult(Secret, BasePoint) ->
 %% @end
 curve25519_scalarmult(#{ secret := Secret, base_point := BasePoint }) ->
     curve25519_scalarmult(Secret, BasePoint).
+
+%% @doc curve25519_scalarmult_base/1 does scalar multiplication between Secret and the
+%% Curve25519 basepoint.
+curve25519_scalarmult_base(Secret) ->
+    enacl_nif:crypto_curve25519_scalarmult_base(Secret).
 
 %% Ed 25519 Crypto
 %% ---------------
