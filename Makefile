@@ -21,6 +21,10 @@ eqc_mini_run: eqc_mini_compile
 console: compile
 	$(REBAR) shell
 
+.PHONE: console
+console: compile
+	$(REBAR) shell
+
 .PHONY: clean
 clean:
 	$(REBAR) clean
