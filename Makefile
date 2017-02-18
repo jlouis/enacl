@@ -4,6 +4,10 @@ REBAR=rebar3
 compile:
 	$(REBAR) compile | sed -e 's|_build/default/lib/enacl/||g'
 
+.PHONE: console
+console: compile
+	$(REBAR) shell
+
 .PHONY: clean
 clean:
 	$(REBAR) clean

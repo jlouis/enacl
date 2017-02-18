@@ -113,6 +113,13 @@
 	sodium_memzero/1
 ]).
 
+%% Password Hashing - Argon2 Algorithm
+-export([
+	 crypto_pwhash/2,
+	 crypto_pwhash_str/1,
+	 crypto_pwhash_str_verify/2
+]).
+
 %% Access to the RNG
 -export([
 	randombytes/1
@@ -134,6 +141,10 @@ init() ->
 		        Dir
 		end, atom_to_list(?MODULE)),
 	erlang:load_nif(SoName, 0).
+
+crypto_pwhash(Password, Salt) -> erlang:nif_error(nif_not_loaded).
+crypto_pwhash_str(Password) -> erlang:nif_error(nif_not_loaded).
+crypto_pwhash_str_verify(HashedPassword, Password) -> erlang:nif_error(nif_not_loaded).
 
 crypto_box_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_box_ZEROBYTES() -> erlang:nif_error(nif_not_loaded).
