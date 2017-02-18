@@ -4,6 +4,9 @@
 
 #include <sodium.h>
 
+#define ATOM_OK "ok"
+#define ATOM_ERROR "error"
+
 /* Errors */
 static
 ERL_NIF_TERM nacl_error_tuple(ErlNifEnv *env, char *error_atom) {
@@ -13,8 +16,7 @@ ERL_NIF_TERM nacl_error_tuple(ErlNifEnv *env, char *error_atom) {
 /* Initialization */
 static
 int enif_crypto_load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
-	sodium_init();
-	return 0;
+	return sodium_init();
 }
 
 /* Low-level functions (Hashing, String Equality, ...) */
@@ -1198,6 +1200,50 @@ ERL_NIF_TERM enif_scramble_block_16(ErlNifEnv *env, int argc, ERL_NIF_TERM const
 	return enif_make_binary(env, &out);
 }
 
+static
+ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  ErlNifBinary h, p, s;
+
+  // Validate the arguments
+  if( (argc != 2) ||
+      (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
+      (!enif_inspect_binary(env, argv[1], &s)) ) {
+    return enif_make_badarg(env);
+  }
+
+  // Check Salt size
+  if(s.size != crypto_pwhash_SALTBYTES) {
+    return nacl_error_tuple(env, "invalid_salt_size");
+  }
+
+  // Allocate memory for return binary
+  if( !enif_alloc_binary(crypto_box_SEEDBYTES, &h) ) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if( crypto_pwhash(h.data, h.size, p.data, p.size, s.data,
+		    crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE, crypto_pwhash_ALG_DEFAULT) != 0) {
+    /* out of memory */
+    enif_release_binary(&h);
+    return nacl_error_tuple(env, "out_of_memory");
+  }
+
+  ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret = enif_make_binary(env, &h);
+    
+  return enif_make_tuple2(env, ok, ret);
+}
+
+static
+ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  return nacl_error_tuple(env, "not_implemented");
+}
+
+static
+ERL_NIF_TERM enif_crypto_pwhash_str_verify(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  return nacl_error_tuple(env, "not_implemented");
+}
+
 /* Tie the knot to the Erlang world */
 static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_NONCEBYTES", 0, enif_crypto_box_NONCEBYTES},
@@ -1279,6 +1325,10 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_verify_16", 2, enif_crypto_verify_16},
 	{"crypto_verify_32", 2, enif_crypto_verify_32},
 	{"sodium_memzero", 1, enif_sodium_memzero},
+
+	{"crypto_pwhash", 2, enif_crypto_pwhash},
+	{"crypto_pwhash_str", 1, enif_crypto_pwhash_str},
+	{"crypto_pwhash_str_verify", 2, enif_crypto_pwhash_str_verify},
 
 	{"crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult},
 

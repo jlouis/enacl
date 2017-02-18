@@ -106,6 +106,13 @@
          kx_session_key_size/0
 ]).
 
+%% Password Hashing - Argon2 Algorithm
+-export([
+	 pwhash/2,
+	 pwhash_str/1,
+	 pwhash_str_verify/2
+]).
+
 %% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
 -export([
          randombytes/1
@@ -248,6 +255,32 @@ unsafe_memzero(X) when is_binary(X) ->
     enacl_nif:sodium_memzero(X);
 unsafe_memzero(_) ->
     error(badarg).
+
+
+%% @doc pwhash/2 hash a password
+%%
+%% This function generates a fixed size salted hash of a user defined password.
+%% @end
+-spec pwhash(iodata(), binary()) -> {ok, binary()} | {error, term()}.
+pwhash(Password, Salt) ->
+    enacl_nif:crypto_pwhash(Password, Salt).
+
+%% @doc pwhash_str_verify/2 generates a ASCII encoded hash of a password
+%%
+%% This function generates a fixed size, salted, ASCII encoded hash of a user defined password.
+%% @end
+-spec pwhash_str(iodata()) -> {ok, iodata()} | {error, term()}.
+pwhash_str(Password) ->
+    enacl_nif:crypto_pwhash_str(Password).
+
+%% @doc pwhash_str_verify/2 compares a password with a hash
+%%
+%% This function verifies that the hash is generated from the password. The
+%% function returns true if the verifcate succeeds, false otherwise
+%% @end
+-spec pwhash_str_verify(binary(), iodata()) -> boolean().
+pwhash_str_verify(HashPassword, Password) ->
+    enacl_nif:crypto_pwhash_str_verify(HashPassword, Password).
 
 %% Public Key Crypto
 %% ---------------------
@@ -912,6 +945,8 @@ kx_public_key_size() ->
 -spec kx_secret_key_size() -> pos_integer().
 kx_secret_key_size() ->
     enacl_nif:crypto_kx_SECRETKEYBYTES().
+
+
 
 %% Obtaining random bytes
 
