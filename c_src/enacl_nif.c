@@ -6,6 +6,8 @@
 
 #define ATOM_OK "ok"
 #define ATOM_ERROR "error"
+#define ATOM_TRUE "true"
+#define ATOM_FALSE "false"
 
 /* Errors */
 static
@@ -1141,12 +1143,50 @@ ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
 
 static
 ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-  return nacl_error_tuple(env, "not_implemented");
+  ErlNifBinary h, p;
+
+  // Validate the arguments
+  if( (argc != 1) ||
+      (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ) {
+    return enif_make_badarg(env);
+  }
+
+  // Allocate memory for return binary
+  if( !enif_alloc_binary(crypto_pwhash_STRBYTES, &h) ) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if( crypto_pwhash_str(h.data, p.data, p.size,
+		    crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE) != 0) {
+    /* out of memory */
+    enif_release_binary(&h);
+    return nacl_error_tuple(env, "out_of_memory");
+  }
+
+  ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret = enif_make_binary(env, &h);
+    
+  return enif_make_tuple2(env, ok, ret);
 }
 
 static
 ERL_NIF_TERM enif_crypto_pwhash_str_verify(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-  return nacl_error_tuple(env, "not_implemented");
+    ErlNifBinary h, p;
+
+  // Validate the arguments
+  if( (argc != 2) ||
+      (!enif_inspect_iolist_as_binary(env, argv[0], &h)) ||
+      (!enif_inspect_iolist_as_binary(env, argv[1], &p)) ) {
+    return enif_make_badarg(env);
+  }
+
+  ERL_NIF_TERM retVal = enif_make_atom(env, ATOM_TRUE);
+  if( crypto_pwhash_str_verify(h.data, p.data, p.size) != 0) {
+    /* wrong password */
+    retVal = enif_make_atom(env, ATOM_FALSE);
+  } 
+
+  return retVal;
 }
 
 /* Tie the knot to the Erlang world */
