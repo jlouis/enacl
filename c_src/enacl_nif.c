@@ -1270,8 +1270,8 @@ ERL_NIF_TERM enif_crypto_pwhash_str_verify(ErlNifEnv *env, int argc, ERL_NIF_TER
 
   // Validate the arguments
   if( (argc != 2) ||
-      (!enif_inspect_iolist_as_binary(env, argv[0], &h)) ||
-      (!enif_inspect_iolist_as_binary(env, argv[1], &p)) ) {
+      (!enif_inspect_binary(env, argv[0], &h)) ||
+      (!enif_inspect_binary(env, argv[1], &p)) ) {
     return enif_make_badarg(env);
   }
 
