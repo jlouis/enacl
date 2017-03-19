@@ -18,91 +18,101 @@
 
 %% Public key crypto
 -export([
-	box_keypair/0,
-	box/4,
-	box_open/4,
-	box_beforenm/2,
-	box_afternm/3,
-	box_open_afternm/3,
+  box_keypair/0,
+  box/4,
+  box_open/4,
+  box_beforenm/2,
+  box_afternm/3,
+  box_open_afternm/3,
 
-	box_nonce_size/0,
-	box_public_key_bytes/0,
-	box_secret_key_bytes/0,
-	box_beforenm_bytes/0,
+  box_nonce_size/0,
+  box_public_key_bytes/0,
+  box_secret_key_bytes/0,
+  box_beforenm_bytes/0,
 
-	sign_keypair_public_size/0,
-	sign_keypair_secret_size/0,
-	sign_keypair/0,
-	sign/2,
-	sign_open/2,
-	sign_detached/2,
-	sign_verify_detached/3,
+  sign_keypair_public_size/0,
+  sign_keypair_secret_size/0,
+  sign_keypair/0,
+  sign/2,
+  sign_open/2,
+  sign_detached/2,
+  sign_verify_detached/3,
 
-	box_seal/2,
-	box_seal_open/3
+  box_seal/2,
+  box_seal_open/3
 ]).
 
 %% Secret key crypto
 -export([
-	secretbox_key_size/0,
-	secretbox_nonce_size/0,
-	secretbox/3,
-	secretbox_open/3,
+  secretbox_key_size/0,
+  secretbox_nonce_size/0,
+  secretbox/3,
+  secretbox_open/3,
 
-	stream_chacha20_key_size/0,
-	stream_chacha20_nonce_size/0,
-	stream_chacha20/3,
-	stream_chacha20_xor/3,
+  stream_chacha20_key_size/0,
+  stream_chacha20_nonce_size/0,
+  stream_chacha20/3,
+  stream_chacha20_xor/3,
 
-	stream_key_size/0,
-	stream_nonce_size/0,
-	stream/3,
-	stream_xor/3,
+  stream_key_size/0,
+  stream_nonce_size/0,
+  stream/3,
+  stream_xor/3,
 
-	auth_key_size/0,
-	auth_size/0,
-	auth/2,
-	auth_verify/3,
+  auth_key_size/0,
+  auth_size/0,
+  auth/2,
+  auth_verify/3,
 
   shorthash_key_size/0,
   shorthash_size/0,
   shorthash/2,
 
-	onetime_auth_key_size/0,
-	onetime_auth_size/0,
-	onetime_auth/2,
-	onetime_auth_verify/3
+  onetime_auth_key_size/0,
+  onetime_auth_size/0,
+  onetime_auth/2,
+  onetime_auth_verify/3
 ]).
 
 %% Curve 25519.
 -export([
-	curve25519_scalarmult/1, curve25519_scalarmult/2
+  curve25519_scalarmult/1, curve25519_scalarmult/2
 ]).
 
 %% Ed 25519.
 -export([
-	crypto_sign_ed25519_keypair/0,
-	crypto_sign_ed25519_public_to_curve25519/1,
-	crypto_sign_ed25519_secret_to_curve25519/1,
-	crypto_sign_ed25519_public_size/0,
-	crypto_sign_ed25519_secret_size/0
+  crypto_sign_ed25519_keypair/0,
+  crypto_sign_ed25519_public_to_curve25519/1,
+  crypto_sign_ed25519_secret_to_curve25519/1,
+  crypto_sign_ed25519_public_size/0,
+  crypto_sign_ed25519_secret_size/0
 ]).
 
 %% Low-level functions
 -export([
-	hash/1,
-	verify_16/2,
-	verify_32/2,
+  hash/1,
+  verify_16/2,
+  verify_32/2,
   unsafe_memzero/1
+]).
+
+%% Key exchange functions
+-export([
+         kx_keypair/0,
+         kx_client_session_keys/3,
+         kx_server_session_keys/3,
+         kx_public_key_size/0,
+         kx_secret_key_size/0,
+         kx_session_key_size/0
 ]).
 
 %% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
 -export([
-	randombytes/1
+  randombytes/1
 ]).
 
 -export([
-	verify/0
+  verify/0
 ]).
 
 %% Definitions of system budgets
@@ -139,6 +149,9 @@
 -define(CRYPTO_STREAM_CHACHA20_NONCEBYTES, 8).
 -define(CRYPTO_STREAM_KEYBYTES, 32).
 -define(CRYPTO_STREAM_NONCEBYTES, 24).
+-define(CRYPTO_KX_PUBLICKEYBYTES, 32).
+-define(CRYPTO_KX_SECRETKEYBYTES, 32).
+-define(CRYPTO_KX_SESSIONKEYBYTES, 32).
 
 %% @doc Verify makes sure the constants defined in libsodium matches ours
 verify() ->
@@ -146,8 +159,8 @@ verify() ->
     true = equals(binary:copy(<<0>>, enacl_nif:crypto_box_BOXZEROBYTES()), ?P_BOXZEROBYTES),
     true = equals(binary:copy(<<0>>, enacl_nif:crypto_secretbox_ZEROBYTES()), ?S_ZEROBYTES),
     true = equals(binary:copy(<<0>>, enacl_nif:crypto_secretbox_BOXZEROBYTES()),
-    	?S_BOXZEROBYTES),
-    
+      ?S_BOXZEROBYTES),
+
     Verifiers = [
         {crypto_stream_chacha20_KEYBYTES, ?CRYPTO_STREAM_CHACHA20_KEYBYTES},
         {crypto_stream_chacha20_NONCEBYTES, ?CRYPTO_STREAM_CHACHA20_NONCEBYTES},
@@ -156,10 +169,13 @@ verify() ->
         {crypto_box_ZEROBYTES, ?CRYPTO_BOX_ZEROBYTES},
         {crypto_box_BOXZEROBYTES, ?CRYPTO_BOX_BOXZEROBYTES},
         {crypto_secretbox_ZEROBYTES, ?CRYPTO_SECRETBOX_ZEROBYTES},
-        {crypto_secretbox_BOXZEROBYTES, ?CRYPTO_SECRETBOX_BOXZEROBYTES}
+        {crypto_secretbox_BOXZEROBYTES, ?CRYPTO_SECRETBOX_BOXZEROBYTES},
+        {crypto_kx_SESSIONKEYBYTES, ?CRYPTO_KX_SESSIONKEYBYTES},
+        {crypto_kx_PUBLICKEYBYTES, ?CRYPTO_KX_PUBLICKEYBYTES},
+        {crypto_kx_SECRETKEYBYTES, ?CRYPTO_KX_SECRETKEYBYTES}
     ],
     run_verifiers(Verifiers).
-    
+
 run_verifiers([]) -> ok;
 run_verifiers([{V, R} | Vs]) ->
     case enacl_nif:V() of
@@ -235,8 +251,8 @@ unsafe_memzero(_) -> error(badarg).
 %% @end.
 -spec box_keypair() -> #{ atom() => binary() }.
 box_keypair() ->
-	{PK, SK} = enacl_nif:crypto_box_keypair(),
-	#{ public => PK, secret => SK}.
+  {PK, SK} = enacl_nif:crypto_box_keypair(),
+  #{ public => PK, secret => SK}.
 
 
 %% @doc box/4 encrypts+authenticates a message to another party.
@@ -298,7 +314,7 @@ box_afternm(Msg, Nonce, Key) ->
     case iolist_size(Msg) of
         K when K =< ?BOX_AFTERNM_SIZE ->
             bump(enacl_nif:crypto_box_afternm_b([?P_ZEROBYTES, Msg], Nonce, Key),
-            	?BOX_AFTERNM_REDUCTIONS, ?BOX_AFTERNM_SIZE, K);
+              ?BOX_AFTERNM_REDUCTIONS, ?BOX_AFTERNM_SIZE, K);
         _ ->
             enacl_nif:crypto_box_afternm([?P_ZEROBYTES, Msg], Nonce, Key)
     end.
@@ -337,16 +353,16 @@ box_open_afternm(CipherText, Nonce, Key) ->
 %% @end.
 -spec box_nonce_size() -> pos_integer().
 box_nonce_size() ->
-	enacl_nif:crypto_box_NONCEBYTES().
+  enacl_nif:crypto_box_NONCEBYTES().
 
 %% @private
 -spec box_public_key_bytes() -> pos_integer().
 box_public_key_bytes() ->
-	enacl_nif:crypto_box_PUBLICKEYBYTES().
+  enacl_nif:crypto_box_PUBLICKEYBYTES().
 
 %% @private
 box_beforenm_bytes() ->
-	enacl_nif:crypto_box_BEFORENMBYTES().
+  enacl_nif:crypto_box_BEFORENMBYTES().
 
 %% Signatures
 
@@ -427,12 +443,12 @@ sign_verify_detached(SIG, M, PK) ->
 %% @private
 -spec box_secret_key_bytes() -> pos_integer().
 box_secret_key_bytes() ->
-	enacl_nif:crypto_box_SECRETKEYBYTES().
+  enacl_nif:crypto_box_SECRETKEYBYTES().
 
 %% @doc seal_box/2 encrypts an anonymous message to another party.
 %%
 %% Encrypt a `Msg' to a party using his public key, `PK'. This generates an ephemeral
-%% keypair and then uses `box'. Ephemeral public key will sent to other party. Returns the 
+%% keypair and then uses `box'. Ephemeral public key will sent to other party. Returns the
 %% enciphered message `SealedCipherText' which includes ephemeral public key at head.
 %% @end
 -spec box_seal(Msg, PK) -> SealedCipherText
@@ -441,7 +457,7 @@ box_secret_key_bytes() ->
        SealedCipherText :: binary().
 box_seal(Msg, PK) ->
     enacl_nif:crypto_box_seal(Msg, PK).
- 
+
 %% @doc seal_box_open/3 decrypts+check message integrity from an unknown sender.
 %%
 %% Decrypt a `SealedCipherText' which contains an ephemeral public key from another party
@@ -577,8 +593,6 @@ stream_chacha20_xor(Msg, Nonce, Key) ->
         enacl_nif:crypto_stream_chacha20_xor(Msg, Nonce, Key)
     end.
 
-%% @doc auth_key_size/0 returns the byte-size of the authentication key
-%% @end
 %% @doc stream_nonce_size/0 returns the byte size of the nonce for streams
 %% @end
 -spec stream_nonce_size() -> ?CRYPTO_STREAM_NONCEBYTES.
@@ -765,7 +779,7 @@ onetime_auth_key_size() -> enacl_nif:crypto_onetimeauth_KEYBYTES().
 %% @end.
 -spec curve25519_scalarmult(Secret :: binary(), BasePoint :: binary()) -> binary().
 curve25519_scalarmult(Secret, BasePoint) ->
-	enacl_nif:crypto_curve25519_scalarmult(Secret, BasePoint).
+  enacl_nif:crypto_curve25519_scalarmult(Secret, BasePoint).
 
 %% @doc curve25519_scalarmult/1 avoids messing up arguments.
 %% Takes as input a map `#{ secret := Secret, base_point := BasePoint }' in order to avoid
@@ -783,34 +797,95 @@ curve25519_scalarmult(#{ secret := Secret, base_point := BasePoint }) ->
 %% @end
 -spec crypto_sign_ed25519_keypair() -> #{ atom() => binary() }.
 crypto_sign_ed25519_keypair() ->
-	{PK, SK} = enacl_nif:crypto_sign_ed25519_keypair(),
-	#{ public => PK, secret => SK }.
+  {PK, SK} = enacl_nif:crypto_sign_ed25519_keypair(),
+  #{ public => PK, secret => SK }.
 
 %% @doc crypto_sign_ed25519_public_to_curve25519/1 converts a given Ed 25519 public
 %% key to a Curve 25519 public key.
 %% @end
 -spec crypto_sign_ed25519_public_to_curve25519(PublicKey :: binary()) -> binary().
 crypto_sign_ed25519_public_to_curve25519(PublicKey) ->
-	R = enacl_nif:crypto_sign_ed25519_public_to_curve25519(PublicKey),
-	erlang:bump_reductions(?ED25519_PUBLIC_TO_CURVE_REDS),
-	R.
+  R = enacl_nif:crypto_sign_ed25519_public_to_curve25519(PublicKey),
+  erlang:bump_reductions(?ED25519_PUBLIC_TO_CURVE_REDS),
+  R.
 
 %% @doc crypto_sign_ed25519_secret_to_curve25519/1 converts a given Ed 25519 secret
 %% key to a Curve 25519 secret key.
 %% @end
 -spec crypto_sign_ed25519_secret_to_curve25519(SecretKey :: binary()) -> binary().
 crypto_sign_ed25519_secret_to_curve25519(SecretKey) ->
-	R = enacl_nif:crypto_sign_ed25519_secret_to_curve25519(SecretKey),
-	erlang:bump_reductions(?ED25519_SECRET_TO_CURVE_REDS),
-	R.
+  R = enacl_nif:crypto_sign_ed25519_secret_to_curve25519(SecretKey),
+  erlang:bump_reductions(?ED25519_SECRET_TO_CURVE_REDS),
+  R.
 
 -spec crypto_sign_ed25519_public_size() -> pos_integer().
 crypto_sign_ed25519_public_size() ->
-	enacl_nif:crypto_sign_ed25519_PUBLICKEYBYTES().
+  enacl_nif:crypto_sign_ed25519_PUBLICKEYBYTES().
 
 -spec crypto_sign_ed25519_secret_size() -> pos_integer().
 crypto_sign_ed25519_secret_size() ->
-	enacl_nif:crypto_sign_ed25519_SECRETKEYBYTES().
+  enacl_nif:crypto_sign_ed25519_SECRETKEYBYTES().
+
+%% Key exchange functions
+%% ----------------------
+%% @doc kx_keypair/0 creates a new Public/Secret keypair.
+%%
+%% Generates and returns a new key pair for the key exchange. The return value is a
+%% map in order to avoid using the public key as a secret key and vice versa.
+%% @end
+-spec kx_keypair() -> #{ atom() => binary() }.
+kx_keypair() ->
+  {PK, SK} = enacl_nif:crypto_kx_keypair(),
+  #{ public => PK, secret => SK}.
+
+%% @doc kx_client_session_keys/3 computes and returns shared keys for client session.
+%%
+%% <p>Compute two shared keys using the server's public key `ServerPk' and the client's secret key `ClientPk'.</p>
+%% <p>Returns map with two keys `client_rx' and `client_tx'.
+%% `client_rx' will be used by the client to receive data from the server,
+%% `client_tx' will by used by the client to send data to the server.</p>
+%% @end
+-spec kx_client_session_keys(ClientPk, ClientSk, ServerPk) -> #{ atom() => binary() }
+  when
+    ClientPk :: binary(),
+    ClientSk :: binary(),
+    ServerPk :: binary().
+kx_client_session_keys(ClientPk, ClientSk, ServerPk) ->
+  {Rx, Tx} = enacl_nif:crypto_kx_client_session_keys(ClientPk, ClientSk, ServerPk),
+  #{ client_rx => Rx, client_tx => Tx}.
+
+%% @doc kx_server_session_keys/3 computes and returns shared keys for server session.
+%% <p>Compute two shared keys using the client's public key `ClientPk'  and the server's secret key `ServerSk'.</p>
+%% <p>Returns map with two keys `server_rx' and `server_tx'.
+%% `server_rx' will be used by the server to receive data from the client,
+%% `server_tx' will be used by the server to send data to the client.</p>
+%% @end
+-spec kx_server_session_keys(ServerPk, ServerSk, ClientPk) -> #{ atom() => binary() }
+  when
+    ServerPk :: binary(),
+    ServerSk :: binary(),
+    ClientPk :: binary().
+kx_server_session_keys(ServerPk, ServerSk, ClientPk) ->
+  {Rx, Tx} = enacl_nif:crypto_kx_server_session_keys(ServerPk, ServerSk, ClientPk),
+  #{ server_rx => Rx, server_tx => Tx}.
+
+%% @doc kx_session_key_size/0 returns the number of bytes of the generated during key exchange session key.
+%% @end
+-spec kx_session_key_size() -> pos_integer().
+kx_session_key_size() ->
+  enacl_nif:crypto_kx_SESSIONKEYBYTES().
+
+%% @doc kx_public_key_size/0 returns the number of bytes of the public key used in key exchange.
+%% @end
+-spec kx_public_key_size() -> pos_integer().
+kx_public_key_size() ->
+  enacl_nif:crypto_kx_PUBLICKEYBYTES().
+
+%% @doc kx_secret_key_size/0 returns the number of bytes of the secret key used in key exchange.
+%% @end
+-spec kx_secret_key_size() -> pos_integer().
+kx_secret_key_size() ->
+  enacl_nif:crypto_kx_SECRETKEYBYTES().
 
 %% Obtaining random bytes
 

@@ -104,6 +104,16 @@
 	crypto_sign_ed25519_SECRETKEYBYTES/0
 ]).
 
+%% Key exchange
+-export([
+  crypto_kx_keypair/0,
+  crypto_kx_server_session_keys/3,
+  crypto_kx_client_session_keys/3,
+  crypto_kx_SESSIONKEYBYTES/0,
+  crypto_kx_PUBLICKEYBYTES/0,
+  crypto_kx_SECRETKEYBYTES/0
+]).
+
 %% Miscellaneous helper functions
 -export([
 	crypto_hash/1,
@@ -222,6 +232,13 @@ crypto_hash_b(Input) when is_binary(Input) -> erlang:nif_error(nif_not_loaded).
 crypto_verify_16(_X, _Y) -> erlang:nif_error(nif_not_loaded).
 crypto_verify_32(_X, _Y) -> erlang:nif_error(nif_not_loaded).
 sodium_memzero(Input) when is_binary(Input) -> erlang:nif_error(nif_not_loaded).
+
+crypto_kx_keypair() -> erlang:nif_error(nif_not_loaded).
+crypto_kx_server_session_keys(_ServerPk,_ServerSk,_ClientPk) -> erlang:nif_error(nif_not_loaded).
+crypto_kx_client_session_keys(_ClientPk,_ClientSk,_ServerPk) -> erlang:nif_error(nif_not_loaded).
+crypto_kx_SESSIONKEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_kx_PUBLICKEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_kx_SECRETKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 
 randombytes(_RequestedSize) -> erlang:nif_error(nif_not_loaded).
 
