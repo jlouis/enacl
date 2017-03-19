@@ -121,6 +121,22 @@ However, their correct use is still needed in order to be secure:
 
 # Versions
 
+### master
+
+Bump libsodium requirement to version 1.0.12. This gives us access to
+a number of functions which are added recently and thus gives us
+access to implement these from libsodium.
+
+Features:
+
+* Add kx_* functions (Alexander Malaev)
+* chacha stream functions added, siphash-2-4 added, unsafe_memzero/1
+added (no attribution)
+
+Bug fixes:
+
+* Do not use the dirty-scheduler test macro as it is gone.
+
 ### v0.15.0
 
 Bug fixes:
