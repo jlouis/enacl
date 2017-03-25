@@ -121,7 +121,7 @@ However, their correct use is still needed in order to be secure:
 
 # Versions
 
-### master
+### v0.16.0
 
 Bump libsodium requirement to version 1.0.12. This gives us access to
 a number of functions which are added recently and thus gives us
@@ -131,7 +131,7 @@ Features:
 
 * Add kx_* functions (Alexander Malaev)
 * chacha stream functions added, siphash-2-4 added, unsafe_memzero/1
-added (no attribution)
+  added (no attribution)
 
 Bug fixes:
 

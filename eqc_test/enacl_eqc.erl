@@ -2,6 +2,8 @@
 -include_lib("eqc/include/eqc.hrl").
 -compile(export_all).
 
+-compile({parse_transform, eqc_parallelize}).
+
 non_byte_int() ->
     oneof([
         ?LET(N, nat(), -(N+1)),
