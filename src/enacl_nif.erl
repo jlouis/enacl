@@ -5,113 +5,122 @@
 
 %% Public key auth
 -export([
-	crypto_box_BOXZEROBYTES/0,
-	crypto_box_NONCEBYTES/0,
-	crypto_box_PUBLICKEYBYTES/0,
-	crypto_box_SECRETKEYBYTES/0,
-	crypto_box_ZEROBYTES/0,
-	crypto_box_BEFORENMBYTES/0,
+         crypto_box_BOXZEROBYTES/0,
+         crypto_box_NONCEBYTES/0,
+         crypto_box_PUBLICKEYBYTES/0,
+         crypto_box_SECRETKEYBYTES/0,
+         crypto_box_ZEROBYTES/0,
+         crypto_box_BEFORENMBYTES/0,
 
-	crypto_box_keypair/0,
+         crypto_box_keypair/0,
 
-	crypto_box/4,
-	crypto_box_open/4,
+         crypto_box/4,
+         crypto_box_open/4,
 
-	crypto_box_beforenm/2,
-	crypto_box_afternm/3,
-	crypto_box_afternm_b/3,
-	crypto_box_open_afternm/3,
-	crypto_box_open_afternm_b/3,
+         crypto_box_beforenm/2,
+         crypto_box_afternm/3,
+         crypto_box_afternm_b/3,
+         crypto_box_open_afternm/3,
+         crypto_box_open_afternm_b/3,
 
-	crypto_sign_PUBLICKEYBYTES/0,
-	crypto_sign_SECRETKEYBYTES/0,
+         crypto_sign_PUBLICKEYBYTES/0,
+         crypto_sign_SECRETKEYBYTES/0,
 
-	crypto_sign_keypair/0,
+         crypto_sign_keypair/0,
 
-	crypto_sign/2,
-	crypto_sign_open/2,
+         crypto_sign/2,
+         crypto_sign_open/2,
 
-	crypto_sign_detached/2,
-	crypto_sign_verify_detached/3,
+         crypto_sign_detached/2,
+         crypto_sign_verify_detached/3,
 
-	crypto_box_seal/2,
-	crypto_box_seal_open/3,
-	crypto_box_SEALBYTES/0
-
+         crypto_box_seal/2,
+         crypto_box_seal_open/3,
+         crypto_box_SEALBYTES/0
 ]).
 
 %% Secret key crypto
 -export([
-	crypto_secretbox_BOXZEROBYTES/0,
-	crypto_secretbox_KEYBYTES/0,
-	crypto_secretbox_NONCEBYTES/0,
-	crypto_secretbox_ZEROBYTES/0,
+         crypto_secretbox_BOXZEROBYTES/0,
+         crypto_secretbox_KEYBYTES/0,
+         crypto_secretbox_NONCEBYTES/0,
+         crypto_secretbox_ZEROBYTES/0,
 
-	crypto_secretbox/3,
-	crypto_secretbox_b/3,
-	crypto_secretbox_open/3,
-	crypto_secretbox_open_b/3,
+         crypto_secretbox/3,
+         crypto_secretbox_b/3,
+         crypto_secretbox_open/3,
+         crypto_secretbox_open_b/3,
 
-	crypto_stream_chacha20_KEYBYTES/0,
-	crypto_stream_chacha20_NONCEBYTES/0,
+         crypto_stream_chacha20_KEYBYTES/0,
+         crypto_stream_chacha20_NONCEBYTES/0,
 
-	crypto_stream_chacha20/3,
-	crypto_stream_chacha20_b/3,
-	crypto_stream_chacha20_xor/3,
-	crypto_stream_chacha20_xor_b/3,
+         crypto_stream_chacha20/3,
+         crypto_stream_chacha20_b/3,
+         crypto_stream_chacha20_xor/3,
+         crypto_stream_chacha20_xor_b/3,
 
-	crypto_stream_KEYBYTES/0,
-	crypto_stream_NONCEBYTES/0,
+         crypto_stream_KEYBYTES/0,
+         crypto_stream_NONCEBYTES/0,
 
-	crypto_stream/3,
-	crypto_stream_b/3,
-	crypto_stream_xor/3,
-	crypto_stream_xor_b/3,
+         crypto_stream/3,
+         crypto_stream_b/3,
+         crypto_stream_xor/3,
+         crypto_stream_xor_b/3,
 
-	crypto_auth_BYTES/0,
-	crypto_auth_KEYBYTES/0,
+         crypto_auth_BYTES/0,
+         crypto_auth_KEYBYTES/0,
 
-	crypto_auth/2,
-	crypto_auth_b/2,
-	crypto_auth_verify/3,
-	crypto_auth_verify_b/3,
+         crypto_auth/2,
+         crypto_auth_b/2,
+         crypto_auth_verify/3,
+         crypto_auth_verify_b/3,
 
-	crypto_shorthash_BYTES/0,
-	crypto_shorthash_KEYBYTES/0,
+         crypto_shorthash_BYTES/0,
+         crypto_shorthash_KEYBYTES/0,
 
-	crypto_shorthash/2,
+         crypto_shorthash/2,
 
-	crypto_onetimeauth_BYTES/0,
-	crypto_onetimeauth_KEYBYTES/0,
+         crypto_onetimeauth_BYTES/0,
+         crypto_onetimeauth_KEYBYTES/0,
 
-	crypto_onetimeauth/2,
-	crypto_onetimeauth_b/2,
-	crypto_onetimeauth_verify/3,
-	crypto_onetimeauth_verify_b/3
-]).
+         crypto_onetimeauth/2,
+         crypto_onetimeauth_b/2,
+         crypto_onetimeauth_verify/3,
+         crypto_onetimeauth_verify_b/3
+        ]).
 
 %% Curve25519
 -export([
-	crypto_curve25519_scalarmult/2
-]).
+         crypto_curve25519_scalarmult/2
+        ]).
 
 %% Ed 25519
 -export([
-	crypto_sign_ed25519_keypair/0,
-	crypto_sign_ed25519_public_to_curve25519/1,
-	crypto_sign_ed25519_secret_to_curve25519/1,
-	crypto_sign_ed25519_PUBLICKEYBYTES/0,
-	crypto_sign_ed25519_SECRETKEYBYTES/0
-]).
+         crypto_sign_ed25519_keypair/0,
+         crypto_sign_ed25519_public_to_curve25519/1,
+         crypto_sign_ed25519_secret_to_curve25519/1,
+         crypto_sign_ed25519_PUBLICKEYBYTES/0,
+         crypto_sign_ed25519_SECRETKEYBYTES/0
+        ]).
+
+%% Key exchange
+-export([
+         crypto_kx_keypair/0,
+         crypto_kx_server_session_keys/3,
+         crypto_kx_client_session_keys/3,
+         crypto_kx_SESSIONKEYBYTES/0,
+         crypto_kx_PUBLICKEYBYTES/0,
+         crypto_kx_SECRETKEYBYTES/0
+        ]).
 
 %% Miscellaneous helper functions
 -export([
-	crypto_hash/1,
-	crypto_hash_b/1,
-	crypto_verify_16/2,
-	crypto_verify_32/2,
-	sodium_memzero/1
-]).
+         crypto_hash/1,
+         crypto_hash_b/1,
+         crypto_verify_16/2,
+         crypto_verify_32/2,
+         sodium_memzero/1
+        ]).
 
 %% Password Hashing - Argon2 Algorithm
 -export([
@@ -122,24 +131,26 @@
 
 %% Access to the RNG
 -export([
-	randombytes/1
-]).
+         randombytes/1
+        ]).
 
 %% Undocumented features :>
 -export([
-	scramble_block_16/2
-]).
+         scramble_block_16/2
+        ]).
 
 -on_load(init/0).
 
 init() ->
-	SoName = filename:join(
-		case code:priv_dir(enacl) of
-		    {error, bad_name} ->
-		        filename:join(filename:dirname(filename:dirname(code:which(?MODULE))), "priv");
-		    Dir ->
-		        Dir
-		end, atom_to_list(?MODULE)),
+    Dir = case code:priv_dir(enacl) of
+              {error, bad_name} ->
+                  filename:join(
+                    filename:dirname(
+                      filename:dirname(
+                        code:which(?MODULE))), "priv");
+              D -> D
+          end,
+	SoName = filename:join(Dir, atom_to_list(?MODULE)),
 	erlang:load_nif(SoName, 0).
 
 crypto_pwhash(Password, Salt) -> erlang:nif_error(nif_not_loaded).
@@ -233,6 +244,13 @@ crypto_hash_b(Input) when is_binary(Input) -> erlang:nif_error(nif_not_loaded).
 crypto_verify_16(_X, _Y) -> erlang:nif_error(nif_not_loaded).
 crypto_verify_32(_X, _Y) -> erlang:nif_error(nif_not_loaded).
 sodium_memzero(Input) when is_binary(Input) -> erlang:nif_error(nif_not_loaded).
+
+crypto_kx_keypair() -> erlang:nif_error(nif_not_loaded).
+crypto_kx_server_session_keys(_ServerPk,_ServerSk,_ClientPk) -> erlang:nif_error(nif_not_loaded).
+crypto_kx_client_session_keys(_ClientPk,_ClientSk,_ServerPk) -> erlang:nif_error(nif_not_loaded).
+crypto_kx_SESSIONKEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_kx_PUBLICKEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_kx_SECRETKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 
 randombytes(_RequestedSize) -> erlang:nif_error(nif_not_loaded).
 
