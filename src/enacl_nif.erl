@@ -199,9 +199,9 @@ crypto_pwhash(_Password, _Salt) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str(_Password) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str_verify(_HashedPassword, _Password) -> erlang:nif_error(nif_not_loaded).
 
-crypto_pwhash(Password, Salt) -> erlang:nif_error(nif_not_loaded).
-crypto_pwhash_str(Password) -> erlang:nif_error(nif_not_loaded).
-crypto_pwhash_str_verify(HashedPassword, Password) -> erlang:nif_error(nif_not_loaded).
+crypto_pwhash(_Password, _Salt) -> erlang:nif_error(nif_not_loaded).
+crypto_pwhash_str(_Password) -> erlang:nif_error(nif_not_loaded).
+crypto_pwhash_str_verify(_HashedPassword, _Password) -> erlang:nif_error(nif_not_loaded).
 
 crypto_box_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_box_ZEROBYTES() -> erlang:nif_error(nif_not_loaded).
