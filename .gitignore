@@ -11,3 +11,4 @@ doc/*.html
 doc/*.png
 doc/*.css
 _build
+/.eqc-info

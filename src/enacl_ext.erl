@@ -6,15 +6,15 @@
 -module(enacl_ext).
 
 -export([
-	scramble_block_16/2
-]).
+         scramble_block_16/2
+        ]).
 
 %% Curve25519
 -export([
-	curve25519_keypair/0,
-	curve25519_public_key/1,
-	curve25519_shared/2
-]).
+         curve25519_keypair/0,
+         curve25519_public_key/1,
+         curve25519_shared/2
+        ]).
 
 %% @doc scramble_block_16/2 scrambles (encrypt) a block under a given key
 %% The rules are that the block is 16 bytes and the key is 32 bytes. The block
