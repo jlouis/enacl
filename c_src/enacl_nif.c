@@ -9,6 +9,8 @@
 #define ATOM_TRUE "true"
 #define ATOM_FALSE "false"
 
+#define CRYPTO_GENERICHASH_STATE_RESOURCE "crypto_generichash_state"
+
 #ifdef ERL_NIF_DIRTY_JOB_CPU_BOUND
 #define erl_nif_dirty_job_cpu_bound_macro(a,b,c) {a,b,c,ERL_NIF_DIRTY_JOB_CPU_BOUND}
 #else
@@ -17,15 +19,24 @@
 
 //{"crypto_box_keypair", 0, enif_crypto_box_keypair, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 /* Errors */
+
+/* This is a global variable for resource type */
+static ErlNifResourceType *generichash_state_type = NULL;
+
 static
 ERL_NIF_TERM nacl_error_tuple(ErlNifEnv *env, char *error_atom) {
-	return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, error_atom));
+  return enif_make_tuple2(env, enif_make_atom(env, "error"), enif_make_atom(env, error_atom));
 }
 
 /* Initialization */
 static
 int enif_crypto_load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
-	return sodium_init();
+    // Create a new resource type for crypto_generichash_state
+  if( !(generichash_state_type = enif_open_resource_type(env, NULL, CRYPTO_GENERICHASH_STATE_RESOURCE, NULL, ERL_NIF_RT_CREATE, NULL)) ) {
+    return -1;
+  }
+			  
+  return sodium_init();
 }
 
 /* Low-level functions (Hashing, String Equality, ...) */
@@ -293,7 +304,9 @@ ERL_NIF_TERM enif_crypto_box(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]
 		return nacl_error_tuple(env, "alloc_failed");
 	}
 
-	crypto_box(result.data, padded_msg.data, padded_msg.size, nonce.data, pk.data, sk.data);
+	if( 0 != crypto_box(result.data, padded_msg.data, padded_msg.size, nonce.data, pk.data, sk.data) ) {
+	  return nacl_error_tuple(env, "box_error");
+	}
 
 	return enif_make_sub_binary(
 		env,
@@ -358,7 +371,10 @@ ERL_NIF_TERM enif_crypto_box_beforenm(ErlNifEnv *env, int argc, ERL_NIF_TERM con
 		return nacl_error_tuple(env, "alloc_failed");
 	}
 
-	crypto_box_beforenm(k.data, pk.data, sk.data);
+	if( 0 != crypto_box_beforenm(k.data, pk.data, sk.data) ) {
+	  // error
+	  return nacl_error_tuple(env, "error_gen_shared_secret");
+	}
 
 	return enif_make_binary(env, &k);
 }
@@ -1101,7 +1117,10 @@ ERL_NIF_TERM enif_crypto_kx_server_session_keys(ErlNifEnv *env, int argc, ERL_NI
 		return nacl_error_tuple(env, "alloc_failed");
 	}
 
-	crypto_kx_server_session_keys(rx.data, tx.data, server_pk.data, server_sk.data, client_pk.data);
+	if( 0 != crypto_kx_server_session_keys(rx.data, tx.data, server_pk.data, server_sk.data, client_pk.data) ) {
+	  // suspicious client public key
+	  return nacl_error_tuple(env, "invalid_client_public_key");
+	}
 
 	return enif_make_tuple2(env, enif_make_binary(env, &rx), enif_make_binary(env, &tx));
 }
@@ -1129,7 +1148,10 @@ ERL_NIF_TERM enif_crypto_kx_client_session_keys(ErlNifEnv *env, int argc, ERL_NI
 		return nacl_error_tuple(env, "alloc_failed");
 	}
 
-	crypto_kx_client_session_keys(rx.data, tx.data, client_pk.data, client_sk.data, server_pk.data);
+	if( 0 != crypto_kx_client_session_keys(rx.data, tx.data, client_pk.data, client_sk.data, server_pk.data) ) {
+	  // suspicious server public key
+	  return nacl_error_tuple(env, "invalid_server_public_key");
+	}
 
 	return enif_make_tuple2(env, enif_make_binary(env, &rx), enif_make_binary(env, &tx));
 }
@@ -1291,6 +1313,211 @@ ERL_NIF_TERM enif_crypto_pwhash_str_verify(ErlNifEnv *env, int argc, ERL_NIF_TER
   return retVal;
 }
 
+/*
+ * Generic hash
+ */
+static
+ERL_NIF_TERM enif_crypto_generichash_BYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_generichash_BYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash_BYTES_MIN(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_generichash_BYTES_MIN);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash_BYTES_MAX(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_generichash_BYTES_MAX);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_generichash_KEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash_KEYBYTES_MIN(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_generichash_KEYBYTES_MIN);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash_KEYBYTES_MAX(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_generichash_KEYBYTES_MAX);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  ErlNifBinary hash, message, key;
+
+  size_t hashSize;
+
+    // Validate the arguments
+  if( (argc != 3) ||
+      (!enif_get_uint64(env, argv[0], &hashSize)) ||
+      (!enif_inspect_binary(env, argv[1], &message)) ||
+      (!enif_inspect_binary(env, argv[2], &key)) ) {
+    return enif_make_badarg(env);
+  }
+
+  // Verify that hash size is crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
+  if( (hashSize < crypto_generichash_BYTES_MIN) ||
+      (hashSize > crypto_generichash_BYTES_MAX) ) {
+    return nacl_error_tuple(env, "invalid_hash_size");
+  }
+
+  // validate key size
+  unsigned char *k = key.data;
+  if( 0 == key.size ) {
+    k = NULL;
+  } else if( key.size < crypto_generichash_KEYBYTES_MIN || key.size > crypto_generichash_KEYBYTES_MAX ) {
+    return nacl_error_tuple(env, "invalid_key_size");
+  }
+
+  // allocate memory for hash
+  if( !enif_alloc_binary(hashSize, &hash) ) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  // calculate hash
+  if( 0 != crypto_generichash(hash.data, hash.size, message.data, message.size, k, key.size) ) {
+    enif_release_binary(&hash);
+    return nacl_error_tuple(env, "hash_error");
+  }
+  
+  ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret = enif_make_binary(env, &hash);
+    
+  return enif_make_tuple2(env, ok, ret);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  ErlNifBinary key;
+
+  size_t hashSize;
+
+    // Validate the arguments
+  if( (argc != 2) ||
+      (!enif_get_uint64(env, argv[0], &hashSize)) ||
+      (!enif_inspect_binary(env, argv[1], &key)) ) {
+    return enif_make_badarg(env);
+  }
+
+  // Verify that hash size is crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
+  if( (hashSize < crypto_generichash_BYTES_MIN) ||
+      (hashSize > crypto_generichash_BYTES_MAX) ) {
+    return nacl_error_tuple(env, "invalid_hash_size");
+  }
+
+  // validate key size
+  unsigned char *k = key.data;
+  if( 0 == key.size ) {
+    k = NULL;
+  } else if( key.size < crypto_generichash_KEYBYTES_MIN || key.size > crypto_generichash_KEYBYTES_MAX ) {
+    return nacl_error_tuple(env, "invalid_key_size");
+  }
+
+  // Create a resource for hash state
+  crypto_generichash_state *state = (crypto_generichash_state *)enif_alloc_resource(generichash_state_type, crypto_generichash_statebytes());
+  if( !state ) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  // Call the library function
+  if( 0 != crypto_generichash_init(state, k, key.size, hashSize) ) {
+    return nacl_error_tuple(env, "hash_init_error");
+  }
+  
+  
+  // Create return values
+  ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
+  ERL_NIF_TERM e2 = argv[0];
+  ERL_NIF_TERM e3 = enif_make_resource(env, state);
+
+
+  // release dynamically allocated memory to erlang to mange
+  enif_release_resource(state);
+
+  // return a tuple
+  return enif_make_tuple3(env, e1, e2, e3);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  ErlNifBinary message;
+
+  size_t hashSize;
+
+  crypto_generichash_state *state;
+
+    // Validate the arguments
+  if( (argc != 3) ||
+      (!enif_get_uint64(env, argv[0], &hashSize)) ||
+      (!enif_get_resource(env, argv[1], generichash_state_type, (void **)&state)) ||
+      (!enif_inspect_binary(env, argv[2], &message)) ) {
+    return enif_make_badarg(env);
+  }
+
+    // Verify that hash size is crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
+  if( (hashSize < crypto_generichash_BYTES_MIN) ||
+      (hashSize > crypto_generichash_BYTES_MAX) ) {
+    return nacl_error_tuple(env, "invalid_hash_size");
+  }
+
+  // Update hash state
+  if( 0 != crypto_generichash_update(state, message.data, message.size) ) {
+    return nacl_error_tuple(env, "hash_update_error");
+  }
+
+
+  // Generate return value
+  ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
+  ERL_NIF_TERM e2 = argv[0];
+  ERL_NIF_TERM e3 = enif_make_resource(env, state);
+  
+  // return a tuple
+  return enif_make_tuple3(env, e1, e2, e3);
+}
+
+static
+ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  ErlNifBinary hash;
+  
+  size_t hashSize;
+
+  crypto_generichash_state *state;
+
+    // Validate the arguments
+  if( (argc != 2) ||
+      (!enif_get_uint64(env, argv[0], &hashSize)) ||
+      (!enif_get_resource(env, argv[1], generichash_state_type, (void **)&state)) ) {
+    return enif_make_badarg(env);
+  }
+
+    // Verify that hash size is crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
+  if( (hashSize < crypto_generichash_BYTES_MIN) ||
+      (hashSize > crypto_generichash_BYTES_MAX) ) {
+    return nacl_error_tuple(env, "invalid_hash_size");
+  }
+
+    // allocate memory for hash
+  if( !enif_alloc_binary(hashSize, &hash) ) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  // calculate hash
+  if( 0 != crypto_generichash_final(state, hash.data, hash.size) ) {
+    enif_release_binary(&hash);
+    return nacl_error_tuple(env, "hash_error");
+  }
+  
+  ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret = enif_make_binary(env, &hash);
+    
+  return enif_make_tuple2(env, ok, ret);
+}
+
 /* Tie the knot to the Erlang world */
 static ErlNifFunc nif_funcs[] = {
 	{"crypto_box_NONCEBYTES", 0, enif_crypto_box_NONCEBYTES},
@@ -1395,7 +1622,19 @@ static ErlNifFunc nif_funcs[] = {
   {"crypto_kx_SECRETKEYBYTES", 0, enif_crypto_kx_SECRETKEYBYTES},
   {"crypto_kx_SESSIONKEYBYTES", 0, enif_crypto_kx_SESSIONKEYBYTES},
 
-	{"scramble_block_16", 2, enif_scramble_block_16}
+	{"scramble_block_16", 2, enif_scramble_block_16},
+
+	{"crypto_generichash_BYTES", 0, enif_crypto_generichash_BYTES},
+	{"crypto_generichash_BYTES_MIN", 0, enif_crypto_generichash_BYTES_MIN},
+	{"crypto_generichash_BYTES_MAX", 0, enif_crypto_generichash_BYTES_MAX},
+	{"crypto_generichash_KEYBYTES", 0, enif_crypto_generichash_KEYBYTES},
+	{"crypto_generichash_KEYBYTES_MIN", 0, enif_crypto_generichash_KEYBYTES_MIN},
+	{"crypto_generichash_KEYBYTES_MAX", 0, enif_crypto_generichash_KEYBYTES_MAX},
+	{"crypto_generichash", 3, enif_crypto_generichash},
+	{"crypto_generichash_init", 2, enif_crypto_generichash_init},
+	{"crypto_generichash_update", 3, enif_crypto_generichash_update},
+	{"crypto_generichash_final", 2, enif_crypto_generichash_final}
+	
 };
 
 ERL_NIF_INIT(enacl_nif, nif_funcs, enif_crypto_load, NULL, NULL, NULL);

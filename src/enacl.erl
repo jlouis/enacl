@@ -113,6 +113,16 @@
 	 pwhash_str_verify/2
 ]).
 
+%% Generic hash functions
+-export([
+	 generichash/3,
+	 generichash/2,
+
+	 generichash_init/2,
+	 generichash_update/2,
+	 generichash_final/1
+]).
+
 %% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
 -export([
          randombytes/1
@@ -160,6 +170,13 @@
 -define(CRYPTO_KX_SECRETKEYBYTES, 32).
 -define(CRYPTO_KX_SESSIONKEYBYTES, 32).
 
+-define(CRYPTO_GENERICHASH_BYTES_MIN, 16).
+-define(CRYPTO_GENERICHASH_BYTES_MAX, 64).
+-define(CRYPTO_GENERICHASH_BYTES, 32).
+-define(CRYPTO_GENERICHASH_KEYBYTES_MIN, 16).
+-define(CRYPTO_GENERICHASH_KEYBYTES_MAX, 64).
+-define(CRYPTO_GENERICHASH_KEYBYTES, 32).
+
 %% @doc Verify makes sure the constants defined in libsodium matches ours
 verify() ->
     true = equals(binary:copy(<<0>>, enacl_nif:crypto_box_ZEROBYTES()), ?P_ZEROBYTES),
@@ -180,7 +197,13 @@ verify() ->
          {crypto_secretbox_BOXZEROBYTES, ?CRYPTO_SECRETBOX_BOXZEROBYTES},
          {crypto_kx_SESSIONKEYBYTES, ?CRYPTO_KX_SESSIONKEYBYTES},
          {crypto_kx_PUBLICKEYBYTES, ?CRYPTO_KX_PUBLICKEYBYTES},
-         {crypto_kx_SECRETKEYBYTES, ?CRYPTO_KX_SECRETKEYBYTES}
+         {crypto_kx_SECRETKEYBYTES, ?CRYPTO_KX_SECRETKEYBYTES},
+	 {crypto_generichash_BYTES, ?CRYPTO_GENERICHASH_BYTES},
+	 {crypto_generichash_BYTES_MIN, ?CRYPTO_GENERICHASH_BYTES_MIN},
+	 {crypto_generichash_BYTES_MAX, ?CRYPTO_GENERICHASH_BYTES_MAX},
+	 {crypto_generichash_KEYBYTES, ?CRYPTO_GENERICHASH_KEYBYTES},
+	 {crypto_generichash_KEYBYTES_MIN, ?CRYPTO_GENERICHASH_KEYBYTES_MIN},
+	 {crypto_generichash_KEYBYTES_MAX, ?CRYPTO_GENERICHASH_KEYBYTES_MAX}
     ],
     run_verifiers(Verifiers).
 
@@ -255,6 +278,33 @@ unsafe_memzero(X) when is_binary(X) ->
     enacl_nif:sodium_memzero(X);
 unsafe_memzero(_) ->
     error(badarg).
+
+
+%% @doc generichash/3 creates a hash of the message using a key. 
+%%
+%% This function generates a hash of the message using a key. The hash size is
+%% either 16, 32 or 64 bytes
+%% @end
+-spec generichash(iodata(), binary()) -> {ok, binary()} | {error, term()}.
+generichash(HashSize, Message, Key) ->
+    enacl_nif:crypto_generichash(HashSize, Message, Key).
+
+%% @doc generichash/2 creates a hash of the message.
+%%
+%% This function generates a hash of the message. The hash size is
+%% either 16, 32 or 64 bytes
+%% @end
+generichash(HashSize, Message) ->
+    enacl_nif:crypto_generichash(HashSize, Message, <<>>).
+
+generichash_init(HashSize, Key) ->
+    enacl_nif:crypto_generichash_init(HashSize, Key).
+
+generichash_update({hashstate, HashSize, HashState}, Message) ->
+    enacl_nif:crypto_generichash_update(HashSize, HashState, Message).
+
+generichash_final({hashstate, HashSize, HashState}) ->
+    enacl_nif:crypto_generichash_final(HashSize, HashState).
 
 
 %% @doc pwhash/2 hash a password
