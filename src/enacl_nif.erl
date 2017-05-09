@@ -129,6 +129,21 @@
 	 crypto_pwhash_str_verify/2
 ]).
 
+%% Generic hash
+-export([
+	 crypto_generichash_BYTES/0,
+	 crypto_generichash_BYTES_MIN/0,
+	 crypto_generichash_BYTES_MAX/0,
+	 crypto_generichash_KEYBYTES/0,
+	 crypto_generichash_KEYBYTES_MIN/0,
+	 crypto_generichash_KEYBYTES_MAX/0,
+
+	 crypto_generichash/3,
+	 crypto_generichash_init/2,
+	 crypto_generichash_update/3,
+	 crypto_generichash_final/2
+]).
+
 %% Access to the RNG
 -export([
          randombytes/1
@@ -152,6 +167,21 @@ init() ->
           end,
 	SoName = filename:join(Dir, atom_to_list(?MODULE)),
 	erlang:load_nif(SoName, 0).
+
+crypto_generichash_BYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_generichash_BYTES_MIN() -> erlang:nif_error(nif_not_loaded).
+crypto_generichash_BYTES_MAX() -> erlang:nif_error(nif_not_loaded).
+crypto_generichash_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_generichash_KEYBYTES_MIN() -> erlang:nif_error(nif_not_loaded).
+crypto_generichash_KEYBYTES_MAX() -> erlang:nif_error(nif_not_loaded).
+
+crypto_generichash(_HashSize, _Message, _Key) -> erlang:nif_error(nif_not_loaded).
+
+crypto_generichash_init(_HashSize, _Key) ->  erlang:nif_error(nif_not_loaded).
+crypto_generichash_update(_HashSize, _HashState, _Message) ->  erlang:nif_error(nif_not_loaded).
+crypto_generichash_final(_HashSize, _HashState) ->  erlang:nif_error(nif_not_loaded).
+    
+    
 
 crypto_pwhash(_Password, _Salt) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str(_Password) -> erlang:nif_error(nif_not_loaded).
