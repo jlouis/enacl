@@ -1015,7 +1015,7 @@ ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[
 	size_t req_size;
 	ErlNifBinary result;
 
-	if ((argc != 1) || (!enif_get_uint64(env, argv[0], &req_size))) {
+	if ((argc != 1) || (!enif_get_uint(env, argv[0], &req_size))) {
 		return enif_make_badarg(env);
 	}
 
