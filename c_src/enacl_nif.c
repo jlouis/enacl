@@ -1039,7 +1039,7 @@ ERL_NIF_TERM enif_crypto_onetimeauth_verify(ErlNifEnv *env, int argc, ERL_NIF_TE
 static
 ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[])
 {
-	size_t req_size;
+	unsigned req_size;
 	ErlNifBinary result;
 
 	if ((argc != 1) || (!enif_get_uint(env, argv[0], &req_size))) {
@@ -1350,7 +1350,7 @@ static
 ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary hash, message, key;
 
-  size_t hashSize;
+  unsigned hashSize;
 
     // Validate the arguments
   if( (argc != 3) ||
@@ -1395,7 +1395,7 @@ static
 ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary key;
 
-  size_t hashSize;
+  unsigned hashSize;
 
     // Validate the arguments
   if( (argc != 2) ||
@@ -1447,7 +1447,7 @@ static
 ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary message;
 
-  size_t hashSize;
+  unsigned hashSize;
 
   crypto_generichash_state *state;
 
@@ -1484,7 +1484,7 @@ static
 ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary hash;
   
-  size_t hashSize;
+  unsigned hashSize;
 
   crypto_generichash_state *state;
 
