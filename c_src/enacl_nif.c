@@ -1012,7 +1012,7 @@ ERL_NIF_TERM enif_crypto_onetimeauth_verify(ErlNifEnv *env, int argc, ERL_NIF_TE
 static
 ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[])
 {
-	size_t req_size;
+	unsigned req_size;
 	ErlNifBinary result;
 
 	if ((argc != 1) || (!enif_get_uint(env, argv[0], &req_size))) {
