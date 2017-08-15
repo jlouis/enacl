@@ -1,2 +1,2 @@
-{build, "sudo apt-get update && sudo apt-get install libsodium-dev && make eqc_compile"}.
+{build, "apt-get update && apt-get install libsodium-dev && make eqc_compile"}.
 {test_path, "_build/default/lib/enacl/ebin"}.
