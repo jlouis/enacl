@@ -4,6 +4,9 @@ REBAR=rebar3
 compile:
 	$(REBAR) compile | sed -e 's|_build/default/lib/enacl/||g'
 
+eqc_compile: compile
+	erlc -o _build/default/lib/enacl/ebin eqc_test/enacl_eqc.erl
+
 .PHONE: console
 console: compile
 	$(REBAR) shell

@@ -1,0 +1,2 @@
+{build, "make eqc_compile"}.
+{test_path, "_build/default/lib/enacl/ebin"}.
