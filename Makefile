@@ -7,6 +7,9 @@ compile:
 eqc_compile: compile
 	erlc -o _build/default/lib/enacl/ebin eqc_test/enacl_eqc.erl
 
+eqc_mini_compile: compile
+	erlc -Dmini -o _build/default/lib/enacl/ebin eqc_test/enacl_eqc.erl
+
 .PHONE: console
 console: compile
 	$(REBAR) shell
