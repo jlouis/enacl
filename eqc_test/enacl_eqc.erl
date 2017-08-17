@@ -4,8 +4,8 @@
 
 -ifndef(mini).
 -compile({parse_transform, eqc_parallelize}).
--define(FAULT(Arg1, Arg2), eqc:fault(Arg1, Arg2)).
--define(FAULT_RATE(Arg1, Arg2, Arg3), eqc:fault_rate(Arg1, Arg2, Arg3)).
+-define(FAULT(Arg1, Arg2), fault(Arg1, Arg2)).
+-define(FAULT_RATE(Arg1, Arg2, Arg3), fault_rate(Arg1, Arg2, Arg3)).
 -else.
 -define(FAULT(Arg1, Arg2), noop_fault(Arg1, Arg2)).
 -define(FAULT_RATE(Arg1, Arg2, Arg3), noop_fault_rate(Arg1, Arg2, Arg3)).
