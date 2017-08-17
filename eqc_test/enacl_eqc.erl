@@ -11,6 +11,8 @@
 -define(FAULT_RATE(Arg1, Arg2, Arg3), noop_fault_rate(Arg1, Arg2, Arg3)).
 -endif.
 
+start()->
+  eqc:module(?MODULE).
 
 noop_fault(_Bad, Good) -> Good.
 
