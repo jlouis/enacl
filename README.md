@@ -30,6 +30,14 @@ or
 
 	rebar compile
 
+To build and run licensed eqc test execute:
+
+	make eqc_run
+	
+To build and run eqc-mini version of test execute:
+
+	make eqc_mini_run
+	
 ## Features:
 
 * Complete NaCl library, implementing all default functionality.
