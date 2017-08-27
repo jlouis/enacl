@@ -10,7 +10,7 @@ C_SRC_DIR = $(CURDIR)
 C_SRC_OUTPUT ?= $(CURDIR)/../priv/$(PROJECT).so
 
 # System type and C compiler/flags.
-
+MACHINE_SYS := $(shell uname -m)
 UNAME_SYS := $(shell uname -s)
 ifeq ($(UNAME_SYS), Darwin)
 	CC ?= cc
