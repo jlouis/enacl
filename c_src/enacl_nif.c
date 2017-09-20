@@ -1395,19 +1395,11 @@ static
 ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary key;
 
-<<<<<<< HEAD
   size_t hashSize;
 
     // Validate the arguments
   if( (argc != 2) ||
       (!enif_get_uint64(env, argv[0], &hashSize)) ||
-=======
-  unsigned hashSize;
-
-    // Validate the arguments
-  if( (argc != 2) ||
-      (!enif_get_uint(env, argv[0], &hashSize)) ||
->>>>>>> 5a48c66b07192665f81b7baf8513bc7e73fadd45
       (!enif_inspect_binary(env, argv[1], &key)) ) {
     return enif_make_badarg(env);
   }
