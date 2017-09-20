@@ -769,6 +769,48 @@ prop_randombytes() ->
                 end
        end).
 
+%% RANDOMINT/0
+prop_randomint() ->
+    ?FORALL(X, g_nat(),
+        case is_nat(X) of
+            true ->
+                is_nat(enacl:randomint());
+            false ->
+		true
+       end).
+
+%% RANDOMINT/1
+prop_randomint_bounds() ->
+    ?FORALL(X, g_nat(),
+        case X > 0 of
+            true ->
+		R = enacl:randomint(X),		
+                is_nat(R) andalso (R < X);
+            false ->
+		true
+       end).
+
+%% RANDOMINT/2
+prop_randomint_range() ->
+    ?FORALL({A,B}, {g_nat(),g_nat()},
+	    case is_nat(A) andalso is_nat(B) > 0 of
+		true ->			
+		    case B >= A of
+			true ->
+			    R = enacl:randomint(A,B),		
+			    is_nat(R) andalso (R >= A) andalso (R =< B);
+			false ->
+			    try
+				enacl:randomint(A,B)
+			    catch
+				error:badarg ->
+				    true
+			    end
+		    end;		    
+		false  ->
+		    true
+	    end).
+
 %% SCRAMBLING
 prop_scramble_block() ->
     ?FORALL({Block, Key}, {binary(16), eqc_gen:largebinary(32)},

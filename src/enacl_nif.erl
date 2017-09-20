@@ -146,7 +146,10 @@
 
 %% Access to the RNG
 -export([
-         randombytes/1
+         randombytes/1,
+	 randomint/0,
+	 randomint/1,
+	 randomint/2
         ]).
 
 %% Undocumented features :>
@@ -283,5 +286,8 @@ crypto_kx_PUBLICKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_kx_SECRETKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 
 randombytes(_RequestedSize) -> erlang:nif_error(nif_not_loaded).
-
+randomint() -> erlang:nif_error(nif_not_loaded).
+randomint(_UpperBound) -> erlang:nif_error(nif_not_loaded).
+randomint(_LowerBound, _UpperBound) -> erlang:nif_error(nif_not_loaded).
+    
 scramble_block_16(_Block, _Key) -> erlang:nif_error(nif_not_loaded).
