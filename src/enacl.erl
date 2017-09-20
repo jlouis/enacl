@@ -125,7 +125,10 @@
 
 %% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
 -export([
-         randombytes/1
+         randombytes/1,
+	 randomint/0,
+	 randomint/1,
+	 randomint/2
 ]).
 
 -export([
@@ -1015,6 +1018,31 @@ kx_secret_key_size() ->
 -spec randombytes(non_neg_integer()) -> binary().
 randombytes(N) ->
     enacl_nif:randombytes(N).
+
+
+%% @doc randomint/0 returns an unpredictable value between 0 and 0xffffffff (included).
+%% @end
+-spec randomint() -> non_neg_integer().
+randomint() ->
+    enacl_nif:randomint().
+
+%% @doc randomint/1 function returns an unpredictable value between 0 and given upper bound (excluded)
+%%
+%% It guarantees a uniform distribution of the possible 
+%% output values even when upper bound is not a power of 2.
+%% @end
+-spec randomint(non_neg_integer()) -> non_neg_integer().
+randomint(UpperBound) ->
+    enacl_nif:randomint(UpperBound).
+
+%% @doc randomint/2 function returns an unpredictable value between 1 and given upper bound (included)
+%%
+%% It guarantees a uniform distribution of the possible 
+%% output values even when upper bound is not a power of 2.
+%% @end
+-spec randomint(non_neg_integer(), non_neg_integer()) -> non_neg_integer().
+randomint(LowerBound, UpperBound) ->
+    enacl_nif:randomint(LowerBound, UpperBound).
 
 %% Helpers
 
