@@ -1,10 +1,23 @@
 REBAR=rebar3
+RUN_EQC=erl -pa _build/default/lib/enacl/ebin -noshell -s enacl_eqc -s init stop
 
 .PHONY: compile
 compile:
 	$(REBAR) compile | sed -e 's|_build/default/lib/enacl/||g'
 
-.PHONE: console
+eqc_compile: compile
+	erlc -o _build/default/lib/enacl/ebin eqc_test/enacl_eqc.erl
+
+eqc_mini_compile: compile
+	erlc -Dmini -o _build/default/lib/enacl/ebin eqc_test/enacl_eqc.erl
+
+eqc_run: eqc_compile
+	$(RUN_EQC)
+
+eqc_mini_run: eqc_mini_compile
+	$(RUN_EQC)
+
+.PHONY: console
 console: compile
 	$(REBAR) shell
 

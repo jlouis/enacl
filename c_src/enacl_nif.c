@@ -1039,10 +1039,10 @@ ERL_NIF_TERM enif_crypto_onetimeauth_verify(ErlNifEnv *env, int argc, ERL_NIF_TE
 static
 ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[])
 {
-	size_t req_size;
+	unsigned req_size;
 	ErlNifBinary result;
 
-	if ((argc != 1) || (!enif_get_uint64(env, argv[0], &req_size))) {
+	if ((argc != 1) || (!enif_get_uint(env, argv[0], &req_size))) {
 		return enif_make_badarg(env);
 	}
 
@@ -1352,7 +1352,7 @@ ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 
   size_t hashSize;
 
-    // Validate the arguments
+  // Validate the arguments
   if( (argc != 3) ||
       (!enif_get_uint64(env, argv[0], &hashSize)) ||
       (!enif_inspect_binary(env, argv[1], &message)) ||
@@ -1395,11 +1395,19 @@ static
 ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary key;
 
+<<<<<<< HEAD
   size_t hashSize;
 
     // Validate the arguments
   if( (argc != 2) ||
       (!enif_get_uint64(env, argv[0], &hashSize)) ||
+=======
+  unsigned hashSize;
+
+    // Validate the arguments
+  if( (argc != 2) ||
+      (!enif_get_uint(env, argv[0], &hashSize)) ||
+>>>>>>> 5a48c66b07192665f81b7baf8513bc7e73fadd45
       (!enif_inspect_binary(env, argv[1], &key)) ) {
     return enif_make_badarg(env);
   }

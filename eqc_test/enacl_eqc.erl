@@ -2,7 +2,21 @@
 -include_lib("eqc/include/eqc.hrl").
 -compile(export_all).
 
+-ifndef(mini).
 -compile({parse_transform, eqc_parallelize}).
+-define(FAULT(Arg1, Arg2), fault(Arg1, Arg2)).
+-define(FAULT_RATE(Arg1, Arg2, Arg3), fault_rate(Arg1, Arg2, Arg3)).
+-else.
+-define(FAULT(Arg1, Arg2), noop_fault(Arg1, Arg2)).
+-define(FAULT_RATE(Arg1, Arg2, Arg3), noop_fault_rate(Arg1, Arg2, Arg3)).
+-endif.
+
+start()->
+  eqc:module(?MODULE).
+
+noop_fault(_Bad, Good) -> Good.
+
+noop_fault_rate(_1, _2, Gen) -> Gen.
 
 non_byte_int() ->
     oneof([
@@ -14,7 +28,7 @@ g_iolist() ->
     ?SIZED(Sz, g_iolist(Sz)).
 
 g_iolist(0) ->
-    fault(
+    ?FAULT(
         oneof([
           elements([a,b,c]),
           real(),
@@ -22,7 +36,7 @@ g_iolist(0) ->
         ]),
         return([]));
 g_iolist(N) ->
-    fault(
+    ?FAULT(
         oneof([
           elements([a,b,c]),
           real(),
@@ -34,7 +48,7 @@ g_iolist(N) ->
         ])).
 
 g_iodata() ->
-    fault(
+    ?FAULT(
       oneof([elements([a,b,c]), real()]),
       oneof([binary(), g_iolist(), eqc_gen:largebinary(64*1024)])).
 
@@ -50,7 +64,7 @@ v_iodata(Structure) -> v_iolist(Structure).
 
 %% Generator for binaries of a given size with different properties and fault injection:
 g_binary(Sz) ->
-    fault(g_binary_bad(Sz), g_binary_good(Sz)).
+    ?FAULT(g_binary_bad(Sz), g_binary_good(Sz)).
 
 g_binary_good(Sz) when Sz =< 32 -> binary(Sz);
 g_binary_good(Sz) -> eqc_gen:largebinary(Sz).
@@ -74,7 +88,7 @@ nonce_valid(N) -> v_binary(enacl:box_nonce_size(), N).
 
 %% Generator of natural numbers
 g_nat() ->
-    fault(g_nat_bad(), nat()).
+    ?FAULT(g_nat_bad(), nat()).
 
 g_nat_bad() ->
     oneof([
@@ -106,7 +120,7 @@ keypair_bad() ->
       end).
 
 keypair() ->
-    fault(keypair_bad(), keypair_good()).
+    ?FAULT(keypair_bad(), keypair_good()).
 
 %% CRYPTO BOX
 %% ---------------------------
@@ -158,10 +172,10 @@ failure(X) -> {failure, X}.
 
 prop_box_correct() ->
     ?FORALL({Msg, Nonce, {PK1, SK1}, {PK2, SK2}},
-            {fault_rate(1, 40, g_iodata()),
-             fault_rate(1, 40, nonce()),
-             fault_rate(1, 40, keypair()),
-             fault_rate(1, 40, keypair())},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             ?FAULT_RATE(1, 40, nonce()),
+             ?FAULT_RATE(1, 40, keypair()),
+             ?FAULT_RATE(1, 40, keypair())},
         begin
             case v_iodata(Msg) andalso nonce_valid(Nonce) andalso keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
                 true ->
@@ -182,10 +196,10 @@ prop_box_correct() ->
 
 prop_box_failure_integrity() ->
     ?FORALL({Msg, Nonce, {PK1, SK1}, {PK2, SK2}},
-            {fault_rate(1, 40, g_iodata()),
-             fault_rate(1, 40, nonce()),
-             fault_rate(1, 40, keypair()),
-             fault_rate(1, 40, keypair())},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             ?FAULT_RATE(1, 40, nonce()),
+             ?FAULT_RATE(1, 40, keypair()),
+             ?FAULT_RATE(1, 40, keypair())},
         begin
             case v_iodata(Msg)
                  andalso nonce_valid(Nonce)
@@ -207,7 +221,7 @@ prop_box_failure_integrity() ->
         end).
         
 prop_seal_box_failure_integrity() ->
-    ?FORALL({Msg, {PK1, SK1}}, {fault_rate(1,40,g_iodata()), fault_rate(1,40,keypair())},
+    ?FORALL({Msg, {PK1, SK1}}, {?FAULT_RATE(1,40,g_iodata()), ?FAULT_RATE(1,40,keypair())},
       begin
          case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
            true ->
@@ -225,8 +239,8 @@ prop_seal_box_failure_integrity() ->
 
 prop_seal_box_correct() ->
     ?FORALL({Msg, {PK1, SK1}},
-        {fault_rate(1, 40, g_iodata()),
-         fault_rate(1, 40, keypair())},
+        {?FAULT_RATE(1, 40, g_iodata()),
+         ?FAULT_RATE(1, 40, keypair())},
      begin
          case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
              true ->
@@ -243,7 +257,7 @@ prop_seal_box_correct() ->
 
 %% PRECOMPUTATIONS
 beforenm_key() ->
-    ?LET([{PK1, SK1}, {PK2, SK2}], [fault_rate(1, 40, keypair()), fault_rate(1, 40, keypair())],
+    ?LET([{PK1, SK1}, {PK2, SK2}], [?FAULT_RATE(1, 40, keypair()), ?FAULT_RATE(1, 40, keypair())],
         case keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
             true ->
                 enacl:box_beforenm(PK1, SK2);
@@ -259,7 +273,7 @@ v_key(K) when is_binary(K) -> byte_size(K) == enacl:box_beforenm_bytes();
 v_key(_) -> false.
 
 prop_beforenm_correct() ->
-    ?FORALL([{PK1, SK1}, {PK2, SK2}], [fault_rate(1, 40, keypair()), fault_rate(1, 40, keypair())],
+    ?FORALL([{PK1, SK1}, {PK2, SK2}], [?FAULT_RATE(1, 40, keypair()), ?FAULT_RATE(1, 40, keypair())],
         case keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
             true ->
                 equals(enacl:box_beforenm(PK1, SK2), enacl:box_beforenm(PK2, SK1));
@@ -272,9 +286,9 @@ prop_beforenm_correct() ->
 
 prop_afternm_correct() ->
     ?FORALL([Msg, Nonce, Key],
-        [fault_rate(1, 40, g_iodata()),
-         fault_rate(1, 40, nonce()),
-         fault_rate(1, 40, beforenm_key())],
+        [?FAULT_RATE(1, 40, g_iodata()),
+         ?FAULT_RATE(1, 40, nonce()),
+         ?FAULT_RATE(1, 40, beforenm_key())],
       begin
           case v_iodata(Msg) andalso nonce_valid(Nonce) andalso v_key(Key) of
               true ->
@@ -325,7 +339,7 @@ sign_keypair_good() ->
   return(enacl:sign_keypair()).
 
 sign_keypair() ->
-  fault(sign_keypair_bad(), sign_keypair_good()).
+  ?FAULT(sign_keypair_bad(), sign_keypair_good()).
 
 sign_keypair_public_valid(#{ public := Public })
   when is_binary(Public) ->
@@ -342,8 +356,8 @@ sign_keypair_valid(KP) ->
 
 prop_sign_detached() ->
     ?FORALL({Msg, KeyPair},
-        {fault_rate(1, 40, g_iodata()),
-         fault_rate(1, 40, sign_keypair())},
+        {?FAULT_RATE(1, 40, g_iodata()),
+         ?FAULT_RATE(1, 40, sign_keypair())},
       begin
           case v_iodata(Msg) andalso sign_keypair_secret_valid(KeyPair) of
             true ->
@@ -358,8 +372,8 @@ prop_sign_detached() ->
 
 prop_sign() ->
     ?FORALL({Msg, KeyPair},
-          {fault_rate(1, 40, g_iodata()),
-           fault_rate(1, 40, sign_keypair())},
+          {?FAULT_RATE(1, 40, g_iodata()),
+           ?FAULT_RATE(1, 40, sign_keypair())},
       begin
         case v_iodata(Msg) andalso sign_keypair_secret_valid(KeyPair) of
           true ->
@@ -403,10 +417,10 @@ signed_message_bad_d() ->
     {binary(), oneof([a, int(), ?SUCHTHAT(B, binary(Sz), byte_size(B) /= Sz)])}.
 
 signed_message(M) ->
-    fault(signed_message_bad(), signed_message_good(M)).
+    ?FAULT(signed_message_bad(), signed_message_good(M)).
 
 signed_message_d(M) ->
-    fault(signed_message_bad(), signed_message_good(M)).
+    ?FAULT(signed_message_bad(), signed_message_good(M)).
 
 signed_message_valid({valid, _}, _) -> true;
 signed_message_valid({invalid, _}, _) -> true;
@@ -451,18 +465,18 @@ prop_sign_open() ->
 key_sz(Sz) ->
   equals(enacl:secretbox_key_size(), Sz).
 
-prop_key_sizes() ->
-    conjunction([{secret, key_sz(enacl:secretbox_key_size())},
-                 {stream, key_sz(enacl:stream_key_size())},
-                 {auth, key_sz(enacl:auth_key_size())},
-                 {onetimeauth, key_sz(enacl:onetime_auth_key_size())}]).
+%% prop_key_sizes() ->
+%%     conjunction([{secret, key_sz(enacl:secretbox_key_size())},
+%%                  {stream, key_sz(enacl:stream_key_size())},
+%%                  {auth, key_sz(enacl:auth_key_size())},
+%%                  {onetimeauth, key_sz(enacl:onetime_auth_key_size())}]).
 
 nonce_sz(Sz) ->
   equals(enacl:secretbox_nonce_size(), Sz).
 
-prop_nonce_sizes() ->
-    conjunction([{secret, nonce_sz(enacl:secretbox_nonce_size())},
-                 {stream, nonce_sz(enacl:stream_nonce_size())}]).
+%% prop_nonce_sizes() ->
+%%     conjunction([{secret, nonce_sz(enacl:secretbox_nonce_size())},
+%%                  {stream, nonce_sz(enacl:stream_nonce_size())}]).
 
 secret_key_good() ->
 	Sz = enacl:secretbox_key_size(),
@@ -474,7 +488,7 @@ secret_key_bad() ->
 	       ?SUCHTHAT(B, binary(), byte_size(B) /= enacl:secretbox_key_size())]).
 
 secret_key() ->
-	fault(secret_key_bad(), secret_key_good()).
+	?FAULT(secret_key_bad(), secret_key_good()).
 
 secret_key_valid(SK) when is_binary(SK) ->
 	Sz = enacl:secretbox_key_size(),
@@ -497,9 +511,9 @@ secretbox_open(Msg, Nonce, Key) ->
 
 prop_secretbox_correct() ->
     ?FORALL({Msg, Nonce, Key},
-            {fault_rate(1, 40, g_iodata()),
-             fault_rate(1, 40, nonce()),
-             fault_rate(1, 40, secret_key())},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             ?FAULT_RATE(1, 40, nonce()),
+             ?FAULT_RATE(1, 40, secret_key())},
       begin
         case v_iodata(Msg) andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
           true ->
@@ -527,8 +541,8 @@ prop_secretbox_failure_integrity() ->
 prop_stream_correct() ->
     ?FORALL({Len, Nonce, Key},
             {int(),
-             fault_rate(1, 40, nonce()),
-             fault_rate(1, 40, secret_key())},
+             ?FAULT_RATE(1, 40, nonce()),
+             ?FAULT_RATE(1, 40, secret_key())},
         case Len >= 0 andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
           true ->
               CipherStream = enacl:stream(Len, Nonce, Key),
@@ -541,29 +555,29 @@ xor_bytes(<<A, As/binary>>, <<B, Bs/binary>>) ->
     [A bxor B | xor_bytes(As, Bs)];
 xor_bytes(<<>>, <<>>) -> [].
 
-prop_stream_xor_correct() ->
-    ?FORALL({Msg, Nonce, Key},
-            {fault_rate(1, 40, g_iodata()),
-             fault_rate(1, 40, nonce()),
-             fault_rate(1, 40, secret_key())},
-        case v_iodata(Msg) andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
-            true ->
-                Stream = enacl:stream(iolist_size(Msg), Nonce, Key),
-                CipherText = enacl:stream_xor(Msg, Nonce, Key),
-                StreamXor = enacl:stream_xor(CipherText, Nonce, Key),
-                conjunction([
-                    {'xor', equals(iolist_to_binary(Msg), StreamXor)},
-                    {stream, equals(iolist_to_binary(xor_bytes(Stream, iolist_to_binary(Msg))), CipherText)}
-                ]);
-            false ->
-                badargs(fun() -> enacl:stream_xor(Msg, Nonce, Key) end)
-        end).
+%% prop_stream_xor_correct() ->
+%%     ?FORALL({Msg, Nonce, Key},
+%%             {?FAULT_RATE(1, 40, g_iodata()),
+%%              ?FAULT_RATE(1, 40, nonce()),
+%%              ?FAULT_RATE(1, 40, secret_key())},
+%%         case v_iodata(Msg) andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
+%%             true ->
+%%                 Stream = enacl:stream(iolist_size(Msg), Nonce, Key),
+%%                 CipherText = enacl:stream_xor(Msg, Nonce, Key),
+%%                 StreamXor = enacl:stream_xor(CipherText, Nonce, Key),
+%%                 conjunction([
+%%                     {'xor', equals(iolist_to_binary(Msg), StreamXor)},
+%%                     {stream, equals(iolist_to_binary(xor_bytes(Stream, iolist_to_binary(Msg))), CipherText)}
+%%                 ]);
+%%             false ->
+%%                 badargs(fun() -> enacl:stream_xor(Msg, Nonce, Key) end)
+%%         end).
 
 %% CRYPTO AUTH
 prop_auth_correct() ->
     ?FORALL({Msg, Key},
-            {fault_rate(1, 40, g_iodata()),
-             fault_rate(1, 40, secret_key())},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             ?FAULT_RATE(1, 40, secret_key())},
        case v_iodata(Msg) andalso secret_key_valid(Key) of
          true ->
            Authenticator = enacl:auth(Msg, Key),
@@ -588,7 +602,7 @@ authenticator_good(_Msg, _Key) ->
     binary(enacl:auth_size()).
 
 authenticator(Msg, Key) ->
-  fault(authenticator_bad(), authenticator_good(Msg, Key)).
+  ?FAULT(authenticator_bad(), authenticator_good(Msg, Key)).
 
 authenticator_valid({valid, _}) -> true;
 authenticator_valid({invalid, _}) -> true;
@@ -596,8 +610,8 @@ authenticator_valid(_) -> false.
 
 prop_auth_verify_correct() ->
     ?FORALL({Msg, Key},
-            {fault_rate(1, 40, g_iodata()),
-             fault_rate(1, 40, secret_key())},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             ?FAULT_RATE(1, 40, secret_key())},
       ?FORALL(Authenticator, authenticator(Msg, Key),
         case v_iodata(Msg) andalso secret_key_valid(Key) andalso authenticator_valid(Authenticator) of
           true ->
@@ -614,8 +628,8 @@ prop_auth_verify_correct() ->
 %% CRYPTO ONETIME AUTH
 prop_onetimeauth_correct() ->
     ?FORALL({Msg, Key},
-            {fault_rate(1, 40, g_iodata()),
-             fault_rate(1, 40, secret_key())},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             ?FAULT_RATE(1, 40, secret_key())},
        case v_iodata(Msg) andalso secret_key_valid(Key) of
          true ->
            Authenticator = enacl:onetime_auth(Msg, Key),
@@ -640,7 +654,7 @@ ot_authenticator_good(_Msg, _Key) ->
     binary(enacl:auth_size()).
 
 ot_authenticator(Msg, Key) ->
-  fault(ot_authenticator_bad(), ot_authenticator_good(Msg, Key)).
+  ?FAULT(ot_authenticator_bad(), ot_authenticator_good(Msg, Key)).
 
 ot_authenticator_valid({valid, _}) -> true;
 ot_authenticator_valid({invalid, _}) -> true;
@@ -648,8 +662,8 @@ ot_authenticator_valid(_) -> false.
 
 prop_onetime_auth_verify_correct() ->
     ?FORALL({Msg, Key},
-            {fault_rate(1, 40, g_iodata()),
-             fault_rate(1, 40, secret_key())},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             ?FAULT_RATE(1, 40, secret_key())},
       ?FORALL(Authenticator, ot_authenticator(Msg, Key),
         case v_iodata(Msg) andalso secret_key_valid(Key) andalso ot_authenticator_valid(Authenticator) of
           true ->
@@ -706,7 +720,7 @@ verify_pair_good(Sz) ->
     ?SUCHTHAT({X, Y}, {binary(Sz), binary(Sz)}, X /= Y)]).
 
 verify_pair(Sz) ->
-  fault(verify_pair_bad(Sz), verify_pair_good(Sz)).
+  ?FAULT(verify_pair_bad(Sz), verify_pair_good(Sz)).
 
 verify_pair_valid(Sz, X, Y) ->
     byte_size(X) == Sz andalso byte_size(Y) == Sz.
