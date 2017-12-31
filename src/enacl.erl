@@ -108,19 +108,18 @@
 
 %% Password Hashing - Argon2 Algorithm
 -export([
-	 pwhash/2,
-	 pwhash_str/1,
-	 pwhash_str_verify/2
+         pwhash/2,
+         pwhash_str/1,
+         pwhash_str_verify/2
 ]).
 
 %% Generic hash functions
 -export([
-	 generichash/3,
-	 generichash/2,
-
-	 generichash_init/2,
-	 generichash_update/2,
-	 generichash_final/1
+         generichash/3,
+         generichash/2,
+         generichash_init/2,
+         generichash_update/2,
+         generichash_final/1
 ]).
 
 %% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
@@ -198,12 +197,12 @@ verify() ->
          {crypto_kx_SESSIONKEYBYTES, ?CRYPTO_KX_SESSIONKEYBYTES},
          {crypto_kx_PUBLICKEYBYTES, ?CRYPTO_KX_PUBLICKEYBYTES},
          {crypto_kx_SECRETKEYBYTES, ?CRYPTO_KX_SECRETKEYBYTES},
-	 {crypto_generichash_BYTES, ?CRYPTO_GENERICHASH_BYTES},
-	 {crypto_generichash_BYTES_MIN, ?CRYPTO_GENERICHASH_BYTES_MIN},
-	 {crypto_generichash_BYTES_MAX, ?CRYPTO_GENERICHASH_BYTES_MAX},
-	 {crypto_generichash_KEYBYTES, ?CRYPTO_GENERICHASH_KEYBYTES},
-	 {crypto_generichash_KEYBYTES_MIN, ?CRYPTO_GENERICHASH_KEYBYTES_MIN},
-	 {crypto_generichash_KEYBYTES_MAX, ?CRYPTO_GENERICHASH_KEYBYTES_MAX}
+         {crypto_generichash_BYTES, ?CRYPTO_GENERICHASH_BYTES},
+         {crypto_generichash_BYTES_MIN, ?CRYPTO_GENERICHASH_BYTES_MIN},
+         {crypto_generichash_BYTES_MAX, ?CRYPTO_GENERICHASH_BYTES_MAX},
+         {crypto_generichash_KEYBYTES, ?CRYPTO_GENERICHASH_KEYBYTES},
+         {crypto_generichash_KEYBYTES_MIN, ?CRYPTO_GENERICHASH_KEYBYTES_MIN},
+         {crypto_generichash_KEYBYTES_MAX, ?CRYPTO_GENERICHASH_KEYBYTES_MAX}
     ],
     run_verifiers(Verifiers).
 
@@ -280,7 +279,7 @@ unsafe_memzero(_) ->
     error(badarg).
 
 
-%% @doc generichash/3 creates a hash of the message using a key. 
+%% @doc generichash/3 creates a hash of the message using a key.
 %%
 %% This function generates a hash of the message using a key. The hash size is
 %% either 16, 32 or 64 bytes
