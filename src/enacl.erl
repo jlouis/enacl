@@ -285,7 +285,8 @@ unsafe_memzero(_) ->
 %% This function generates a hash of the message using a key. The hash size is
 %% either 16, 32 or 64 bytes
 %% @end
--spec generichash(iodata(), binary()) -> {ok, binary()} | {error, term()}.
+-type generichash_bytes() :: ?CRYPTO_GENERICHASH_BYTES_MIN..?CRYPTO_GENERICHASH_BYTES_MAX.
+-spec generichash(generichash_bytes(), iodata(), binary()) -> {ok, binary()} | {error, term()}.
 generichash(HashSize, Message, Key) ->
     enacl_nif:crypto_generichash(HashSize, Message, Key).
 
@@ -294,6 +295,7 @@ generichash(HashSize, Message, Key) ->
 %% This function generates a hash of the message. The hash size is
 %% either 16, 32 or 64 bytes
 %% @end
+-spec generichash(generichash_bytes(), iodata()) -> {ok, binary()} | {error, term()}.
 generichash(HashSize, Message) ->
     enacl_nif:crypto_generichash(HashSize, Message, <<>>).
 
