@@ -316,7 +316,7 @@ generichash_final({hashstate, HashSize, HashState}) ->
 pwhash(Password, Salt) ->
     enacl_nif:crypto_pwhash(Password, Salt).
 
-%% @doc pwhash_str_verify/2 generates a ASCII encoded hash of a password
+%% @doc pwhash_str/1 generates a ASCII encoded hash of a password
 %%
 %% This function generates a fixed size, salted, ASCII encoded hash of a user defined password.
 %% @end
