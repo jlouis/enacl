@@ -219,7 +219,7 @@ prop_box_failure_integrity() ->
                     end
             end
         end).
-        
+
 prop_seal_box_failure_integrity() ->
     ?FORALL({Msg, {PK1, SK1}}, {?FAULT_RATE(1,40,g_iodata()), ?FAULT_RATE(1,40,keypair())},
       begin
@@ -455,6 +455,49 @@ prop_sign_open() ->
               false ->
                   badargs(fun() -> enacl:sign_open(SignMsg, PK) end)
           end)).
+
+%% PWHASH
+%% -------------------------------
+% enacl:pwhash("password", enacl:randombytes(16)).
+% {K, P} = enacl:pwhash_str("password").
+% enacl:pwhash_str_verify(P, "password").
+% enacl:pwhash_str_verify(P, <<"password">>).
+
+pwhash(Passwd, Salt) ->
+  try
+    enacl:pwhash(Passwd, Salt)
+  catch
+    error:badarg -> badarg
+  end.
+
+% pwhash
+% pwhash_str
+% pwhash_str_verify
+% prop_pwhash() ->
+%     ?FORALL({Passwd, Salt},
+%             {?FAULT_RATE(1, 40, g_iodata()),
+%              ?FAULT_RATE(1, 40, g_binary(16))},
+%       begin
+%         case v_iodata(Passwd) andalso v_binary(16, Salt) of
+%           true ->
+%             {ok, PasswdHash} = enacl:pwhash(Passwd, Salt),
+%             equals();
+
+%       end).
+
+prop_pwhash_str_verify() ->
+    ?FORALL({PasswdHash, Passwd},
+            {?FAULT_RATE(1, 40, g_binary(32)),
+             ?FAULT_RATE(1, 40, g_iodata())},
+      begin
+        case v_binary(32, PasswdHash) andalso v_iodata(Passwd) of
+          true ->
+            Verify = enacl:pwhash_str_verify(PasswdHash, Passwd),
+            equals(true, Verify);
+          false ->
+            badargs(fun() -> enacl:pwhash_str_verify(PasswdHash, Passwd) end)
+        end
+      end).
 
 %% CRYPTO SECRET BOX
 %% -------------------------------
