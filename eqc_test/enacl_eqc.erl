@@ -458,10 +458,6 @@ prop_sign_open() ->
 
 %% PWHASH
 %% -------------------------------
-% enacl:pwhash("password", enacl:randombytes(16)).
-% {K, P} = enacl:pwhash_str("password").
-% enacl:pwhash_str_verify(P, "password").
-% enacl:pwhash_str_verify(P, <<"password">>).
 
 pwhash(Passwd, Salt) ->
   try
