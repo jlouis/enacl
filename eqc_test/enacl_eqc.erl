@@ -470,32 +470,31 @@ pwhash(Passwd, Salt) ->
     error:badarg -> badarg
   end.
 
-% pwhash
-% pwhash_str
-% pwhash_str_verify
-% prop_pwhash() ->
-%     ?FORALL({Passwd, Salt},
-%             {?FAULT_RATE(1, 40, g_iodata()),
-%              ?FAULT_RATE(1, 40, g_binary(16))},
-%       begin
-%         case v_iodata(Passwd) andalso v_binary(16, Salt) of
-%           true ->
-%             {ok, PasswdHash} = enacl:pwhash(Passwd, Salt),
-%             equals();
+pwhash_str(Passwd) ->
+  try
+    enacl:pwhash_str(Passwd)
+  catch
+    error:badarg -> badarg
+  end.
 
-%       end).
+pwhash_str_verify(PasswdHash, Passwd) ->
+  try
+    enacl:pwhash_str_verify(PasswdHash, Passwd)
+  catch
+    error:badarg -> badarg
+  end.
 
 prop_pwhash_str_verify() ->
-    ?FORALL({PasswdHash, Passwd},
-            {?FAULT_RATE(1, 40, g_binary(32)),
-             ?FAULT_RATE(1, 40, g_iodata())},
+    ?FORALL({Passwd},
+            {?FAULT_RATE(1, 40, g_iodata())},
       begin
-        case v_binary(32, PasswdHash) andalso v_iodata(Passwd) of
+        case v_iodata(Passwd) of
           true ->
-            Verify = enacl:pwhash_str_verify(PasswdHash, Passwd),
-            equals(true, Verify);
+            {K, P} = enacl:pwhash_str(Passwd),
+            S = enacl:pwhash_str_verify(P, Passwd),
+            equals(S, true);
           false ->
-            badargs(fun() -> enacl:pwhash_str_verify(PasswdHash, Passwd) end)
+            badargs(fun() -> enacl:pwhash_str_verify(Passwd) end)
         end
       end).
 
