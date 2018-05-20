@@ -822,6 +822,26 @@ badargs(Thunk) ->
     error:badarg -> true
   end.
 
+%% AEAD ChaCha20Poly1305
+prop_aead_chacha20poly1305() ->
+  ?FORALL({Key, Msg, AD, Nonce},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
+  begin
+    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
+    equals(enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, EncryptMsg), Msg)
+  end).
+
+prop_aead_chacha20poly1305_fail() ->
+  ?FORALL({Key, Msg, AD, Nonce},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
+  begin
+    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
+    case enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, <<0:8, EncryptMsg/binary>>) of
+        {error, _} -> true;
+        _          -> false
+    end
+  end).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Joel Test Blobs
 

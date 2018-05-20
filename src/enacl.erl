@@ -54,6 +54,13 @@
          stream_chacha20/3,
          stream_chacha20_xor/3,
 
+         aead_chacha20poly1305_encrypt/4,
+         aead_chacha20poly1305_decrypt/4,
+         aead_chacha20poly1305_KEYBYTES/0,
+         aead_chacha20poly1305_NONCEBYTES/0,
+         aead_chacha20poly1305_ABYTES/0,
+         aead_chacha20poly1305_MESSAGEBYTES_MAX/0,
+
          stream_key_size/0,
          stream_nonce_size/0,
          stream/3,
@@ -76,7 +83,8 @@
 
 %% Curve 25519.
 -export([
-         curve25519_scalarmult/1, curve25519_scalarmult/2
+         curve25519_scalarmult/1, curve25519_scalarmult/2,
+         curve25519_scalarmult_base/1
 ]).
 
 %% Ed 25519.
@@ -898,6 +906,13 @@ curve25519_scalarmult(Secret, BasePoint) ->
 curve25519_scalarmult(#{ secret := Secret, base_point := BasePoint }) ->
     curve25519_scalarmult(Secret, BasePoint).
 
+%% @doc curve25519_scalarmult_base/1 compute the corresponding public key for a
+%% given secret key.
+%% @end.
+-spec curve25519_scalarmult_base(Secret :: binary()) -> binary().
+curve25519_scalarmult_base(Secret) ->
+    enacl_nif:crypto_curve25519_scalarmult_base(Secret).
+
 %% Ed 25519 Crypto
 %% ---------------
 %% @doc crypto_sign_ed25519_keypair/0 creates a new Ed 25519 Public/Secret keypair.
@@ -997,7 +1012,62 @@ kx_public_key_size() ->
 kx_secret_key_size() ->
     enacl_nif:crypto_kx_SECRETKEYBYTES().
 
+%% AEAD ChaCha20 Poly1305
+%% ----------------------
+%% @doc aead_chacha20poly1305_encrypt/4 encrypts `Message` with additional data
+%% `AD` using `Key` and `Nonce`. Returns the encrypted message followed by
+%% `aead_chacha20poly1305_ABYTES/0` bytes of MAC.
+%% @end
+-spec aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg) -> binary() | {error, term()}
+    when Key :: binary(),
+         Nonce :: pos_integer(),
+         AD :: binary(),
+         Msg :: binary().
+aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg) ->
+    NonceBin = <<0:32, Nonce:64/little-unsigned-integer>>,
+    enacl_nif:crypto_aead_chacha20poly1305_encrypt(Key, NonceBin, AD, Msg).
 
+%% @doc aead_chacha20poly1305_decrypt/4 decrypts ciphertext `CT` with additional
+%% data `AD` using `Key` and `Nonce`. Note: `CipherText` should contain
+%% `aead_chacha20poly1305_ABYTES/0` bytes that is the MAC. Returns the decrypted
+%% message.
+%% @end
+-spec aead_chacha20poly1305_decrypt(Key, Nonce, AD, CT) -> binary() | {error, term()}
+    when Key :: binary(),
+         Nonce :: pos_integer(),
+         AD :: binary(),
+         CT :: binary().
+aead_chacha20poly1305_decrypt(Key, Nonce, AD, CT) ->
+    NonceBin = <<0:32, Nonce:64/little-unsigned-integer>>,
+    enacl_nif:crypto_aead_chacha20poly1305_decrypt(Key, NonceBin, AD, CT).
+
+%% @doc aead_chacha20poly1305_KEYBYTES/0 returns the number of bytes
+%% of the key used in AEAD ChaCha20 Poly1305 encryption/decryption.
+%% @end
+-spec aead_chacha20poly1305_KEYBYTES() -> pos_integer().
+aead_chacha20poly1305_KEYBYTES() ->
+    enacl_nif:crypto_aead_chacha20poly1305_KEYBYTES().
+
+%% @doc aead_chacha20poly1305_NONCEBYTES/0 returns the number of bytes
+%% of the Nonce in AEAD ChaCha20 Poly1305 encryption/decryption.
+%% @end
+-spec aead_chacha20poly1305_NONCEBYTES() -> pos_integer().
+aead_chacha20poly1305_NONCEBYTES() ->
+    enacl_nif:crypto_aead_chacha20poly1305_NPUBBYTES().
+
+%% @doc aead_chacha20poly1305_ABYTES/0 returns the number of bytes
+%% of the MAC in AEAD ChaCha20 Poly1305 encryption/decryption.
+%% @end
+-spec aead_chacha20poly1305_ABYTES() -> pos_integer().
+aead_chacha20poly1305_ABYTES() ->
+    enacl_nif:crypto_aead_chacha20poly1305_ABYTES().
+
+%% @doc aead_chacha20poly1305_MESSAGEBYTES_MAX/0 returns the max number of bytes
+%% allowed in a message in AEAD ChaCha20 Poly1305 encryption/decryption.
+%% @end
+-spec aead_chacha20poly1305_MESSAGEBYTES_MAX() -> pos_integer().
+aead_chacha20poly1305_MESSAGEBYTES_MAX() ->
+    enacl_nif:crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX().
 
 %% Obtaining random bytes
 
