@@ -486,11 +486,12 @@ prop_pwhash_str_verify() ->
       begin
         case v_iodata(Passwd) of
           true ->
-            {K, P} = enacl:pwhash_str(Passwd),
-            S = enacl:pwhash_str_verify(P, Passwd),
+            {ok, Ascii} = enacl:pwhash_str(Passwd),
+            S = enacl:pwhash_str_verify(Ascii, Passwd),
             equals(S, true);
           false ->
-            badargs(fun() -> enacl:pwhash_str_verify(Passwd) end)
+            badargs(fun() -> enacl:pwhash_str(Passwd) end),
+            badargs(fun() -> enacl:pwhash_str_verify("", Passwd) end)
         end
       end).
 
