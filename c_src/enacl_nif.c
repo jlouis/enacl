@@ -35,7 +35,7 @@ int enif_crypto_load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
   if( !(generichash_state_type = enif_open_resource_type(env, NULL, CRYPTO_GENERICHASH_STATE_RESOURCE, NULL, ERL_NIF_RT_CREATE, NULL)) ) {
     return -1;
   }
-			  
+
   return sodium_init();
 }
 
@@ -1261,7 +1261,7 @@ ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
 
   ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM ret = enif_make_binary(env, &h);
-    
+
   return enif_make_tuple2(env, ok, ret);
 }
 
@@ -1289,7 +1289,7 @@ ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc, ERL_NIF_TERM const
 
   ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM ret = enif_make_binary(env, &h);
-    
+
   return enif_make_tuple2(env, ok, ret);
 }
 
@@ -1300,7 +1300,7 @@ ERL_NIF_TERM enif_crypto_pwhash_str_verify(ErlNifEnv *env, int argc, ERL_NIF_TER
   // Validate the arguments
   if( (argc != 2) ||
       (!enif_inspect_binary(env, argv[0], &h)) ||
-      (!enif_inspect_binary(env, argv[1], &p)) ) {
+      (!enif_inspect_iolist_as_binary(env, argv[1], &p)) ) {
     return enif_make_badarg(env);
   }
 
@@ -1308,7 +1308,7 @@ ERL_NIF_TERM enif_crypto_pwhash_str_verify(ErlNifEnv *env, int argc, ERL_NIF_TER
   if( crypto_pwhash_str_verify((char *)h.data, (char *)p.data, p.size) != 0) {
     /* wrong password */
     retVal = enif_make_atom(env, ATOM_FALSE);
-  } 
+  }
 
   return retVal;
 }
@@ -1384,10 +1384,10 @@ ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
     enif_release_binary(&hash);
     return nacl_error_tuple(env, "hash_error");
   }
-  
+
   ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM ret = enif_make_binary(env, &hash);
-    
+
   return enif_make_tuple2(env, ok, ret);
 }
 
@@ -1428,8 +1428,8 @@ ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM
   if( 0 != crypto_generichash_init(state, k, key.size, hashSize) ) {
     return nacl_error_tuple(env, "hash_init_error");
   }
-  
-  
+
+
   // Create return values
   ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
   ERL_NIF_TERM e2 = argv[0];
@@ -1475,7 +1475,7 @@ ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TE
   ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
   ERL_NIF_TERM e2 = argv[0];
   ERL_NIF_TERM e3 = enif_make_resource(env, state);
-  
+
   // return a tuple
   return enif_make_tuple3(env, e1, e2, e3);
 }
@@ -1483,7 +1483,7 @@ ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TE
 static
 ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary hash;
-  
+
   unsigned hashSize;
 
   crypto_generichash_state *state;
@@ -1511,10 +1511,10 @@ ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc, ERL_NIF_TER
     enif_release_binary(&hash);
     return nacl_error_tuple(env, "hash_error");
   }
-  
+
   ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM ret = enif_make_binary(env, &hash);
-    
+
   return enif_make_tuple2(env, ok, ret);
 }
 
@@ -1529,7 +1529,7 @@ static ErlNifFunc nif_funcs[] = {
 
 	erl_nif_dirty_job_cpu_bound_macro("crypto_box_keypair", 0, enif_crypto_box_keypair),
 
-	
+
 	erl_nif_dirty_job_cpu_bound_macro("crypto_box", 4, enif_crypto_box),
 	erl_nif_dirty_job_cpu_bound_macro("crypto_box_open", 4, enif_crypto_box_open),
 
@@ -1634,7 +1634,7 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_generichash_init", 2, enif_crypto_generichash_init},
 	{"crypto_generichash_update", 3, enif_crypto_generichash_update},
 	{"crypto_generichash_final", 2, enif_crypto_generichash_final}
-	
+
 };
 
 ERL_NIF_INIT(enacl_nif, nif_funcs, enif_crypto_load, NULL, NULL, NULL);

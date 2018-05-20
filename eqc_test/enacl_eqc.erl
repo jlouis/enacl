@@ -219,7 +219,7 @@ prop_box_failure_integrity() ->
                     end
             end
         end).
-        
+
 prop_seal_box_failure_integrity() ->
     ?FORALL({Msg, {PK1, SK1}}, {?FAULT_RATE(1,40,g_iodata()), ?FAULT_RATE(1,40,keypair())},
       begin
@@ -455,6 +455,44 @@ prop_sign_open() ->
               false ->
                   badargs(fun() -> enacl:sign_open(SignMsg, PK) end)
           end)).
+
+%% PWHASH
+%% -------------------------------
+
+pwhash(Passwd, Salt) ->
+  try
+    enacl:pwhash(Passwd, Salt)
+  catch
+    error:badarg -> badarg
+  end.
+
+pwhash_str(Passwd) ->
+  try
+    enacl:pwhash_str(Passwd)
+  catch
+    error:badarg -> badarg
+  end.
+
+pwhash_str_verify(PasswdHash, Passwd) ->
+  try
+    enacl:pwhash_str_verify(PasswdHash, Passwd)
+  catch
+    error:badarg -> badarg
+  end.
+
+prop_pwhash_str_verify() ->
+    ?FORALL({Passwd},
+            {?FAULT_RATE(1, 40, g_iodata())},
+      begin
+        case v_iodata(Passwd) of
+          true ->
+            {K, P} = enacl:pwhash_str(Passwd),
+            S = enacl:pwhash_str_verify(P, Passwd),
+            equals(S, true);
+          false ->
+            badargs(fun() -> enacl:pwhash_str_verify(Passwd) end)
+        end
+      end).
 
 %% CRYPTO SECRET BOX
 %% -------------------------------
