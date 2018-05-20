@@ -292,7 +292,7 @@ unsafe_memzero(_) ->
 %% This function generates a hash of the message using a key. The hash size is
 %% either 16, 32 or 64 bytes
 %% @end
--type generichash_bytes() :: ?CRYPTO_GENERICHASH_BYTES_MIN..?CRYPTO_GENERICHASH_BYTES_MAX.
+-type generichash_bytes() :: 10..64.
 -spec generichash(generichash_bytes(), iodata(), binary()) -> {ok, binary()} | {error, term()}.
 generichash(HashSize, Message, Key) ->
     enacl_nif:crypto_generichash(HashSize, Message, Key).
@@ -1014,9 +1014,9 @@ kx_secret_key_size() ->
 
 %% AEAD ChaCha20 Poly1305
 %% ----------------------
-%% @doc aead_chacha20poly1305_encrypt/4 encrypts `Message` with additional data
-%% `AD` using `Key` and `Nonce`. Returns the encrypted message followed by
-%% `aead_chacha20poly1305_ABYTES/0` bytes of MAC.
+%% @doc aead_chacha20poly1305_encrypt/4 encrypts `Message' with additional data
+%% `AD' using `Key' and `Nonce'. Returns the encrypted message followed by
+%% `aead_chacha20poly1305_ABYTES/0' bytes of MAC.
 %% @end
 -spec aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg) -> binary() | {error, term()}
     when Key :: binary(),
@@ -1027,9 +1027,9 @@ aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg) ->
     NonceBin = <<0:32, Nonce:64/little-unsigned-integer>>,
     enacl_nif:crypto_aead_chacha20poly1305_encrypt(Key, NonceBin, AD, Msg).
 
-%% @doc aead_chacha20poly1305_decrypt/4 decrypts ciphertext `CT` with additional
-%% data `AD` using `Key` and `Nonce`. Note: `CipherText` should contain
-%% `aead_chacha20poly1305_ABYTES/0` bytes that is the MAC. Returns the decrypted
+%% @doc aead_chacha20poly1305_decrypt/4 decrypts ciphertext `CT' with additional
+%% data `AD' using `Key' and `Nonce'. Note: `CipherText' should contain
+%% `aead_chacha20poly1305_ABYTES/0' bytes that is the MAC. Returns the decrypted
 %% message.
 %% @end
 -spec aead_chacha20poly1305_decrypt(Key, Nonce, AD, CT) -> binary() | {error, term()}
