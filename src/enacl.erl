@@ -18,18 +18,19 @@
 
 %% Public key crypto
 -export([
+         %% EQC
          box_keypair/0,
          box/4,
          box_open/4,
          box_beforenm/2,
          box_afternm/3,
          box_open_afternm/3,
-
          box_nonce_size/0,
          box_public_key_bytes/0,
          box_secret_key_bytes/0,
          box_beforenm_bytes/0,
 
+         %% EQC
          sign_keypair_public_size/0,
          sign_keypair_secret_size/0,
          sign_keypair/0,
@@ -38,22 +39,26 @@
          sign_detached/2,
          sign_verify_detached/3,
 
+         %% EQC
          box_seal/2,
          box_seal_open/3
 ]).
 
 %% Secret key crypto
 -export([
+         %% EQC
          secretbox_key_size/0,
          secretbox_nonce_size/0,
          secretbox/3,
          secretbox_open/3,
 
+         %% No Tests!
          stream_chacha20_key_size/0,
          stream_chacha20_nonce_size/0,
          stream_chacha20/3,
          stream_chacha20_xor/3,
 
+         %% EQC
          aead_chacha20poly1305_encrypt/4,
          aead_chacha20poly1305_decrypt/4,
          aead_chacha20poly1305_KEYBYTES/0,
@@ -61,34 +66,76 @@
          aead_chacha20poly1305_ABYTES/0,
          aead_chacha20poly1305_MESSAGEBYTES_MAX/0,
 
+         %% EQC
          stream_key_size/0,
          stream_nonce_size/0,
          stream/3,
+
+         %% No Tests!
          stream_xor/3,
 
+         %% EQC
          auth_key_size/0,
          auth_size/0,
          auth/2,
          auth_verify/3,
 
-         shorthash_key_size/0,
-         shorthash_size/0,
-         shorthash/2,
-
+         %% EQC
          onetime_auth_key_size/0,
          onetime_auth_size/0,
          onetime_auth/2,
          onetime_auth_verify/3
 ]).
 
-%% Curve 25519.
+%% Hash functions
 -export([
+         %% No Tests!
+         generichash/3,
+         generichash/2,
+         generichash_init/2,
+         generichash_update/2,
+         generichash_final/1,
+
+         %% No Tests!
+         shorthash_key_size/0,
+         shorthash_size/0,
+         shorthash/2,
+
+         %% EQC
+         pwhash/2,
+         pwhash_str/1,
+         pwhash_str_verify/2
+
+]).
+
+%% Low-level subtle functions which are hard to get correct
+-export([
+         %% EQC
+         hash/1,
+         verify_16/2,
+         verify_32/2,
+         
+         %% No Tests!
+         unsafe_memzero/1
+]).
+
+%% Randomness
+-export([
+         %% EQC
+         randombytes/1
+]).
+
+%%% Specific primitives
+%% Curve 25519 operations.
+-export([
+         %% No Tests!
          curve25519_scalarmult/1, curve25519_scalarmult/2,
          curve25519_scalarmult_base/1
 ]).
 
-%% Ed 25519.
+%% Ed 25519 operations.
 -export([
+         %% No Tests!
          crypto_sign_ed25519_keypair/0,
          crypto_sign_ed25519_public_to_curve25519/1,
          crypto_sign_ed25519_secret_to_curve25519/1,
@@ -96,16 +143,9 @@
          crypto_sign_ed25519_secret_size/0
         ]).
 
-%% Low-level functions
--export([
-         hash/1,
-         verify_16/2,
-         verify_32/2,
-         unsafe_memzero/1
-]).
-
 %% Key exchange functions
 -export([
+         %% No Tests!
          kx_keypair/0,
          kx_client_session_keys/3,
          kx_server_session_keys/3,
@@ -114,30 +154,10 @@
          kx_session_key_size/0
 ]).
 
-%% Password Hashing - Argon2 Algorithm
--export([
-         pwhash/2,
-         pwhash_str/1,
-         pwhash_str_verify/2
-]).
+%% Internal verification of the system
+-export([verify/0]).
 
-%% Generic hash functions
--export([
-         generichash/3,
-         generichash/2,
-         generichash_init/2,
-         generichash_update/2,
-         generichash_final/1
-]).
 
-%% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
--export([
-         randombytes/1
-]).
-
--export([
-         verify/0
-]).
 
 %% Definitions of system budgets
 %% To get a grip for these, call `enacl_timing:all/0' on your system. The numbers here are

@@ -22,3 +22,7 @@ prop_shared_secret() ->
                 equals(Alice, Bob)
             end).
 
+prop_scramble_block() ->
+    ?FORALL({Block, Key}, {binary(16), eqc_gen:largebinary(32)},
+        is_binary(enacl_ext:scramble_block_16(Block, Key))).
+

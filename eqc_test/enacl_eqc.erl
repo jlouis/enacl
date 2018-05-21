@@ -124,7 +124,11 @@ keypair() ->
 
 %% CRYPTO BOX
 %% ---------------------------
-
+%% * box/4
+%% * box_open/4
+%% * box_beforenm/2
+%% * box_afternm/3
+%% * box_open_afternm/3
 keypair_valid(PK, SK) when is_binary(PK), is_binary(SK) ->
     PKBytes = enacl:box_public_key_bytes(),
     SKBytes = enacl:box_secret_key_bytes(),
@@ -220,40 +224,6 @@ prop_box_failure_integrity() ->
             end
         end).
 
-prop_seal_box_failure_integrity() ->
-    ?FORALL({Msg, {PK1, SK1}}, {?FAULT_RATE(1,40,g_iodata()), ?FAULT_RATE(1,40,keypair())},
-      begin
-         case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
-           true ->
-             CT = enacl:box_seal(Msg, PK1),
-             Err = enacl:box_seal_open([<<"x">>, CT], PK1, SK1),
-             equals(Err, {error, failed_verification});
-           false ->
-             case box_seal(Msg, PK1) of
-                 badarg -> true;
-                 Res ->
-                    failure(box_seal_open(Res, PK1, SK1))
-            end
-        end
-    end).
-
-prop_seal_box_correct() ->
-    ?FORALL({Msg, {PK1, SK1}},
-        {?FAULT_RATE(1, 40, g_iodata()),
-         ?FAULT_RATE(1, 40, keypair())},
-     begin
-         case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
-             true ->
-                 SealedCipherText = enacl:box_seal(Msg, PK1),
-                 {ok, DecodedMsg} = enacl:box_seal_open(SealedCipherText, PK1, SK1),
-                 equals(iolist_to_binary(Msg), DecodedMsg);
-             false ->
-                case box_seal(Msg, PK1) of
-                    badarg -> true;
-                    Res -> failure(box_seal_open(Res, PK1, SK1))
-                end
-         end
-     end).
 
 %% PRECOMPUTATIONS
 beforenm_key() ->
@@ -456,67 +426,46 @@ prop_sign_open() ->
                   badargs(fun() -> enacl:sign_open(SignMsg, PK) end)
           end)).
 
-%% PWHASH
-%% -------------------------------
-
-pwhash(Passwd, Salt) ->
-  try
-    enacl:pwhash(Passwd, Salt)
-  catch
-    error:badarg -> badarg
-  end.
-
-pwhash_str(Passwd) ->
-  try
-    enacl:pwhash_str(Passwd)
-  catch
-    error:badarg -> badarg
-  end.
-
-pwhash_str_verify(PasswdHash, Passwd) ->
-  try
-    enacl:pwhash_str_verify(PasswdHash, Passwd)
-  catch
-    error:badarg -> badarg
-  end.
-
-prop_pwhash_str_verify() ->
-    ?FORALL({Passwd},
-            {?FAULT_RATE(1, 40, g_iodata())},
+prop_seal_box_failure_integrity() ->
+    ?FORALL({Msg, {PK1, SK1}}, {?FAULT_RATE(1,40,g_iodata()), ?FAULT_RATE(1,40,keypair())},
       begin
-        case v_iodata(Passwd) of
-          true ->
-            {ok, Ascii} = enacl:pwhash_str(Passwd),
-            S = enacl:pwhash_str_verify(Ascii, Passwd),
-            equals(S, true);
-          false ->
-            badargs(fun() -> enacl:pwhash_str(Passwd) end),
-            badargs(fun() -> enacl:pwhash_str_verify("", Passwd) end)
+         case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
+           true ->
+             CT = enacl:box_seal(Msg, PK1),
+             Err = enacl:box_seal_open([<<"x">>, CT], PK1, SK1),
+             equals(Err, {error, failed_verification});
+           false ->
+             case box_seal(Msg, PK1) of
+                 badarg -> true;
+                 Res ->
+                    failure(box_seal_open(Res, PK1, SK1))
+            end
         end
-      end).
+    end).
+
+prop_seal_box_correct() ->
+    ?FORALL({Msg, {PK1, SK1}},
+        {?FAULT_RATE(1, 40, g_iodata()),
+         ?FAULT_RATE(1, 40, keypair())},
+     begin
+         case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
+             true ->
+                 SealedCipherText = enacl:box_seal(Msg, PK1),
+                 {ok, DecodedMsg} = enacl:box_seal_open(SealedCipherText, PK1, SK1),
+                 equals(iolist_to_binary(Msg), DecodedMsg);
+             false ->
+                case box_seal(Msg, PK1) of
+                    badarg -> true;
+                    Res -> failure(box_seal_open(Res, PK1, SK1))
+                end
+         end
+     end).
+
 
 %% CRYPTO SECRET BOX
-%% -------------------------------
-
-%% Note: key sizes are the same in a lot of situations, so we can use the same generator
-%% for keys in many locations.
-
-key_sz(Sz) ->
-  equals(enacl:secretbox_key_size(), Sz).
-
-%% prop_key_sizes() ->
-%%     conjunction([{secret, key_sz(enacl:secretbox_key_size())},
-%%                  {stream, key_sz(enacl:stream_key_size())},
-%%                  {auth, key_sz(enacl:auth_key_size())},
-%%                  {onetimeauth, key_sz(enacl:onetime_auth_key_size())}]).
-
-nonce_sz(Sz) ->
-  equals(enacl:secretbox_nonce_size(), Sz).
-
-%% prop_nonce_sizes() ->
-%%     conjunction([{secret, nonce_sz(enacl:secretbox_nonce_size())},
-%%                  {stream, nonce_sz(enacl:stream_nonce_size())}]).
-
+%% ------------------------------------------------------------
+%% * secretbox/3
+%% * secretbo_open/3
 secret_key_good() ->
 	Sz = enacl:secretbox_key_size(),
 	binary(Sz).
@@ -535,17 +484,13 @@ secret_key_valid(SK) when is_binary(SK) ->
 secret_key_valid(_SK) -> false.
 
 secretbox(Msg, Nonce, Key) ->
-  try
-    enacl:secretbox(Msg, Nonce, Key)
-  catch
-    error:badarg -> badarg
+  try enacl:secretbox(Msg, Nonce, Key)
+  catch error:badarg -> badarg
   end.
 
 secretbox_open(Msg, Nonce, Key) ->
-  try
-    enacl:secretbox_open(Msg, Nonce, Key)
-  catch
-    error:badarg -> badarg
+  try enacl:secretbox_open(Msg, Nonce, Key)
+  catch error:badarg -> badarg
   end.
 
 prop_secretbox_correct() ->
@@ -576,7 +521,32 @@ prop_secretbox_failure_integrity() ->
         equals(Err, {error, failed_verification})
       end).
 
+%% AEAD ChaCha20Poly1305
+%% ------------------------------------------------------------
+%% * aead_chacha20poly1305_encrypt/4,
+%% * aead_chacha20poly1305_decrypt/4,
+prop_aead_chacha20poly1305() ->
+  ?FORALL({Key, Msg, AD, Nonce},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
+  begin
+    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
+    equals(enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, EncryptMsg), Msg)
+  end).
+
+prop_aead_chacha20poly1305_fail() ->
+  ?FORALL({Key, Msg, AD, Nonce},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
+  begin
+    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
+    case enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, <<0:8, EncryptMsg/binary>>) of
+        {error, _} -> true;
+        _          -> false
+    end
+  end).
+
 %% CRYPTO STREAM
+%% ------------------------------------------------------------
+%% * stream/3
 prop_stream_correct() ->
     ?FORALL({Len, Nonce, Key},
             {int(),
@@ -613,6 +583,9 @@ xor_bytes(<<>>, <<>>) -> [].
 %%         end).
 
 %% CRYPTO AUTH
+%% ------------------------------------------------------------
+%% * auth/2
+%% * auth_verify/3
 prop_auth_correct() ->
     ?FORALL({Msg, Key},
             {?FAULT_RATE(1, 40, g_iodata()),
@@ -665,6 +638,9 @@ prop_auth_verify_correct() ->
         end)).
 
 %% CRYPTO ONETIME AUTH
+%% ------------------------------------------------------------
+%% * onetime_auth/2
+%% * onetime_auth_verify/3
 prop_onetimeauth_correct() ->
     ?FORALL({Msg, Key},
             {?FAULT_RATE(1, 40, g_iodata()),
@@ -716,7 +692,48 @@ prop_onetime_auth_verify_correct() ->
             badargs(fun() -> enacl:onetime_auth_verify(Authenticator, Msg, Key) end)
         end)).
 
-%% HASHING
+%% PWHASH
+%% -------------------------------
+%% * pwhash/2
+%% * pwhash_str/1
+%% * pwhash_str_verify/2
+pwhash(Passwd, Salt) ->
+  try
+    enacl:pwhash(Passwd, Salt)
+  catch
+    error:badarg -> badarg
+  end.
+
+pwhash_str(Passwd) ->
+  try
+    enacl:pwhash_str(Passwd)
+  catch
+    error:badarg -> badarg
+  end.
+
+pwhash_str_verify(PasswdHash, Passwd) ->
+  try
+    enacl:pwhash_str_verify(PasswdHash, Passwd)
+  catch
+    error:badarg -> badarg
+  end.
+
+prop_pwhash_str_verify() ->
+    ?FORALL({Passwd},
+            {?FAULT_RATE(1, 40, g_iodata())},
+      begin
+        case v_iodata(Passwd) of
+          true ->
+            {ok, Ascii} = enacl:pwhash_str(Passwd),
+            S = enacl:pwhash_str_verify(Ascii, Passwd),
+            equals(S, true);
+          false ->
+            badargs(fun() -> enacl:pwhash_str(Passwd) end),
+            badargs(fun() -> enacl:pwhash_str_verify("", Passwd) end)
+        end
+      end).
+
+%% SUBTLE HASHING
 %% ---------------------------
 diff_pair() ->
     ?SUCHTHAT({X, Y}, {g_iodata(), g_iodata()},
@@ -743,7 +760,8 @@ prop_crypto_hash_neq() ->
 
 %% STRING COMPARISON
 %% -------------------------
-
+%% * verify_16/2,
+%% * verify_32/2
 verify_pair_bad(Sz) ->
   ?LET(X, elements([fst, snd]),
     case X of
@@ -793,6 +811,8 @@ prop_verify_32() ->
       end).
 
 %% RANDOMBYTES
+%% ------------------------------------------------------------
+%% * randombytes/1
 prop_randombytes() ->
     ?FORALL(X, g_nat(),
         case is_nat(X) of
@@ -808,12 +828,8 @@ prop_randombytes() ->
                 end
        end).
 
-%% SCRAMBLING
-prop_scramble_block() ->
-    ?FORALL({Block, Key}, {binary(16), eqc_gen:largebinary(32)},
-        is_binary(enacl_ext:scramble_block_16(Block, Key))).
-
-%% HELPERS
+%% INTERNAL FUNCTIONS
+%% ------------------------------------------------------------
 badargs(Thunk) ->
   try
     Thunk(),
@@ -821,26 +837,6 @@ badargs(Thunk) ->
   catch
     error:badarg -> true
   end.
-
-%% AEAD ChaCha20Poly1305
-prop_aead_chacha20poly1305() ->
-  ?FORALL({Key, Msg, AD, Nonce},
-          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
-  begin
-    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
-    equals(enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, EncryptMsg), Msg)
-  end).
-
-prop_aead_chacha20poly1305_fail() ->
-  ?FORALL({Key, Msg, AD, Nonce},
-          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
-  begin
-    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
-    case enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, <<0:8, EncryptMsg/binary>>) of
-        {error, _} -> true;
-        _          -> false
-    end
-  end).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Joel Test Blobs
