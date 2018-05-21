@@ -721,17 +721,17 @@ pwhash_str_verify(PasswdHash, Passwd) ->
 prop_pwhash_str_verify() ->
     ?FORALL({Passwd},
             {?FAULT_RATE(1, 40, g_iodata())},
-      begin
-        case v_iodata(Passwd) of
-          true ->
-            {ok, Ascii} = enacl:pwhash_str(Passwd),
-            S = enacl:pwhash_str_verify(Ascii, Passwd),
-            equals(S, true);
-          false ->
-            badargs(fun() -> enacl:pwhash_str(Passwd) end),
-            badargs(fun() -> enacl:pwhash_str_verify("", Passwd) end)
-        end
-      end).
+            begin
+                case v_iodata(Passwd) of
+                    true ->
+                        {ok, Ascii} = enacl:pwhash_str(Passwd),
+                        S = enacl:pwhash_str_verify(Ascii, Passwd),
+                        equals(S, true);
+                    false ->
+                        badargs(fun() -> enacl:pwhash_str(Passwd) end),
+                        badargs(fun() -> enacl:pwhash_str_verify("", Passwd) end)
+                end
+            end).
 
 %% SUBTLE HASHING
 %% ---------------------------

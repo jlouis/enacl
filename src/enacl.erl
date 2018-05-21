@@ -350,7 +350,19 @@ pwhash(Password, Salt) ->
 %% @end
 -spec pwhash_str(iodata()) -> {ok, iodata()} | {error, term()}.
 pwhash_str(Password) ->
-    enacl_nif:crypto_pwhash_str(Password).
+    case enacl_nif:crypto_pwhash_str(Password) of
+        {ok, ASCII} ->
+            {ok, strip_null_terminate(ASCII)};
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
+strip_null_terminate(Binary) ->
+    [X, _] = binary:split(Binary, <<0>>),
+    X.
+
+null_terminate(ASCII) ->
+    iolist_to_binary([ASCII, 0]).
 
 %% @doc pwhash_str_verify/2 compares a password with a hash
 %%
@@ -359,7 +371,7 @@ pwhash_str(Password) ->
 %% @end
 -spec pwhash_str_verify(binary(), iodata()) -> boolean().
 pwhash_str_verify(HashPassword, Password) ->
-    enacl_nif:crypto_pwhash_str_verify(HashPassword, Password).
+    enacl_nif:crypto_pwhash_str_verify(null_terminate(HashPassword), Password).
 
 %% Public Key Crypto
 %% ---------------------
