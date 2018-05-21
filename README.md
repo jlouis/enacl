@@ -136,7 +136,6 @@ However, their correct use is still needed in order to be secure:
 
 See CHANGELOG.md
 
-
 # Overview
 
 The NaCl cryptographic library provides a number of different

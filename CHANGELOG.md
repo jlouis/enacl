@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.17.1]
+
+### Fixed
+- Provide a fix for the `pwhash_str/x` functions. The C strings were
+  not properly handled wrt. NULL-termination and what the libsodium
+  library expects.
+
 ## [0.17.0]
 
 ### Added
