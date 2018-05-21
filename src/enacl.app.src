@@ -1,6 +1,6 @@
 {application,enacl,
              [{description,"Erlang libsodium (NaCl) bindings"},
-              {vsn,"0.17.1"},
+              {vsn,"0.17.2"},
               {registered,[]},
               {applications,[kernel,stdlib]},
               {env,[]},
