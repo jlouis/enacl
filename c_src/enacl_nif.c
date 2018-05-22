@@ -35,7 +35,7 @@ int enif_crypto_load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
   if( !(generichash_state_type = enif_open_resource_type(env, NULL, CRYPTO_GENERICHASH_STATE_RESOURCE, NULL, ERL_NIF_RT_CREATE, NULL)) ) {
     return -1;
   }
-
+			  
   return sodium_init();
 }
 
@@ -149,34 +149,6 @@ ERL_NIF_TERM enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc, ERL_NIF
 	} while (0);
 
 	sodium_memzero(bp, crypto_scalarmult_curve25519_BYTES);
-
-	return result;
-}
-
-static
-ERL_NIF_TERM enif_crypto_curve25519_scalarmult_base(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-	ERL_NIF_TERM result;
-	ErlNifBinary secret, output;
-
-	if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &secret))
-			|| (secret.size != crypto_scalarmult_curve25519_BYTES)) {
-		return enif_make_badarg(env);
-	}
-
-	do
-	{
-		if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
-			result = nacl_error_tuple(env, "alloc_failed");
-			continue;
-		}
-
-		if (crypto_scalarmult_curve25519_base(output.data, secret.data) < 0) {
-			result = nacl_error_tuple(env, "scalarmult_curve25519_base_failed");
-			continue;
-		}
-
-		result = enif_make_binary(env, &output);
-	} while (0);
 
 	return result;
 }
@@ -399,7 +371,10 @@ ERL_NIF_TERM enif_crypto_box_beforenm(ErlNifEnv *env, int argc, ERL_NIF_TERM con
 		return nacl_error_tuple(env, "alloc_failed");
 	}
 
-	crypto_box_beforenm(k.data, pk.data, sk.data);
+	if( 0 != crypto_box_beforenm(k.data, pk.data, sk.data) ) {
+	  // error
+	  return nacl_error_tuple(env, "error_gen_shared_secret");
+	}
 
 	return enif_make_binary(env, &k);
 }
@@ -1064,10 +1039,10 @@ ERL_NIF_TERM enif_crypto_onetimeauth_verify(ErlNifEnv *env, int argc, ERL_NIF_TE
 static
 ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[])
 {
-	size_t req_size;
+	unsigned req_size;
 	ErlNifBinary result;
 
-	if ((argc != 1) || (!enif_get_uint64(env, argv[0], &req_size))) {
+	if ((argc != 1) || (!enif_get_uint(env, argv[0], &req_size))) {
 		return enif_make_badarg(env);
 	}
 
@@ -1328,7 +1303,7 @@ ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
 
   ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM ret = enif_make_binary(env, &h);
-
+    
   return enif_make_tuple2(env, ok, ret);
 }
 
@@ -1356,7 +1331,7 @@ ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc, ERL_NIF_TERM const
 
   ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM ret = enif_make_binary(env, &h);
-
+    
   return enif_make_tuple2(env, ok, ret);
 }
 
@@ -1375,101 +1350,9 @@ ERL_NIF_TERM enif_crypto_pwhash_str_verify(ErlNifEnv *env, int argc, ERL_NIF_TER
   if( crypto_pwhash_str_verify((char *)h.data, (char *)p.data, p.size) != 0) {
     /* wrong password */
     retVal = enif_make_atom(env, ATOM_FALSE);
-  }
+  } 
 
   return retVal;
-}
-
-/*
- * AEAD ChaCha20 Poly1305
- */
-static
-ERL_NIF_TERM enif_crypto_aead_chacha20poly1305_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_aead_chacha20poly1305_ietf_KEYBYTES);
-}
-
-static
-ERL_NIF_TERM enif_crypto_aead_chacha20poly1305_NPUBBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_aead_chacha20poly1305_ietf_NPUBBYTES);
-}
-
-static
-ERL_NIF_TERM enif_crypto_aead_chacha20poly1305_ABYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_aead_chacha20poly1305_ietf_ABYTES);
-}
-
-static
-ERL_NIF_TERM enif_crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX);
-}
-
-static
-ERL_NIF_TERM enif_crypto_aead_chacha20poly1305_encrypt(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-  ERL_NIF_TERM result;
-  ErlNifBinary key, nonce, ad, message, ciphertext;
-
-  if ((argc != 4) || (!enif_inspect_binary(env, argv[0], &key))
-                  || (!enif_inspect_binary(env, argv[1], &nonce))
-                  || (!enif_inspect_binary(env, argv[2], &ad))
-                  || (!enif_inspect_binary(env, argv[3], &message))
-                  || (key.size != crypto_aead_chacha20poly1305_ietf_KEYBYTES)
-                  || (nonce.size != crypto_aead_chacha20poly1305_ietf_NPUBBYTES)) {
-          return enif_make_badarg(env);
-  }
-
-  do
-  {
-          if (!enif_alloc_binary(message.size + crypto_aead_chacha20poly1305_ietf_ABYTES, &ciphertext)) {
-                  result = nacl_error_tuple(env, "alloc_failed");
-                  continue;
-          }
-
-          if (crypto_aead_chacha20poly1305_ietf_encrypt(ciphertext.data, NULL, message.data, message.size,
-                                                        ad.data, ad.size, NULL, nonce.data, key.data) < 0) {
-                  result = nacl_error_tuple(env, "aead_chacha20poly1305_ietf_encrypt_failed");
-                  continue;
-          }
-
-          result = enif_make_binary(env, &ciphertext);
-  } while (0);
-
-  return result;
-
-}
-
-static
-ERL_NIF_TERM enif_crypto_aead_chacha20poly1305_decrypt(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
-  ERL_NIF_TERM result;
-  ErlNifBinary key, nonce, ad, message, ciphertext;
-
-  if ((argc != 4) || (!enif_inspect_binary(env, argv[0], &key))
-                  || (!enif_inspect_binary(env, argv[1], &nonce))
-                  || (!enif_inspect_binary(env, argv[2], &ad))
-                  || (!enif_inspect_binary(env, argv[3], &ciphertext))
-                  || (ciphertext.size < crypto_aead_chacha20poly1305_ietf_ABYTES)
-                  || (key.size != crypto_aead_chacha20poly1305_ietf_KEYBYTES)
-                  || (nonce.size != crypto_aead_chacha20poly1305_ietf_NPUBBYTES)) {
-          return enif_make_badarg(env);
-  }
-
-  do
-  {
-          if (!enif_alloc_binary(ciphertext.size - crypto_aead_chacha20poly1305_ietf_ABYTES, &message)) {
-                  result = nacl_error_tuple(env, "alloc_failed");
-                  continue;
-          }
-
-          if (crypto_aead_chacha20poly1305_ietf_decrypt(message.data, NULL, NULL, ciphertext.data, ciphertext.size,
-                                                        ad.data, ad.size, nonce.data, key.data) < 0) {
-                  result = nacl_error_tuple(env, "aead_chacha20poly1305_ietf_decrypt_failed");
-                  continue;
-          }
-
-          result = enif_make_binary(env, &message);
-  } while (0);
-
-  return result;
-
 }
 
 /*
@@ -1509,11 +1392,11 @@ static
 ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary hash, message, key;
 
-  unsigned hashSize;
+  size_t hashSize;
 
-    // Validate the arguments
+  // Validate the arguments
   if( (argc != 3) ||
-      (!enif_get_uint(env, argv[0], &hashSize)) ||
+      (!enif_get_uint64(env, argv[0], &hashSize)) ||
       (!enif_inspect_binary(env, argv[1], &message)) ||
       (!enif_inspect_binary(env, argv[2], &key)) ) {
     return enif_make_badarg(env);
@@ -1543,10 +1426,10 @@ ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
     enif_release_binary(&hash);
     return nacl_error_tuple(env, "hash_error");
   }
-
+  
   ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM ret = enif_make_binary(env, &hash);
-
+    
   return enif_make_tuple2(env, ok, ret);
 }
 
@@ -1554,11 +1437,11 @@ static
 ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary key;
 
-  unsigned hashSize;
+  size_t hashSize;
 
     // Validate the arguments
   if( (argc != 2) ||
-      (!enif_get_uint(env, argv[0], &hashSize)) ||
+      (!enif_get_uint64(env, argv[0], &hashSize)) ||
       (!enif_inspect_binary(env, argv[1], &key)) ) {
     return enif_make_badarg(env);
   }
@@ -1587,8 +1470,8 @@ ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM
   if( 0 != crypto_generichash_init(state, k, key.size, hashSize) ) {
     return nacl_error_tuple(env, "hash_init_error");
   }
-
-
+  
+  
   // Create return values
   ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
   ERL_NIF_TERM e2 = argv[0];
@@ -1606,13 +1489,13 @@ static
 ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary message;
 
-  unsigned hashSize;
+  size_t hashSize;
 
   crypto_generichash_state *state;
 
     // Validate the arguments
   if( (argc != 3) ||
-      (!enif_get_uint(env, argv[0], &hashSize)) ||
+      (!enif_get_uint64(env, argv[0], &hashSize)) ||
       (!enif_get_resource(env, argv[1], generichash_state_type, (void **)&state)) ||
       (!enif_inspect_binary(env, argv[2], &message)) ) {
     return enif_make_badarg(env);
@@ -1634,7 +1517,7 @@ ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TE
   ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
   ERL_NIF_TERM e2 = argv[0];
   ERL_NIF_TERM e3 = enif_make_resource(env, state);
-
+  
   // return a tuple
   return enif_make_tuple3(env, e1, e2, e3);
 }
@@ -1642,14 +1525,14 @@ ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TE
 static
 ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary hash;
-
-  unsigned hashSize;
+  
+  size_t hashSize;
 
   crypto_generichash_state *state;
 
     // Validate the arguments
   if( (argc != 2) ||
-      (!enif_get_uint(env, argv[0], &hashSize)) ||
+      (!enif_get_uint64(env, argv[0], &hashSize)) ||
       (!enif_get_resource(env, argv[1], generichash_state_type, (void **)&state)) ) {
     return enif_make_badarg(env);
   }
@@ -1670,10 +1553,10 @@ ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc, ERL_NIF_TER
     enif_release_binary(&hash);
     return nacl_error_tuple(env, "hash_error");
   }
-
+  
   ERL_NIF_TERM ok =  enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM ret = enif_make_binary(env, &hash);
-
+    
   return enif_make_tuple2(env, ok, ret);
 }
 
@@ -1688,7 +1571,7 @@ static ErlNifFunc nif_funcs[] = {
 
 	erl_nif_dirty_job_cpu_bound_macro("crypto_box_keypair", 0, enif_crypto_box_keypair),
 
-
+	
 	erl_nif_dirty_job_cpu_bound_macro("crypto_box", 4, enif_crypto_box),
 	erl_nif_dirty_job_cpu_bound_macro("crypto_box_open", 4, enif_crypto_box_open),
 
@@ -1765,7 +1648,6 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_pwhash_str_verify", 2, enif_crypto_pwhash_str_verify},
 
 	erl_nif_dirty_job_cpu_bound_macro("crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult),
-	erl_nif_dirty_job_cpu_bound_macro("crypto_curve25519_scalarmult_base", 1, enif_crypto_curve25519_scalarmult_base),
 
 	erl_nif_dirty_job_cpu_bound_macro("crypto_sign_ed25519_keypair", 0, enif_crypto_sign_ed25519_keypair),
 	{"crypto_sign_ed25519_public_to_curve25519", 1, enif_crypto_sign_ed25519_public_to_curve25519},
@@ -1787,13 +1669,6 @@ static ErlNifFunc nif_funcs[] = {
 
 	{"scramble_block_16", 2, enif_scramble_block_16},
 
-        {"crypto_aead_chacha20poly1305_KEYBYTES", 0, enif_crypto_aead_chacha20poly1305_KEYBYTES},
-        {"crypto_aead_chacha20poly1305_NPUBBYTES", 0, enif_crypto_aead_chacha20poly1305_NPUBBYTES},
-        {"crypto_aead_chacha20poly1305_ABYTES", 0, enif_crypto_aead_chacha20poly1305_ABYTES},
-        {"crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX", 0, enif_crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX},
-        erl_nif_dirty_job_cpu_bound_macro("crypto_aead_chacha20poly1305_encrypt", 4, enif_crypto_aead_chacha20poly1305_encrypt),
-        erl_nif_dirty_job_cpu_bound_macro("crypto_aead_chacha20poly1305_decrypt", 4, enif_crypto_aead_chacha20poly1305_decrypt),
-
 	{"crypto_generichash_BYTES", 0, enif_crypto_generichash_BYTES},
 	{"crypto_generichash_BYTES_MIN", 0, enif_crypto_generichash_BYTES_MIN},
 	{"crypto_generichash_BYTES_MAX", 0, enif_crypto_generichash_BYTES_MAX},
@@ -1804,7 +1679,7 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_generichash_init", 2, enif_crypto_generichash_init},
 	{"crypto_generichash_update", 3, enif_crypto_generichash_update},
 	{"crypto_generichash_final", 2, enif_crypto_generichash_final}
-
+	
 };
 
 ERL_NIF_INIT(enacl_nif, nif_funcs, enif_crypto_load, NULL, NULL, NULL);

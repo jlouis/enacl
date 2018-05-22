@@ -17,7 +17,7 @@ eqc_run: eqc_compile
 eqc_mini_run: eqc_mini_compile
 	$(RUN_EQC)
 
-.PHONE: console
+.PHONY: console
 console: compile
 	$(REBAR) shell
 

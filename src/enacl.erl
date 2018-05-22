@@ -18,19 +18,18 @@
 
 %% Public key crypto
 -export([
-         %% EQC
          box_keypair/0,
          box/4,
          box_open/4,
          box_beforenm/2,
          box_afternm/3,
          box_open_afternm/3,
+
          box_nonce_size/0,
          box_public_key_bytes/0,
          box_secret_key_bytes/0,
          box_beforenm_bytes/0,
 
-         %% EQC
          sign_keypair_public_size/0,
          sign_keypair_secret_size/0,
          sign_keypair/0,
@@ -39,103 +38,49 @@
          sign_detached/2,
          sign_verify_detached/3,
 
-         %% EQC
          box_seal/2,
          box_seal_open/3
 ]).
 
 %% Secret key crypto
 -export([
-         %% EQC
          secretbox_key_size/0,
          secretbox_nonce_size/0,
          secretbox/3,
          secretbox_open/3,
 
-         %% No Tests!
          stream_chacha20_key_size/0,
          stream_chacha20_nonce_size/0,
          stream_chacha20/3,
          stream_chacha20_xor/3,
 
-         %% EQC
-         aead_chacha20poly1305_encrypt/4,
-         aead_chacha20poly1305_decrypt/4,
-         aead_chacha20poly1305_KEYBYTES/0,
-         aead_chacha20poly1305_NONCEBYTES/0,
-         aead_chacha20poly1305_ABYTES/0,
-         aead_chacha20poly1305_MESSAGEBYTES_MAX/0,
-
-         %% EQC
          stream_key_size/0,
          stream_nonce_size/0,
          stream/3,
-
-         %% No Tests!
          stream_xor/3,
 
-         %% EQC
          auth_key_size/0,
          auth_size/0,
          auth/2,
          auth_verify/3,
 
-         %% EQC
+         shorthash_key_size/0,
+         shorthash_size/0,
+         shorthash/2,
+
          onetime_auth_key_size/0,
          onetime_auth_size/0,
          onetime_auth/2,
          onetime_auth_verify/3
 ]).
 
-%% Hash functions
+%% Curve 25519.
 -export([
-         %% No Tests!
-         generichash/3,
-         generichash/2,
-         generichash_init/2,
-         generichash_update/2,
-         generichash_final/1,
-
-         %% No Tests!
-         shorthash_key_size/0,
-         shorthash_size/0,
-         shorthash/2,
-
-         %% EQC
-         pwhash/2,
-         pwhash_str/1,
-         pwhash_str_verify/2
-
+         curve25519_scalarmult/1, curve25519_scalarmult/2
 ]).
 
-%% Low-level subtle functions which are hard to get correct
+%% Ed 25519.
 -export([
-         %% EQC
-         hash/1,
-         verify_16/2,
-         verify_32/2,
-         
-         %% No Tests!
-         unsafe_memzero/1
-]).
-
-%% Randomness
--export([
-         %% EQC
-         randombytes/1
-]).
-
-%%% Specific primitives
-%% Curve 25519 operations.
--export([
-         %% No Tests!
-         curve25519_scalarmult/1, curve25519_scalarmult/2,
-         curve25519_scalarmult_base/1
-]).
-
-%% Ed 25519 operations.
--export([
-         %% No Tests!
          crypto_sign_ed25519_keypair/0,
          crypto_sign_ed25519_public_to_curve25519/1,
          crypto_sign_ed25519_secret_to_curve25519/1,
@@ -143,9 +88,16 @@
          crypto_sign_ed25519_secret_size/0
         ]).
 
+%% Low-level functions
+-export([
+         hash/1,
+         verify_16/2,
+         verify_32/2,
+         unsafe_memzero/1
+]).
+
 %% Key exchange functions
 -export([
-         %% No Tests!
          kx_keypair/0,
          kx_client_session_keys/3,
          kx_server_session_keys/3,
@@ -154,10 +106,33 @@
          kx_session_key_size/0
 ]).
 
-%% Internal verification of the system
--export([verify/0]).
+%% Password Hashing - Argon2 Algorithm
+-export([
+         pwhash/2,
+         pwhash_str/1,
+         pwhash_str_verify/2
+]).
 
+%% Generic hash functions
+-export([
+         generichash/3,
+         generichash/2,
+         generichash_init/2,
+         generichash_update/2,
+         generichash_final/1
+]).
 
+%% Libsodium specific functions (which are also part of the "undocumented" interface to NaCl
+-export([
+         randombytes/1,
+	 randomint/0,
+	 randomint/1,
+	 randomint/2
+]).
+
+-export([
+         verify/0
+]).
 
 %% Definitions of system budgets
 %% To get a grip for these, call `enacl_timing:all/0' on your system. The numbers here are
@@ -312,7 +287,7 @@ unsafe_memzero(_) ->
 %% This function generates a hash of the message using a key. The hash size is
 %% either 16, 32 or 64 bytes
 %% @end
--type generichash_bytes() :: 10..64.
+-type generichash_bytes() :: ?CRYPTO_GENERICHASH_BYTES_MIN..?CRYPTO_GENERICHASH_BYTES_MAX.
 -spec generichash(generichash_bytes(), iodata(), binary()) -> {ok, binary()} | {error, term()}.
 generichash(HashSize, Message, Key) ->
     enacl_nif:crypto_generichash(HashSize, Message, Key).
@@ -350,19 +325,7 @@ pwhash(Password, Salt) ->
 %% @end
 -spec pwhash_str(iodata()) -> {ok, iodata()} | {error, term()}.
 pwhash_str(Password) ->
-    case enacl_nif:crypto_pwhash_str(Password) of
-        {ok, ASCII} ->
-            {ok, strip_null_terminate(ASCII)};
-        {error, Reason} ->
-            {error, Reason}
-    end.
-
-strip_null_terminate(Binary) ->
-    [X, _] = binary:split(Binary, <<0>>),
-    X.
-
-null_terminate(ASCII) ->
-    iolist_to_binary([ASCII, 0]).
+    enacl_nif:crypto_pwhash_str(Password).
 
 %% @doc pwhash_str_verify/2 compares a password with a hash
 %%
@@ -371,7 +334,7 @@ null_terminate(ASCII) ->
 %% @end
 -spec pwhash_str_verify(binary(), iodata()) -> boolean().
 pwhash_str_verify(HashPassword, Password) ->
-    enacl_nif:crypto_pwhash_str_verify(null_terminate(HashPassword), Password).
+    enacl_nif:crypto_pwhash_str_verify(HashPassword, Password).
 
 %% Public Key Crypto
 %% ---------------------
@@ -938,13 +901,6 @@ curve25519_scalarmult(Secret, BasePoint) ->
 curve25519_scalarmult(#{ secret := Secret, base_point := BasePoint }) ->
     curve25519_scalarmult(Secret, BasePoint).
 
-%% @doc curve25519_scalarmult_base/1 compute the corresponding public key for a
-%% given secret key.
-%% @end.
--spec curve25519_scalarmult_base(Secret :: binary()) -> binary().
-curve25519_scalarmult_base(Secret) ->
-    enacl_nif:crypto_curve25519_scalarmult_base(Secret).
-
 %% Ed 25519 Crypto
 %% ---------------
 %% @doc crypto_sign_ed25519_keypair/0 creates a new Ed 25519 Public/Secret keypair.
@@ -1044,62 +1000,7 @@ kx_public_key_size() ->
 kx_secret_key_size() ->
     enacl_nif:crypto_kx_SECRETKEYBYTES().
 
-%% AEAD ChaCha20 Poly1305
-%% ----------------------
-%% @doc aead_chacha20poly1305_encrypt/4 encrypts `Message' with additional data
-%% `AD' using `Key' and `Nonce'. Returns the encrypted message followed by
-%% `aead_chacha20poly1305_ABYTES/0' bytes of MAC.
-%% @end
--spec aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg) -> binary() | {error, term()}
-    when Key :: binary(),
-         Nonce :: pos_integer(),
-         AD :: binary(),
-         Msg :: binary().
-aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg) ->
-    NonceBin = <<0:32, Nonce:64/little-unsigned-integer>>,
-    enacl_nif:crypto_aead_chacha20poly1305_encrypt(Key, NonceBin, AD, Msg).
 
-%% @doc aead_chacha20poly1305_decrypt/4 decrypts ciphertext `CT' with additional
-%% data `AD' using `Key' and `Nonce'. Note: `CipherText' should contain
-%% `aead_chacha20poly1305_ABYTES/0' bytes that is the MAC. Returns the decrypted
-%% message.
-%% @end
--spec aead_chacha20poly1305_decrypt(Key, Nonce, AD, CT) -> binary() | {error, term()}
-    when Key :: binary(),
-         Nonce :: pos_integer(),
-         AD :: binary(),
-         CT :: binary().
-aead_chacha20poly1305_decrypt(Key, Nonce, AD, CT) ->
-    NonceBin = <<0:32, Nonce:64/little-unsigned-integer>>,
-    enacl_nif:crypto_aead_chacha20poly1305_decrypt(Key, NonceBin, AD, CT).
-
-%% @doc aead_chacha20poly1305_KEYBYTES/0 returns the number of bytes
-%% of the key used in AEAD ChaCha20 Poly1305 encryption/decryption.
-%% @end
--spec aead_chacha20poly1305_KEYBYTES() -> pos_integer().
-aead_chacha20poly1305_KEYBYTES() ->
-    enacl_nif:crypto_aead_chacha20poly1305_KEYBYTES().
-
-%% @doc aead_chacha20poly1305_NONCEBYTES/0 returns the number of bytes
-%% of the Nonce in AEAD ChaCha20 Poly1305 encryption/decryption.
-%% @end
--spec aead_chacha20poly1305_NONCEBYTES() -> pos_integer().
-aead_chacha20poly1305_NONCEBYTES() ->
-    enacl_nif:crypto_aead_chacha20poly1305_NPUBBYTES().
-
-%% @doc aead_chacha20poly1305_ABYTES/0 returns the number of bytes
-%% of the MAC in AEAD ChaCha20 Poly1305 encryption/decryption.
-%% @end
--spec aead_chacha20poly1305_ABYTES() -> pos_integer().
-aead_chacha20poly1305_ABYTES() ->
-    enacl_nif:crypto_aead_chacha20poly1305_ABYTES().
-
-%% @doc aead_chacha20poly1305_MESSAGEBYTES_MAX/0 returns the max number of bytes
-%% allowed in a message in AEAD ChaCha20 Poly1305 encryption/decryption.
-%% @end
--spec aead_chacha20poly1305_MESSAGEBYTES_MAX() -> pos_integer().
-aead_chacha20poly1305_MESSAGEBYTES_MAX() ->
-    enacl_nif:crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX().
 
 %% Obtaining random bytes
 
@@ -1118,6 +1019,31 @@ aead_chacha20poly1305_MESSAGEBYTES_MAX() ->
 -spec randombytes(non_neg_integer()) -> binary().
 randombytes(N) ->
     enacl_nif:randombytes(N).
+
+
+%% @doc randomint/0 returns an unpredictable value between 0 and 0xffffffff (included).
+%% @end
+-spec randomint() -> non_neg_integer().
+randomint() ->
+    enacl_nif:randomint().
+
+%% @doc randomint/1 function returns an unpredictable value between 0 and given upper bound (excluded)
+%%
+%% It guarantees a uniform distribution of the possible 
+%% output values even when upper bound is not a power of 2.
+%% @end
+-spec randomint(non_neg_integer()) -> non_neg_integer().
+randomint(UpperBound) ->
+    enacl_nif:randomint(UpperBound).
+
+%% @doc randomint/2 function returns an unpredictable value between 1 and given upper bound (included)
+%%
+%% It guarantees a uniform distribution of the possible 
+%% output values even when upper bound is not a power of 2.
+%% @end
+-spec randomint(non_neg_integer(), non_neg_integer()) -> non_neg_integer().
+randomint(LowerBound, UpperBound) ->
+    enacl_nif:randomint(LowerBound, UpperBound).
 
 %% Helpers
 
