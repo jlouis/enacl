@@ -16,6 +16,9 @@
 %%% @end.
 -module(enacl).
 
+%% Helpers
+-export([nonce/1]).
+
 %% Public key crypto
 -export([
          %% EQC
@@ -65,6 +68,15 @@
          aead_chacha20poly1305_NONCEBYTES/0,
          aead_chacha20poly1305_ABYTES/0,
          aead_chacha20poly1305_MESSAGEBYTES_MAX/0,
+
+         %% EQC
+         aead_xchacha20poly1305_ietf_encrypt/4,
+         aead_xchacha20poly1305_ietf_decrypt/4, 
+         aead_xchacha20poly1305_ietf_keygen/0,
+         aead_xchacha20poly1305_ietf_KEYBYTES/0,
+         aead_xchacha20poly1305_ietf_NPUBBYTES/0,
+         aead_xchacha20poly1305_ietf_ABYTES/0,
+         aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX/0,
 
          %% EQC
          stream_key_size/0,
@@ -157,8 +169,6 @@
 %% Internal verification of the system
 -export([verify/0]).
 
-
-
 %% Definitions of system budgets
 %% To get a grip for these, call `enacl_timing:all/0' on your system. The numbers here are
 %% described in the README.md file.
@@ -204,6 +214,19 @@
 -define(CRYPTO_GENERICHASH_KEYBYTES_MAX, 64).
 -define(CRYPTO_GENERICHASH_KEYBYTES, 32).
 
+-define(CRYPTO_AEAD_CHACHA20POLY1305_IETF_NPUBBYTES, 12).
+-define(CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES, 24).
+
+% Helper map for nonce/1
+-define(NONCE_SIZES, 
+        #{
+            stream                      => ?CRYPTO_STREAM_NONCEBYTES,
+            stream_chacha20             => ?CRYPTO_STREAM_CHACHA20_NONCEBYTES,
+            aead_chacha20poly1305_ietf  => ?CRYPTO_AEAD_CHACHA20POLY1305_IETF_NPUBBYTES,
+            aead_xchacha20poly1305_ietf => ?CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES
+         }
+       ).
+
 %% @doc Verify makes sure the constants defined in libsodium matches ours
 verify() ->
     true = equals(binary:copy(<<0>>, enacl_nif:crypto_box_ZEROBYTES()), ?P_ZEROBYTES),
@@ -230,7 +253,9 @@ verify() ->
          {crypto_generichash_BYTES_MAX, ?CRYPTO_GENERICHASH_BYTES_MAX},
          {crypto_generichash_KEYBYTES, ?CRYPTO_GENERICHASH_KEYBYTES},
          {crypto_generichash_KEYBYTES_MIN, ?CRYPTO_GENERICHASH_KEYBYTES_MIN},
-         {crypto_generichash_KEYBYTES_MAX, ?CRYPTO_GENERICHASH_KEYBYTES_MAX}
+         {crypto_generichash_KEYBYTES_MAX, ?CRYPTO_GENERICHASH_KEYBYTES_MAX},
+         {crypto_aead_chacha20poly1305_NPUBBYTES, ?CRYPTO_AEAD_CHACHA20POLY1305_IETF_NPUBBYTES},
+         {crypto_aead_xchacha20poly1305_ietf_NPUBBYTES, ?CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES}
     ],
     run_verifiers(Verifiers).
 
@@ -265,6 +290,14 @@ hash(Bin) ->
         _ ->
             enacl_nif:crypto_hash(Bin)
     end.
+
+%% ----------------------
+%% @doc nonce/1
+%% @end
+-spec nonce(atom()) -> binary() | {error, term()}.
+nonce(NonceType) ->                                          
+    randombytes(maps:get(NonceType, ?NONCE_SIZES)).
+
 
 %% @doc verify_16/2 implements constant time 16-byte binary() verification
 %%
@@ -1100,6 +1133,66 @@ aead_chacha20poly1305_ABYTES() ->
 -spec aead_chacha20poly1305_MESSAGEBYTES_MAX() -> pos_integer().
 aead_chacha20poly1305_MESSAGEBYTES_MAX() ->
     enacl_nif:crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX().
+
+%% XChaCha20-Poly1305
+%% ------------------
+%% @doc aead_xchacha20poly1305_ietf_KEYBYTES/0 returns the number of bytes
+%% of the key used in the XChaCha20-Poly1305 construction.
+%% @end
+-spec aead_xchacha20poly1305_ietf_KEYBYTES() -> pos_integer().
+aead_xchacha20poly1305_ietf_KEYBYTES() ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_KEYBYTES().
+
+%% @doc aead_xchacha20poly1305_ietf_NPUBBYTES/0 returns the number of bytes
+%% of the Nonce used in the XChaCha20-Poly1305 construction.
+%% @end
+-spec aead_xchacha20poly1305_ietf_NPUBBYTES() -> pos_integer().
+aead_xchacha20poly1305_ietf_NPUBBYTES() ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_NPUBBYTES().
+
+%% @doc aead_xchacha20poly1305_ietf_ABYTES/0 returns the number of bytes
+%% of the MAC used in the XChaCha20-Poly1305 construction.
+%% @end
+-spec aead_xchacha20poly1305_ietf_ABYTES() -> pos_integer().
+aead_xchacha20poly1305_ietf_ABYTES() ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_ABYTES().
+
+%% @doc aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX/0 returns the max number of bytes
+%% allowed in a message in the XChaCha20-Poly1305 construction.
+%% @end
+-spec aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX() -> pos_integer().
+aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX() ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX().
+
+%% ----------------------
+%% @doc aead_xchacha20poly1305_ietf_keygen/0 generates a random key is
+%% equivalent to calling `randombytes/1' with `aead_xchacha20poly1305_ietf_KEYBYTES/0`'
+%% @end
+-spec aead_xchacha20poly1305_ietf_keygen() -> binary() | {error, term()}.
+aead_xchacha20poly1305_ietf_keygen() ->                                          
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_keygen().
+
+%% ----------------------
+%% @doc aead_xchacha20poly1305_ietf_encrypt/4 encrypts `Message' with additional data
+%% `AD' using `Key' and `Nonce'. Returns the encrypted message followed by
+%% `aead_chacha20poly1305_ietf_ABYTES/0' bytes of MAC.
+%% @end
+-spec aead_xchacha20poly1305_ietf_encrypt(binary(), binary(), binary(),
+                                          binary()) -> binary() | {error,
+                                                                   term()}.
+aead_xchacha20poly1305_ietf_encrypt(Message, AD, Nonce, Key) ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_encrypt(Message, AD, Nonce, Key).
+
+%% @doc aead_xchacha20poly1305_ietf_decrypt/4 decrypts ciphertext `CT' with additional
+%% data `AD' using `Key' and `Nonce'. Note: `CipherText' should contain
+%% `aead_xchacha20poly1305_ietf_ABYTES/0' bytes that is the MAC. Returns the decrypted
+%% message.
+%% @end
+-spec aead_xchacha20poly1305_ietf_decrypt(binary(), binary(), binary(),
+                                          binary()) -> binary() | {error,
+                                                                   term()}.
+aead_xchacha20poly1305_ietf_decrypt(CT, AD, Nonce, Key) ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_decrypt(CT, AD, Nonce, Key).
 
 %% Obtaining random bytes
 

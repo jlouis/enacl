@@ -544,6 +544,146 @@ prop_aead_chacha20poly1305_fail() ->
     end
   end).
 
+
+%% AEAD XChaCha20Poly1305
+%% ------------------------------------------------------------
+%% * aead_chacha20poly1305_encrypt/4,
+%% * aead_chacha20poly1305_decrypt/4,
+prop_aead_xchacha20poly1305_ietf() ->
+  ?FORALL({Msg, Ad, Nonce, Key},
+          {binary(), binary(), binary(24), binary(32)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, Nonce, Key),
+    equals(enacl:aead_xchacha20poly1305_ietf_decrypt(EncryptMsg, Ad, Nonce, Key), Msg)
+  end).
+
+prop_nonce() ->
+  ?FORALL({},{},
+  begin
+    Props = [
+         {stream, 24}, 
+         {stream_chacha20, 8}, 
+         {aead_chacha20poly1305_ietf, 12},
+         {aead_xchacha20poly1305_ietf, 24}
+        ],
+    Pred = fun({N,S}) -> erlang:size(enacl:nonce(N)) == S end, 
+    [] = lists:dropwhile(Pred, Props),
+    true
+  end).
+
+prop_aead_xchacha20poly1305_ietf_keygen() ->
+  ?FORALL({},{},
+  begin
+    K = enacl:aead_xchacha20poly1305_ietf_keygen(),
+    equals(erlang:size(K), 32)
+  end).
+
+prop_aead_xchacha20poly1305_ietf_msg_fail() ->
+  ?FORALL({Msg, Ad, Nonce, Key},
+          {binary(), binary(), binary(24), binary(32)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, Nonce, Key),
+    case enacl:aead_xchacha20poly1305_ietf_decrypt(<<0:8, EncryptMsg/binary>>,
+                                                   Ad, Nonce, Key) of
+        {error, _} -> true;
+        _          -> false
+    end
+  end).
+
+prop_aead_xchacha20poly1305_ietf_ad_fail() ->
+  ?FORALL({Msg, Ad, Nonce, Key},
+          {binary(), binary(), binary(24), binary(32)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, Nonce, Key),
+    case enacl:aead_xchacha20poly1305_ietf_decrypt(EncryptMsg, <<0:8, Ad/binary>>, Nonce, Key) of
+        {error, _} -> true;
+        _          -> false
+    end
+  end).
+
+prop_aead_xchacha20poly1305_ietf_nonce_fail() ->
+  ?FORALL({Msg, Ad, Nonce, Key, BadNonce},
+          {binary(), binary(), binary(24), binary(32), binary(24)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, Nonce, Key),
+    case enacl:aead_xchacha20poly1305_ietf_decrypt(EncryptMsg, Ad, BadNonce, Key) of
+        {error, _} -> true;
+        _          -> false
+    end
+  end).
+
+prop_aead_xchacha20poly1305_ietf_key_fail() ->
+  ?FORALL({Msg, Ad, Nonce, Key, BadKey},
+          {binary(), binary(), binary(24), binary(32), binary(32)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, Nonce, Key),
+    case enacl:aead_xchacha20poly1305_ietf_decrypt(EncryptMsg, Ad, Nonce, BadKey) of
+        {error, _} -> true;
+        _          -> false
+    end
+  end).
+
+prop_aead_xchacha20poly1305_ietf_nonce_size_fail() ->
+  ?FORALL({Msg, Ad, UnderSizedNonce, OverSizedNonce, Key},
+          {binary(), binary(), binary(23), binary(25), binary(32)},
+  begin
+    try
+        enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, UnderSizedNonce, Key),
+        false
+    catch
+        error:badarg -> true
+    end,
+    try
+        enacl:aead_xchacha20poly1305_ietf_decrypt(Msg, Ad, UnderSizedNonce, Key),
+        false
+    catch
+        error:badarg -> true
+    end,
+    try
+        enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, OverSizedNonce, Key),
+        false
+    catch
+        error:badarg -> true
+    end,
+    try
+        enacl:aead_xchacha20poly1305_ietf_decrypt(Msg, Ad, OverSizedNonce, Key),
+        false
+    catch
+        error:badarg -> true
+    end
+  end).
+
+
+prop_aead_xchacha20poly1305_ietf_key_size_fail() ->
+  ?FORALL({Msg, Ad, Nonce, UnderSizedKey, OverSizedKey},
+          {binary(), binary(), binary(24), binary(31), binary(33)},
+  begin
+    try
+        enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, Nonce, UnderSizedKey),
+        false
+    catch
+        error:badarg -> true
+    end,
+    try
+        enacl:aead_xchacha20poly1305_ietf_decrypt(Msg, Ad, Nonce, UnderSizedKey),
+        false
+    catch
+        error:badarg -> true
+    end,
+    try
+        enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, Ad, Nonce, OverSizedKey),
+        false
+    catch
+        error:badarg -> true
+    end,
+    try
+        enacl:aead_xchacha20poly1305_ietf_decrypt(Msg, Ad, Nonce, OverSizedKey),
+        false
+    catch
+        error:badarg -> true
+    end
+  end).
+
 %% CRYPTO STREAM
 %% ------------------------------------------------------------
 %% * stream/3
