@@ -197,6 +197,7 @@ init() ->
                         code:which(?MODULE))), "priv");
               D -> D
           end,
+    io:format("LOADING ENACL FROM PRIV DIR ~p~n", [Dir]),
     SoName = filename:join(Dir, atom_to_list(?MODULE)),
     erlang:load_nif(SoName, 0).
 
