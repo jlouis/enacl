@@ -168,8 +168,8 @@
 
 init() ->
     PrivDir = priv_dir(),
-    io:format("LOADING ENACL FROM PRIV DIR ~p~n", [PrivDir]),
     SoName = filename:join(PrivDir, atom_to_list(?MODULE)),
+    io:format("LOADING ENACL FROM ~p~n", [SoName]),
     erlang:load_nif(SoName, 0).
 
 priv_dir() ->
