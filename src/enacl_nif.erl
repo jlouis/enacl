@@ -167,17 +167,22 @@
 -on_load(init/0).
 
 init() ->
-    Dir = case code:priv_dir(enacl) of
-              {error, bad_name} ->
-                  filename:join(
-                    filename:dirname(
-                      filename:dirname(
-                        code:which(?MODULE))), "priv");
-              D -> D
-          end,
-    io:format("LOADING ENACL FROM PRIV DIR ~p~n", [Dir]),
-    SoName = filename:join(Dir, atom_to_list(?MODULE)),
+    PrivDir = priv_dir(),
+    io:format("LOADING ENACL FROM PRIV DIR ~p~n", [PrivDir]),
+    SoName = filename:join(PrivDir, atom_to_list(?MODULE)),
     erlang:load_nif(SoName, 0).
+
+priv_dir() ->
+  case code:priv_dir(enacl) of
+    {error, bad_name} ->
+      case filelib:is_dir(filename:join(["..", priv])) of
+        true ->
+          filename:join(["..", priv]);
+        _ -> "priv"
+      end;
+    Dir -> Dir
+  end.
+
 
 crypto_generichash_BYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_generichash_BYTES_MIN() -> erlang:nif_error(nif_not_loaded).
