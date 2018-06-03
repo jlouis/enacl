@@ -571,6 +571,15 @@ prop_nonce() ->
     true
   end).
 
+prop_nonce_fail() ->
+  ?FORALL({},{},
+  begin
+    case enacl:nonce(bad_nonce_type) of 
+        {error, unknown_nonce} -> true;
+        _ -> false
+    end
+  end).
+
 prop_aead_xchacha20poly1305_ietf_keygen() ->
   ?FORALL({},{},
   begin
