@@ -1434,6 +1434,91 @@ ERL_NIF_TERM enif_crypto_aead_chacha20poly1305_decrypt(ErlNifEnv *env, int argc,
 }
 
 /*
+ * AEAD XChaCha20 Poly1305 IETF
+ */
+
+static
+ERL_NIF_TERM enif_crypto_aead_xchacha20poly1305_ietf_KEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_aead_xchacha20poly1305_ietf_KEYBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_aead_xchacha20poly1305_ietf_NPUBBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_aead_xchacha20poly1305_ietf_NPUBBYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_aead_xchacha20poly1305_ietf_ABYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_aead_xchacha20poly1305_ietf_ABYTES);
+}
+
+static
+ERL_NIF_TERM enif_crypto_aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX);
+}
+
+static
+ERL_NIF_TERM enif_crypto_aead_xchacha20poly1305_ietf_keygen(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  ErlNifBinary key;
+  if (0 != argc) return enif_make_badarg(env);
+  
+  enif_alloc_binary(crypto_aead_xchacha20poly1305_ietf_KEYBYTES, &key);
+  crypto_aead_xchacha20poly1305_ietf_keygen(key.data);
+	return enif_make_binary(env, &key);
+}
+
+
+static
+ERL_NIF_TERM enif_crypto_aead_xchacha20poly1305_ietf_encrypt(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  ErlNifBinary msg, ad, nonce, key, ciphertext;
+  if ((argc != 4) || (!enif_inspect_iolist_as_binary(env, argv[0], &msg))
+                  || (!enif_inspect_iolist_as_binary(env, argv[1], &ad))
+                  || (!enif_inspect_iolist_as_binary(env, argv[2], &nonce))
+                  || (!enif_inspect_iolist_as_binary(env, argv[3], &key))
+                  || (key.size != crypto_aead_xchacha20poly1305_ietf_KEYBYTES) 
+                  || (nonce.size != crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(msg.size + crypto_aead_xchacha20poly1305_ietf_ABYTES, &ciphertext)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (crypto_aead_xchacha20poly1305_ietf_encrypt(ciphertext.data, NULL, msg.data, msg.size,
+                        ad.data, ad.size, NULL, nonce.data, key.data) != 0) {
+    return nacl_error_tuple(env, "aead_xchacha20poly1305_ietf_encrypt_failed");
+  }
+
+  return enif_make_binary(env, &ciphertext);
+}
+
+static
+ERL_NIF_TERM enif_crypto_aead_xchacha20poly1305_ietf_decrypt(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  ErlNifBinary ciphertext, ad, nonce, key, msg;
+  
+  if ((argc != 4) || (!enif_inspect_iolist_as_binary(env, argv[0], &ciphertext))
+                  || (!enif_inspect_iolist_as_binary(env, argv[1], &ad))
+                  || (!enif_inspect_iolist_as_binary(env, argv[2], &nonce))
+                  || (!enif_inspect_iolist_as_binary(env, argv[3], &key))
+                  || (key.size != crypto_aead_xchacha20poly1305_ietf_KEYBYTES)
+                  || (nonce.size != crypto_aead_xchacha20poly1305_ietf_NPUBBYTES)) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(ciphertext.size - crypto_aead_xchacha20poly1305_ietf_ABYTES, &msg)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (crypto_aead_xchacha20poly1305_ietf_decrypt(msg.data, NULL, NULL, ciphertext.data, ciphertext.size,
+                                                        ad.data, ad.size, nonce.data, key.data) < 0) {
+      return nacl_error_tuple(env, "aead_xchacha20poly1305_ietf_decrypt_failed");
+  }
+
+  return enif_make_binary(env, &msg);
+}
+
+
+/*
  * Generic hash
  */
 static
@@ -1745,12 +1830,20 @@ static ErlNifFunc nif_funcs[] = {
 
 	{"scramble_block_16", 2, enif_scramble_block_16},
 
-        {"crypto_aead_chacha20poly1305_KEYBYTES", 0, enif_crypto_aead_chacha20poly1305_KEYBYTES},
-        {"crypto_aead_chacha20poly1305_NPUBBYTES", 0, enif_crypto_aead_chacha20poly1305_NPUBBYTES},
-        {"crypto_aead_chacha20poly1305_ABYTES", 0, enif_crypto_aead_chacha20poly1305_ABYTES},
-        {"crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX", 0, enif_crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX},
-        erl_nif_dirty_job_cpu_bound_macro("crypto_aead_chacha20poly1305_encrypt", 4, enif_crypto_aead_chacha20poly1305_encrypt),
-        erl_nif_dirty_job_cpu_bound_macro("crypto_aead_chacha20poly1305_decrypt", 4, enif_crypto_aead_chacha20poly1305_decrypt),
+  {"crypto_aead_chacha20poly1305_KEYBYTES", 0, enif_crypto_aead_chacha20poly1305_KEYBYTES},
+  {"crypto_aead_chacha20poly1305_NPUBBYTES", 0, enif_crypto_aead_chacha20poly1305_NPUBBYTES},
+  {"crypto_aead_chacha20poly1305_ABYTES", 0, enif_crypto_aead_chacha20poly1305_ABYTES},
+  {"crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX", 0, enif_crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX},
+  erl_nif_dirty_job_cpu_bound_macro("crypto_aead_chacha20poly1305_encrypt", 4, enif_crypto_aead_chacha20poly1305_encrypt),
+  erl_nif_dirty_job_cpu_bound_macro("crypto_aead_chacha20poly1305_decrypt", 4, enif_crypto_aead_chacha20poly1305_decrypt),
+
+  {"crypto_aead_xchacha20poly1305_ietf_KEYBYTES", 0, enif_crypto_aead_xchacha20poly1305_ietf_KEYBYTES},
+  {"crypto_aead_xchacha20poly1305_ietf_NPUBBYTES", 0, enif_crypto_aead_xchacha20poly1305_ietf_NPUBBYTES},
+  {"crypto_aead_xchacha20poly1305_ietf_ABYTES", 0, enif_crypto_aead_xchacha20poly1305_ietf_ABYTES},
+  {"crypto_aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX", 0, enif_crypto_aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX},
+  erl_nif_dirty_job_cpu_bound_macro("crypto_aead_xchacha20poly1305_ietf_keygen", 0, enif_crypto_aead_xchacha20poly1305_ietf_keygen),
+  erl_nif_dirty_job_cpu_bound_macro("crypto_aead_xchacha20poly1305_ietf_encrypt", 4, enif_crypto_aead_xchacha20poly1305_ietf_encrypt),
+  erl_nif_dirty_job_cpu_bound_macro("crypto_aead_xchacha20poly1305_ietf_decrypt", 4, enif_crypto_aead_xchacha20poly1305_ietf_decrypt),
 
 	{"crypto_generichash_BYTES", 0, enif_crypto_generichash_BYTES},
 	{"crypto_generichash_BYTES_MIN", 0, enif_crypto_generichash_BYTES_MIN},
