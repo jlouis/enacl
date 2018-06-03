@@ -296,8 +296,10 @@ hash(Bin) ->
 %% @end
 -spec nonce(atom()) -> binary() | {error, term()}.
 nonce(NonceType) ->                                          
-    randombytes(maps:get(NonceType, ?NONCE_SIZES)).
-
+    case maps:get(NonceType, ?NONCE_SIZES, none) of 
+        none -> {error, unknown_nonce};
+        Size -> randombytes(Size)
+    end.
 
 %% @doc verify_16/2 implements constant time 16-byte binary() verification
 %%
