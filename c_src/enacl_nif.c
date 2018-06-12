@@ -131,7 +131,7 @@ ERL_NIF_TERM enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc, ERL_NIF
 	memcpy(bp, basepoint.data, crypto_scalarmult_curve25519_BYTES);
 
 	/* Clear the high-bit. Better safe than sorry. */
-	bp[31] &= 0x7f;
+	bp[crypto_scalarmult_curve25519_BYTES - 1] &= 0x7f;
 
 	do
 	{
