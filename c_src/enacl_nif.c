@@ -1167,7 +1167,7 @@ void uint64_pack(unsigned char *y, ErlNifUInt64 x)
 	*y++ = x; x >>= 8;
 	*y++ = x; x >>= 8;
 	*y++ = x; x >>= 8;
-	*y++ = x; x >>= 8;
+	*y++ = x;
 }
 
 static
