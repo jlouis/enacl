@@ -1,6 +1,6 @@
 -module(enacl_eqc).
 -include_lib("eqc/include/eqc.hrl").
--compile(export_all).
+-compile([export_all, nowarn_export_all]).
 
 -ifndef(mini).
 -compile({parse_transform, eqc_parallelize}).
@@ -773,6 +773,16 @@ prop_randombytes() ->
 prop_scramble_block() ->
     ?FORALL({Block, Key}, {binary(16), eqc_gen:largebinary(32)},
         is_binary(enacl_ext:scramble_block_16(Block, Key))).
+
+%% Scala multiplication
+prop_scalarmult() ->
+  Bytes = 32,
+  ?FORALL({S1, S2, Basepoint}, {binary(Bytes), binary(Bytes), binary(Bytes)},
+          equals(enacl:curve25519_scalarmult(S1, 
+                       enacl:curve25519_scalarmult(S2, Basepoint)),
+                 enacl:curve25519_scalarmult(S2, 
+                       enacl:curve25519_scalarmult(S1, Basepoint)))
+         ). 
 
 %% HELPERS
 badargs(Thunk) ->
