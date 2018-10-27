@@ -101,6 +101,9 @@
          shorthash_size/0,
          shorthash/2,
 
+         %% No Tests!
+         pwhash_str/3,
+
          %% EQC
          pwhash/2,
          pwhash_str/1,
@@ -336,6 +339,7 @@ generichash_final({hashstate, HashSize, HashState}) ->
     enacl_nif:crypto_generichash_final(HashSize, HashState).
 
 
+-type pwhash_limit() :: interactive | moderate | sensitive | pos_integer().
 %% @doc pwhash/2 hash a password
 %%
 %% This function generates a fixed size salted hash of a user defined password.
@@ -347,10 +351,24 @@ pwhash(Password, Salt) ->
 %% @doc pwhash_str/1 generates a ASCII encoded hash of a password
 %%
 %% This function generates a fixed size, salted, ASCII encoded hash of a user defined password.
+%% Defaults to interactive/interactive limits.
 %% @end
 -spec pwhash_str(iodata()) -> {ok, iodata()} | {error, term()}.
 pwhash_str(Password) ->
-    case enacl_nif:crypto_pwhash_str(Password) of
+    pwhash_str(Password, interactive, interactive).
+
+%% @doc pwhash_str/3 generates a ASCII encoded hash of a password
+%%
+%% This function generates a fixed size, salted, ASCII encoded hash of a user defined password
+%% given Ops and Mem limits.
+%% @end
+-spec pwhash_str(Password, Ops, Mem) -> {ok, iodata()} | {error, term()}
+    when
+      Password :: iodata(),
+      Ops :: pwhash_limit(),
+      Mem :: pwhash_limit().
+pwhash_str(Password, Ops, Mem) ->
+    case enacl_nif:crypto_pwhash_str(Password, Ops, Mem) of
         {ok, ASCII} ->
             {ok, strip_null_terminate(ASCII)};
         {error, Reason} ->

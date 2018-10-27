@@ -1260,6 +1260,61 @@ ERL_NIF_TERM enif_scramble_block_16(ErlNifEnv *env, int argc, ERL_NIF_TERM const
 }
 
 static
+size_t enacl_pwhash_opslimit(ErlNifEnv *env, ERL_NIF_TERM arg) {
+  ERL_NIF_TERM a;
+  size_t r;
+
+  if (enif_is_atom(env, arg)) {
+    a = enif_make_atom(env, "interactive");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_OPSLIMIT_INTERACTIVE;
+    }
+
+    a = enif_make_atom(env, "moderate");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_OPSLIMIT_MODERATE;
+    }
+
+    a = enif_make_atom(env, "sensitive");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_OPSLIMIT_SENSITIVE;
+    }
+  } else if (enif_get_ulong(env, arg, &r)) {
+    return r;
+  }
+
+  return 0;
+}
+
+static
+size_t enacl_pwhash_memlimit(ErlNifEnv *env, ERL_NIF_TERM arg) {
+  ERL_NIF_TERM a;
+  size_t r;
+
+  if (enif_is_atom(env, arg)) {
+    a = enif_make_atom(env, "interactive");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_MEMLIMIT_INTERACTIVE;
+    }
+
+    a = enif_make_atom(env, "moderate");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_MEMLIMIT_MODERATE;
+    }
+
+    a = enif_make_atom(env, "sensitive");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_MEMLIMIT_SENSITIVE;
+    }
+  } else if (enif_get_ulong(env, arg, &r)) {
+    return r;
+  }
+
+  return 0;
+}
+
+
+static
 ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary h, p, s;
 
@@ -1296,10 +1351,13 @@ ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
 static
 ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary h, p;
+  size_t o, m;
 
   // Validate the arguments
-  if( (argc != 1) ||
-      (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ) {
+  if( (argc != 3) ||
+      (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
+      !(o = enacl_pwhash_opslimit(env, argv[1])) ||
+      !(m = enacl_pwhash_memlimit(env, argv[2])) ) {
     return enif_make_badarg(env);
   }
 
@@ -1308,8 +1366,7 @@ ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc, ERL_NIF_TERM const
     return nacl_error_tuple(env, "alloc_failed");
   }
 
-  if( crypto_pwhash_str((char *)h.data, (char *)p.data, p.size,
-		    crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE) != 0) {
+  if( crypto_pwhash_str((char *)h.data, (char *)p.data, p.size, o, m) != 0) {
     /* out of memory */
     enif_release_binary(&h);
     return nacl_error_tuple(env, "out_of_memory");
@@ -1722,7 +1779,7 @@ static ErlNifFunc nif_funcs[] = {
 	{"sodium_memzero", 1, enif_sodium_memzero},
 
 	{"crypto_pwhash", 2, enif_crypto_pwhash},
-	{"crypto_pwhash_str", 1, enif_crypto_pwhash_str},
+	{"crypto_pwhash_str", 3, enif_crypto_pwhash_str},
 	{"crypto_pwhash_str_verify", 2, enif_crypto_pwhash_str_verify},
 
 	erl_nif_dirty_job_cpu_bound_macro("crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult),
