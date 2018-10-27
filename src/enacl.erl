@@ -102,6 +102,7 @@
          shorthash/2,
 
          %% No Tests!
+         pwhash/4,
          pwhash_str/3,
 
          %% EQC
@@ -343,10 +344,25 @@ generichash_final({hashstate, HashSize, HashState}) ->
 %% @doc pwhash/2 hash a password
 %%
 %% This function generates a fixed size salted hash of a user defined password.
+%% Defaults to interactive/interactive limits.
 %% @end
 -spec pwhash(iodata(), binary()) -> {ok, binary()} | {error, term()}.
 pwhash(Password, Salt) ->
-    enacl_nif:crypto_pwhash(Password, Salt).
+    pwhash(Password, Salt, interactive, interactive).
+
+%% @doc pwhash/4 hash a password
+%%
+%% This function generates a fixed size salted hash of a user defined password given Ops and Mem
+%% limits.
+%% @end
+-spec pwhash(Password, Salt, Ops, Mem) -> {ok, binary()} | {error, term()}
+    when
+      Password :: iodata(),
+      Salt     :: binary(),
+      Ops      :: pwhash_limit(),
+      Mem      :: pwhash_limit().
+pwhash(Password, Salt, Ops, Mem) ->
+    enacl_nif:crypto_pwhash(Password, Salt, Ops, Mem).
 
 %% @doc pwhash_str/1 generates a ASCII encoded hash of a password
 %%

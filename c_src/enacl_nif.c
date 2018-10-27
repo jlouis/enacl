@@ -1317,11 +1317,14 @@ size_t enacl_pwhash_memlimit(ErlNifEnv *env, ERL_NIF_TERM arg) {
 static
 ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary h, p, s;
+  size_t o, m;
 
   // Validate the arguments
-  if( (argc != 2) ||
+  if( (argc != 4) ||
       (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
-      (!enif_inspect_binary(env, argv[1], &s)) ) {
+      (!enif_inspect_binary(env, argv[1], &s)) ||
+      !(o = enacl_pwhash_opslimit(env, argv[2])) ||
+      !(m = enacl_pwhash_memlimit(env, argv[3])) ) {
     return enif_make_badarg(env);
   }
 
@@ -1335,8 +1338,8 @@ ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
     return nacl_error_tuple(env, "alloc_failed");
   }
 
-  if( crypto_pwhash(h.data, h.size, (char *)p.data, p.size, s.data,
-		    crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE, crypto_pwhash_ALG_DEFAULT) != 0) {
+  if( crypto_pwhash(h.data, h.size, (char *)p.data, p.size, s.data, o, m,
+              crypto_pwhash_ALG_DEFAULT) != 0) {
     /* out of memory */
     enif_release_binary(&h);
     return nacl_error_tuple(env, "out_of_memory");
@@ -1778,7 +1781,7 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_verify_32", 2, enif_crypto_verify_32},
 	{"sodium_memzero", 1, enif_sodium_memzero},
 
-	{"crypto_pwhash", 2, enif_crypto_pwhash},
+	{"crypto_pwhash", 4, enif_crypto_pwhash},
 	{"crypto_pwhash_str", 3, enif_crypto_pwhash_str},
 	{"crypto_pwhash_str_verify", 2, enif_crypto_pwhash_str_verify},
 
