@@ -1328,6 +1328,14 @@ ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
     return enif_make_badarg(env);
   }
 
+  // Check limits
+  if( (o < crypto_pwhash_OPSLIMIT_MIN) ||
+      (o > crypto_pwhash_OPSLIMIT_MAX) ||
+      (m < crypto_pwhash_MEMLIMIT_MIN) ||
+      (m > crypto_pwhash_MEMLIMIT_MAX) ) {
+    return enif_make_badarg(env);
+  }
+
   // Check Salt size
   if(s.size != crypto_pwhash_SALTBYTES) {
     return nacl_error_tuple(env, "invalid_salt_size");
@@ -1361,6 +1369,14 @@ ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc, ERL_NIF_TERM const
       (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
       !(o = enacl_pwhash_opslimit(env, argv[1])) ||
       !(m = enacl_pwhash_memlimit(env, argv[2])) ) {
+    return enif_make_badarg(env);
+  }
+
+  // Check limits
+  if( (o < crypto_pwhash_OPSLIMIT_MIN) ||
+      (o > crypto_pwhash_OPSLIMIT_MAX) ||
+      (m < crypto_pwhash_MEMLIMIT_MIN) ||
+      (m > crypto_pwhash_MEMLIMIT_MAX) ) {
     return enif_make_badarg(env);
   }
 
