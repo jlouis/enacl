@@ -137,6 +137,7 @@
 -export([
          %% No Tests!
          crypto_sign_ed25519_keypair/0,
+         crypto_sign_ed25519_sk_to_pk/1,
          crypto_sign_ed25519_public_to_curve25519/1,
          crypto_sign_ed25519_secret_to_curve25519/1,
          crypto_sign_ed25519_public_size/0,
@@ -956,6 +957,12 @@ curve25519_scalarmult_base(Secret) ->
 crypto_sign_ed25519_keypair() ->
     {PK, SK} = enacl_nif:crypto_sign_ed25519_keypair(),
     #{ public => PK, secret => SK }.
+
+%% @doc TODO
+%% @end
+-spec crypto_sign_ed25519_sk_to_pk(Secret :: binary()) -> binary().
+crypto_sign_ed25519_sk_to_pk(Secret) ->
+    enacl_nif:crypto_sign_ed25519_sk_to_pk(Secret).
 
 %% @doc crypto_sign_ed25519_public_to_curve25519/1 converts a given Ed 25519 public
 %% key to a Curve 25519 public key.
