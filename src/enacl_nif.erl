@@ -74,6 +74,13 @@
          crypto_aead_chacha20poly1305_ABYTES/0,
          crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX/0,
 
+         crypto_aead_xchacha20poly1305_encrypt/4,
+         crypto_aead_xchacha20poly1305_decrypt/4,
+         crypto_aead_xchacha20poly1305_KEYBYTES/0,
+         crypto_aead_xchacha20poly1305_NPUBBYTES/0,
+         crypto_aead_xchacha20poly1305_ABYTES/0,
+         crypto_aead_xchacha20poly1305_MESSAGEBYTES_MAX/0,
+
          crypto_auth_BYTES/0,
          crypto_auth_KEYBYTES/0,
 
@@ -254,6 +261,13 @@ crypto_aead_chacha20poly1305_KEYBYTES()                           -> erlang:nif_
 crypto_aead_chacha20poly1305_NPUBBYTES()                          -> erlang:nif_error(nif_not_loaded).
 crypto_aead_chacha20poly1305_ABYTES()                             -> erlang:nif_error(nif_not_loaded).
 crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX()                   -> erlang:nif_error(nif_not_loaded).
+
+crypto_aead_xchacha20poly1305_encrypt(_Key, _Nonce, _AD, _Message) -> erlang:nif_error(nif_not_loaded).
+crypto_aead_xchacha20poly1305_decrypt(_Key, _Nonce, _AD, _Message) -> erlang:nif_error(nif_not_loaded).
+crypto_aead_xchacha20poly1305_KEYBYTES()                           -> erlang:nif_error(nif_not_loaded).
+crypto_aead_xchacha20poly1305_NPUBBYTES()                          -> erlang:nif_error(nif_not_loaded).
+crypto_aead_xchacha20poly1305_ABYTES()                             -> erlang:nif_error(nif_not_loaded).
+crypto_aead_xchacha20poly1305_MESSAGEBYTES_MAX()                   -> erlang:nif_error(nif_not_loaded).
 
 crypto_auth_BYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_auth_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
