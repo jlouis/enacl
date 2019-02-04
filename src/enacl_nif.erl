@@ -169,15 +169,14 @@
 init() ->
   PrivDir = priv_dir(),
   SoName = filename:join(PrivDir, atom_to_list(?MODULE)),
-  io:format("LOADING ENACL FROM ~p~n", [SoName]),
+
   case erlang:load_nif(SoName, 0) of
     ok ->
-      io:format("Successfully loaded NIFs from ~p~n", [SoName]);
-    {error, {reload, _ReloadMessage}} ->
-      ok;
-    {error, RealError} ->
-      io:format("Error loading NIFs from ~p: ~p~n", [SoName, RealError]),
-      {error, RealError}
+	  ok;
+      {error, {reload, _ReloadMessage}} ->
+	  ok;
+      {error, RealError} ->
+	  {error, RealError}
   end.
 
 priv_dir() ->
