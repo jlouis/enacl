@@ -106,11 +106,16 @@
          kx_session_key_size/0
 ]).
 
-%% Password Hashing - Argon2 Algorithm
+%% Password Hashing - default Argon2 Algorithm
 -export([
          pwhash/2,
          pwhash_str/1,
          pwhash_str_verify/2
+]).
+
+%% Password Hashing - Argon2i Algorithm
+-export([
+         pwhash_argon2i/2
 ]).
 
 %% Generic hash functions
@@ -314,6 +319,7 @@ generichash_final({hashstate, HashSize, HashState}) ->
 %% @doc pwhash/2 hash a password
 %%
 %% This function generates a fixed size salted hash of a user defined password.
+%% The agron2 algorithm used depends upon libsodium version. 
 %% @end
 -spec pwhash(iodata(), binary()) -> {ok, binary()} | {error, term()}.
 pwhash(Password, Salt) ->
@@ -322,6 +328,7 @@ pwhash(Password, Salt) ->
 %% @doc pwhash_str/1 generates a ASCII encoded hash of a password
 %%
 %% This function generates a fixed size, salted, ASCII encoded hash of a user defined password.
+%% The agron2 algorithm used depends upon libsodium version. 
 %% @end
 -spec pwhash_str(iodata()) -> {ok, iodata()} | {error, term()}.
 pwhash_str(Password) ->
@@ -330,11 +337,21 @@ pwhash_str(Password) ->
 %% @doc pwhash_str_verify/2 compares a password with a hash
 %%
 %% This function verifies that the hash is generated from the password. The
-%% function returns true if the verifcate succeeds, false otherwise
+%% function returns true if the verifcate succeeds, false otherwise.
+%% The agron2 algorithm used depends upon libsodium version. 
 %% @end
 -spec pwhash_str_verify(binary(), iodata()) -> boolean().
 pwhash_str_verify(HashPassword, Password) ->
     enacl_nif:crypto_pwhash_str_verify(HashPassword, Password).
+
+%% @doc pwhash/2 hash a password
+%%
+%% This function generates a fixed size salted hash of a user defined password.
+%% The hash is generated using argon2i(version 1.3) algorithm
+%% @end
+-spec pwhash_argon2i(iodata(), binary()) -> {ok, binary()} | {error, term()}.
+pwhash_argon2i(Password, Salt) ->
+    enacl_nif:crypto_pwhash_argon2i(Password, Salt).
 
 %% Public Key Crypto
 %% ---------------------

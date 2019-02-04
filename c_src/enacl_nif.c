@@ -1274,7 +1274,8 @@ ERL_NIF_TERM enif_scramble_block_16(ErlNifEnv *env, int argc, ERL_NIF_TERM const
 }
 
 static
-ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+ERL_NIF_TERM _enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[], unsigned long long opslimit,
+                  size_t memlimit, int alg) {
   ErlNifBinary h, p, s;
 
   // Validate the arguments
@@ -1295,7 +1296,7 @@ ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
   }
 
   if( crypto_pwhash(h.data, h.size, (char *)p.data, p.size, s.data,
-		    crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE, crypto_pwhash_ALG_DEFAULT) != 0) {
+		    opslimit, memlimit, alg) != 0) {
     /* out of memory */
     enif_release_binary(&h);
     return nacl_error_tuple(env, "out_of_memory");
@@ -1305,6 +1306,24 @@ ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const arg
   ERL_NIF_TERM ret = enif_make_binary(env, &h);
     
   return enif_make_tuple2(env, ok, ret);
+}
+
+static
+ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  return _enif_crypto_pwhash(env, argc, argv,
+			     crypto_pwhash_argon2id_OPSLIMIT_INTERACTIVE,
+			     crypto_pwhash_argon2id_MEMLIMIT_INTERACTIVE,
+			     crypto_pwhash_ALG_ARGON2ID13);
+  
+}
+
+static
+ERL_NIF_TERM enif_crypto_pwhash_argon2i(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+  return _enif_crypto_pwhash(env, argc, argv,
+			     crypto_pwhash_argon2i_OPSLIMIT_INTERACTIVE,
+			     crypto_pwhash_argon2i_MEMLIMIT_INTERACTIVE,
+			     crypto_pwhash_ALG_ARGON2I13);
+  
 }
 
 static
@@ -1652,6 +1671,8 @@ static ErlNifFunc nif_funcs[] = {
 	{"crypto_pwhash", 2, enif_crypto_pwhash},
 	{"crypto_pwhash_str", 1, enif_crypto_pwhash_str},
 	{"crypto_pwhash_str_verify", 2, enif_crypto_pwhash_str_verify},
+
+	{"crypto_pwhash_argon2i", 2, enif_crypto_pwhash_argon2i},
 
 	erl_nif_dirty_job_cpu_bound_macro("crypto_curve25519_scalarmult", 2, enif_crypto_curve25519_scalarmult),
 
