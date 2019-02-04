@@ -1434,6 +1434,13 @@ ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc, ERL_NIF_TERM cons
 }
 
 static
+crypto_generichash_state *align64(void *ptr){
+  if((unsigned long)ptr % 64 == 0)
+    return ptr;
+  return ptr + (64 - ((unsigned long)ptr % 64));
+}
+
+static
 ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   ErlNifBinary key;
 
@@ -1460,14 +1467,14 @@ ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc, ERL_NIF_TERM
     return nacl_error_tuple(env, "invalid_key_size");
   }
 
-  // Create a resource for hash state
-  crypto_generichash_state *state = (crypto_generichash_state *)enif_alloc_resource(generichash_state_type, crypto_generichash_statebytes());
+  // Create a resource for hash state (+ 60 to make room for 64-byte alignment)
+  void *state = enif_alloc_resource(generichash_state_type, crypto_generichash_statebytes() + 60);
   if( !state ) {
     return nacl_error_tuple(env, "alloc_failed");
   }
 
   // Call the library function
-  if( 0 != crypto_generichash_init(state, k, key.size, hashSize) ) {
+  if( 0 != crypto_generichash_init(align64(state), k, key.size, hashSize) ) {
     return nacl_error_tuple(env, "hash_init_error");
   }
   
@@ -1491,7 +1498,7 @@ ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TE
 
   size_t hashSize;
 
-  crypto_generichash_state *state;
+  void *state;
 
     // Validate the arguments
   if( (argc != 3) ||
@@ -1508,10 +1515,9 @@ ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc, ERL_NIF_TE
   }
 
   // Update hash state
-  if( 0 != crypto_generichash_update(state, message.data, message.size) ) {
+  if( 0 != crypto_generichash_update(align64(state), message.data, message.size) ) {
     return nacl_error_tuple(env, "hash_update_error");
   }
-
 
   // Generate return value
   ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
@@ -1528,7 +1534,7 @@ ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc, ERL_NIF_TER
   
   size_t hashSize;
 
-  crypto_generichash_state *state;
+  void *state;
 
     // Validate the arguments
   if( (argc != 2) ||
@@ -1548,8 +1554,8 @@ ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc, ERL_NIF_TER
     return nacl_error_tuple(env, "alloc_failed");
   }
 
-  // calculate hash
-  if( 0 != crypto_generichash_final(state, hash.data, hash.size) ) {
+    // calculate hash
+  if( 0 != crypto_generichash_final(align64(state), hash.data, hash.size) ) {
     enif_release_binary(&hash);
     return nacl_error_tuple(env, "hash_error");
   }
