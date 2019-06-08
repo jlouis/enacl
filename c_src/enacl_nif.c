@@ -478,6 +478,11 @@ ERL_NIF_TERM enif_crypto_sign_SECRETKEYBYTES(ErlNifEnv *env, int argc, ERL_NIF_T
 }
 
 static
+ERL_NIF_TERM enif_crypto_sign_SEEDBYTES(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	return enif_make_int64(env, crypto_sign_SEEDBYTES);
+}
+
+static
 ERL_NIF_TERM enif_crypto_sign_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
 	ErlNifBinary pk, sk;
 
@@ -494,6 +499,29 @@ ERL_NIF_TERM enif_crypto_sign_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM con
 	}
 
 	crypto_sign_keypair(pk.data, sk.data);
+
+	return enif_make_tuple2(env, enif_make_binary(env, &pk), enif_make_binary(env, &sk));
+}
+
+static
+ERL_NIF_TERM enif_crypto_sign_seed_keypair(ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
+	ErlNifBinary pk, sk, seed;
+
+	if (
+		(argc != 1) ||
+		(!enif_inspect_binary(env, argv[0], &seed))) {
+		return enif_make_badarg(env);
+	}
+
+	if (!enif_alloc_binary(crypto_sign_PUBLICKEYBYTES, &pk)) {
+	  return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	if (!enif_alloc_binary(crypto_sign_SECRETKEYBYTES, &sk)) {
+	  return nacl_error_tuple(env, "alloc_failed");
+	}
+
+	crypto_sign_seed_keypair(pk.data, sk.data, seed.data);
 
 	return enif_make_tuple2(env, enif_make_binary(env, &pk), enif_make_binary(env, &sk));
 }
@@ -1667,7 +1695,9 @@ static ErlNifFunc nif_funcs[] = {
 
 	{"crypto_sign_PUBLICKEYBYTES", 0, enif_crypto_sign_PUBLICKEYBYTES},
 	{"crypto_sign_SECRETKEYBYTES", 0, enif_crypto_sign_SECRETKEYBYTES},
+	{"crypto_sign_SEEDBYTES", 0, enif_crypto_sign_SEEDBYTES},
 	erl_nif_dirty_job_cpu_bound_macro("crypto_sign_keypair", 0, enif_crypto_sign_keypair),
+	erl_nif_dirty_job_cpu_bound_macro("crypto_sign_seed_keypair", 1, enif_crypto_sign_seed_keypair),
 
 	erl_nif_dirty_job_cpu_bound_macro("crypto_sign", 2, enif_crypto_sign),
 	erl_nif_dirty_job_cpu_bound_macro("crypto_sign_open", 2, enif_crypto_sign_open),

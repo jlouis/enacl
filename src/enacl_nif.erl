@@ -25,8 +25,10 @@
 
          crypto_sign_PUBLICKEYBYTES/0,
          crypto_sign_SECRETKEYBYTES/0,
+         crypto_sign_SEEDBYTES/0,
 
          crypto_sign_keypair/0,
+         crypto_sign_seed_keypair/1,
 
          crypto_sign/2,
          crypto_sign_open/2,
@@ -211,8 +213,10 @@ crypto_box_open_afternm_b(_CipherText, _Nonce, _K) -> erlang:nif_error(nif_not_l
 
 crypto_sign_PUBLICKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_sign_SECRETKEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_sign_SEEDBYTES() -> erlang:nif_error(nif_not_loaded).
 
 crypto_sign_keypair() -> erlang:nif_error(nif_not_loaded).
+crypto_sign_seed_keypair(_S) -> erlang:nif_error(nif_not_loaded).
 crypto_sign(_M, _SK) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_open(_SignedMessage, _PK) -> erlang:nif_error(nif_not_loaded).
 
