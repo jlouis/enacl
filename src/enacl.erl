@@ -39,6 +39,11 @@
          sign_detached/2,
          sign_verify_detached/3,
 
+         sign_init/0,
+         sign_update/2,
+         sign_final_create/2,
+         sign_final_verify/3,
+
          %% EQC
          box_seal/2,
          box_seal_open/3
@@ -578,6 +583,47 @@ sign_verify_detached(SIG, M, PK) ->
         true -> {ok, M};
         false -> {error, failed_verification}
     end.
+
+-type sign_state() :: {signstate, reference()}.
+
+%% @doc sign_init/0 initialize a multi-part signature state.
+%%
+%% This state must be passed to all future calls to `sign_update/2`,
+%% `sign_final_create/2` and `sign_final_verify/3`.
+%% @end
+-spec sign_init() -> sign_state().
+sign_init() ->
+    enacl_nif:crypto_sign_init().
+
+%% @doc sign_update/2 update the signature state `S` with a new chunk of data `M`.
+%% @end
+-spec sign_update(S, M) -> sign_state() | {error, sign_update_error}
+    when S :: sign_state(),
+         M :: iodata().
+sign_update({signstate, SignState}, M) ->
+    enacl_nif:crypto_sign_update(SignState, M).
+
+
+%% @doc sign_final_create/2 computes the signature for the previously supplied
+%% message(s) using the secret key `SK`.
+%% @end
+-spec sign_final_create(S, SK) -> {ok, binary()} | {error, atom()}
+    when S :: sign_state(),
+         SK :: iodata().
+sign_final_create({signstate, SignState}, SK) ->
+    enacl_nif:crypto_sign_final_create(SignState, SK).
+
+%% @doc sign_final_verify/3 verify a chunked signature
+%%
+%% Verifies that `SIG` is a valid signature for the message whose content has
+%% been previously supplied using `sign_update/2` using the public key `PK.`
+%% @end
+-spec sign_final_verify(S, SIG, PK) -> ok | {error, failed_verification}
+    when S :: sign_state(),
+         SIG :: binary(),
+         PK :: iodata().
+sign_final_verify({signstate, SignState}, SIG, PK) ->
+    enacl_nif:crypto_sign_final_verify(SignState, SIG, PK).
 
 %% @private
 -spec box_secret_key_bytes() -> pos_integer().

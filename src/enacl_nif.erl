@@ -34,6 +34,11 @@
          crypto_sign_detached/2,
          crypto_sign_verify_detached/3,
 
+         crypto_sign_init/0,
+         crypto_sign_update/2,
+         crypto_sign_final_create/2,
+         crypto_sign_final_verify/3,
+
          crypto_box_seal/2,
          crypto_box_seal_open/3,
          crypto_box_SEALBYTES/0
@@ -219,6 +224,11 @@ crypto_sign_open(_SignedMessage, _PK) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_detached(_M, _SK) -> erlang:nif_error(nif_not_loaded).
 
 crypto_sign_verify_detached(_Sig, _M, _PK) -> erlang:nif_error(nif_not_loaded).
+
+crypto_sign_init() -> erlang:nif_error(nif_not_loaded).
+crypto_sign_update(_S, _M) -> erlang:nif_error(nif_not_loaded).
+crypto_sign_final_create(_S, _SK) -> erlang:nif_error(nif_not_loaded).
+crypto_sign_final_verify(_S, _S, _PK) -> erlang:nif_error(nif_not_loaded).
 
 crypto_box_seal(_Msg, _PK) -> erlang:nif_error(nif_not_loaded).
 crypto_box_seal_open(_CipherText, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
