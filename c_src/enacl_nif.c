@@ -1029,6 +1029,31 @@ static ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc,
   return enif_make_binary(env, &result);
 }
 
+static ERL_NIF_TERM enif_randombytes_int32(ErlNifEnv *env, int argc,
+                                           ERL_NIF_TERM const argv[]) {
+  ErlNifUInt64 result;
+
+  if (argc != 0) {
+    return enif_make_badarg(env);
+  }
+
+  result = randombytes_random();
+  return enif_make_uint64(env, result);
+}
+
+static ERL_NIF_TERM enif_randombytes_uniform(ErlNifEnv *env, int argc,
+                                             ERL_NIF_TERM const argv[]) {
+  unsigned upper_bound;
+  ErlNifUInt64 result;
+
+  if ((argc != 1) || (!enif_get_uint(env, argv[0], &upper_bound))) {
+    return enif_make_badarg(env);
+  }
+
+  result = randombytes_uniform(upper_bound);
+  return enif_make_uint64(env, result);
+}
+
 /* Key exchange */
 
 static ERL_NIF_TERM enif_crypto_kx_SECRETKEYBYTES(ErlNifEnv *env, int argc,
@@ -1741,7 +1766,14 @@ static ErlNifFunc nif_funcs[] = {
     {"crypto_sign_ed25519_SECRETKEYBYTES", 0,
      enif_crypto_sign_ed25519_SECRETKEYBYTES},
 
+    // Linux might block here if early in the boot sequence, so get it off the
+    // main scheduler. Otherwise, it it would probably be fine to run on the
+    // main scheduler. This plays it safe, albeit with a performance hit.
     erl_nif_dirty_job_cpu_bound_macro("randombytes", 1, enif_randombytes),
+    erl_nif_dirty_job_cpu_bound_macro("randombytes_int32", 0,
+                                      enif_randombytes_int32),
+    erl_nif_dirty_job_cpu_bound_macro("randombytes_uniform", 1,
+                                      enif_randombytes_uniform),
 
     erl_nif_dirty_job_cpu_bound_macro("crypto_kx_keypair", 0,
                                       enif_crypto_kx_keypair),

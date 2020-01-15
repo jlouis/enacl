@@ -114,7 +114,7 @@
          hash/1,
          verify_16/2,
          verify_32/2,
-         
+
          %% No Tests!
          unsafe_memzero/1
 ]).
@@ -122,7 +122,9 @@
 %% Randomness
 -export([
          %% EQC
-         randombytes/1
+         randombytes/1,
+         randombytes_int32/0,
+         randombytes_uniform/1
 ]).
 
 %%% Specific primitives
@@ -203,6 +205,9 @@
 -define(CRYPTO_GENERICHASH_KEYBYTES_MIN, 16).
 -define(CRYPTO_GENERICHASH_KEYBYTES_MAX, 64).
 -define(CRYPTO_GENERICHASH_KEYBYTES, 32).
+
+%% Size limits
+-define(MAX_32BIT_INT, 1 bsl 32).
 
 %% @doc Verify makes sure the constants defined in libsodium matches ours
 verify() ->
@@ -1118,6 +1123,18 @@ aead_chacha20poly1305_MESSAGEBYTES_MAX() ->
 -spec randombytes(non_neg_integer()) -> binary().
 randombytes(N) ->
     enacl_nif:randombytes(N).
+
+%% @doc randombytes_int32/0 produces an integer in the 32bit range
+%% @end
+-spec randombytes_int32() -> integer().
+randombytes_int32() ->
+    enacl_nif:randombytes_int32().
+
+%% @doc randombytes_uniform/1 produces a random integer in the space [0..N)
+%% That is with the upper bound excluded. Fails for integers above 32bit size
+%% @end
+randombytes_uniform(N) when N < ?MAX_32BIT_INT ->
+    enacl_nif:randombytes_uniform(N).
 
 %% Helpers
 
