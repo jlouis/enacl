@@ -1197,7 +1197,6 @@ static ErlNifUInt64 uint64_unpack(const unsigned char *x) {
   result |= x[0];
   return result;
 }
-
 static int crypto_block(unsigned char *out, const unsigned char *in,
                         const unsigned char *k) {
   ErlNifUInt64 v0 = uint64_unpack(in + 0);
@@ -1239,13 +1238,74 @@ static ERL_NIF_TERM enif_scramble_block_16(ErlNifEnv *env, int argc,
   return enif_make_binary(env, &out);
 }
 
+static size_t enacl_pwhash_opslimit(ErlNifEnv *env, ERL_NIF_TERM arg) {
+  ERL_NIF_TERM a;
+  size_t r;
+
+  if (enif_is_atom(env, arg)) {
+    a = enif_make_atom(env, "interactive");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_OPSLIMIT_INTERACTIVE;
+    }
+
+    a = enif_make_atom(env, "moderate");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_OPSLIMIT_MODERATE;
+    }
+
+    a = enif_make_atom(env, "sensitive");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_OPSLIMIT_SENSITIVE;
+    }
+  } else if (enif_get_ulong(env, arg, &r)) {
+    return r;
+  }
+
+  return 0;
+}
+
+static size_t enacl_pwhash_memlimit(ErlNifEnv *env, ERL_NIF_TERM arg) {
+  ERL_NIF_TERM a;
+  size_t r;
+
+  if (enif_is_atom(env, arg)) {
+    a = enif_make_atom(env, "interactive");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_MEMLIMIT_INTERACTIVE;
+    }
+
+    a = enif_make_atom(env, "moderate");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_MEMLIMIT_MODERATE;
+    }
+
+    a = enif_make_atom(env, "sensitive");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_MEMLIMIT_SENSITIVE;
+    }
+  } else if (enif_get_ulong(env, arg, &r)) {
+    return r;
+  }
+
+  return 0;
+}
+
 static ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc,
                                        ERL_NIF_TERM const argv[]) {
   ErlNifBinary h, p, s;
+  size_t o, m;
 
   // Validate the arguments
-  if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
-      (!enif_inspect_binary(env, argv[1], &s))) {
+  if ((argc != 4) || (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
+      (!enif_inspect_binary(env, argv[1], &s)) ||
+      !(o = enacl_pwhash_opslimit(env, argv[2])) ||
+      !(m = enacl_pwhash_memlimit(env, argv[3]))) {
+    return enif_make_badarg(env);
+  }
+
+  // Check limits
+  if ((o < crypto_pwhash_OPSLIMIT_MIN) || (o > crypto_pwhash_OPSLIMIT_MAX) ||
+      (m < crypto_pwhash_MEMLIMIT_MIN) || (m > crypto_pwhash_MEMLIMIT_MAX)) {
     return enif_make_badarg(env);
   }
 
@@ -1259,9 +1319,7 @@ static ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc,
     return nacl_error_tuple(env, "alloc_failed");
   }
 
-  if (crypto_pwhash(h.data, h.size, (char *)p.data, p.size, s.data,
-                    crypto_pwhash_OPSLIMIT_INTERACTIVE,
-                    crypto_pwhash_MEMLIMIT_INTERACTIVE,
+  if (crypto_pwhash(h.data, h.size, (char *)p.data, p.size, s.data, o, m,
                     crypto_pwhash_ALG_DEFAULT) != 0) {
     /* out of memory */
     enif_release_binary(&h);
@@ -1277,9 +1335,18 @@ static ERL_NIF_TERM enif_crypto_pwhash(ErlNifEnv *env, int argc,
 static ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc,
                                            ERL_NIF_TERM const argv[]) {
   ErlNifBinary h, p;
+  size_t o, m;
 
   // Validate the arguments
-  if ((argc != 1) || (!enif_inspect_iolist_as_binary(env, argv[0], &p))) {
+  if ((argc != 3) || (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
+      !(o = enacl_pwhash_opslimit(env, argv[1])) ||
+      !(m = enacl_pwhash_memlimit(env, argv[2]))) {
+    return enif_make_badarg(env);
+  }
+
+  // Check limits
+  if ((o < crypto_pwhash_OPSLIMIT_MIN) || (o > crypto_pwhash_OPSLIMIT_MAX) ||
+      (m < crypto_pwhash_MEMLIMIT_MIN) || (m > crypto_pwhash_MEMLIMIT_MAX)) {
     return enif_make_badarg(env);
   }
 
@@ -1288,9 +1355,7 @@ static ERL_NIF_TERM enif_crypto_pwhash_str(ErlNifEnv *env, int argc,
     return nacl_error_tuple(env, "alloc_failed");
   }
 
-  if (crypto_pwhash_str((char *)h.data, (char *)p.data, p.size,
-                        crypto_pwhash_OPSLIMIT_INTERACTIVE,
-                        crypto_pwhash_MEMLIMIT_INTERACTIVE) != 0) {
+  if (crypto_pwhash_str((char *)h.data, (char *)p.data, p.size, o, m) != 0) {
     /* out of memory */
     enif_release_binary(&h);
     return nacl_error_tuple(env, "out_of_memory");
@@ -1746,9 +1811,11 @@ static ErlNifFunc nif_funcs[] = {
     {"crypto_verify_32", 2, enif_crypto_verify_32},
     {"sodium_memzero", 1, enif_sodium_memzero},
 
-    {"crypto_pwhash", 2, enif_crypto_pwhash},
-    {"crypto_pwhash_str", 1, enif_crypto_pwhash_str},
-    {"crypto_pwhash_str_verify", 2, enif_crypto_pwhash_str_verify},
+    erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash", 4, enif_crypto_pwhash),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash_str", 3,
+                                      enif_crypto_pwhash_str),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash_str_verify", 2,
+                                      enif_crypto_pwhash_str_verify),
 
     erl_nif_dirty_job_cpu_bound_macro("crypto_curve25519_scalarmult", 2,
                                       enif_crypto_curve25519_scalarmult),
