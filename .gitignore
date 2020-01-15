@@ -12,3 +12,4 @@ doc/*.png
 doc/*.css
 _build
 /.eqc-info
+c_src/enacl_nif.d
