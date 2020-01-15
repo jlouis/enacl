@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- The Password Hashfunctions now support memory and operations limits,
+  thanks to Github/ECrownofFire.
 - Implement enacl:randombytes_uint32/0. Returns a random 32bit unsigned
   integer, by means of the underlying random source.
 - Implement enacl:randombytes_uniform/1. Takes up to a 32bit unsigned
@@ -13,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   that the implementation avoids the typical non-uniformness which
   would be present on a modulus operation on the nearest power-of-two
   integer.
+- Added Win32 build support (Tino Breddin)
 - Added a nix shell for easier development
 
 ## [0.17.2]
