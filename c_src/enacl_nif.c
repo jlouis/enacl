@@ -1512,7 +1512,7 @@ static ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc,
 static crypto_generichash_state *align64(void *ptr) {
   if ((unsigned long)ptr % 64 == 0)
     return ptr;
-  return ptr + (64 - ((unsigned long)ptr % 64));
+  return (unsigned long)ptr + (64 - ((unsigned long)ptr % 64));
 }
 
 static ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc,
