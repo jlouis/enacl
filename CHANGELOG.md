@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Implement enacl:randombytes_int32/0. Returns a random 32bit unsigned
+- Implement enacl:randombytes_uint32/0. Returns a random 32bit unsigned
   integer, by means of the underlying random source.
 - Implement enacl:randombytes_uniform/1. Takes up to a 32bit unsigned
   integer and produces a uniform integer in the range [0..N). Note

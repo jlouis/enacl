@@ -1029,8 +1029,8 @@ static ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc,
   return enif_make_binary(env, &result);
 }
 
-static ERL_NIF_TERM enif_randombytes_int32(ErlNifEnv *env, int argc,
-                                           ERL_NIF_TERM const argv[]) {
+static ERL_NIF_TERM enif_randombytes_uint32(ErlNifEnv *env, int argc,
+                                            ERL_NIF_TERM const argv[]) {
   ErlNifUInt64 result;
 
   if (argc != 0) {
@@ -1770,8 +1770,8 @@ static ErlNifFunc nif_funcs[] = {
     // main scheduler. Otherwise, it it would probably be fine to run on the
     // main scheduler. This plays it safe, albeit with a performance hit.
     erl_nif_dirty_job_cpu_bound_macro("randombytes", 1, enif_randombytes),
-    erl_nif_dirty_job_cpu_bound_macro("randombytes_int32", 0,
-                                      enif_randombytes_int32),
+    erl_nif_dirty_job_cpu_bound_macro("randombytes_uint32", 0,
+                                      enif_randombytes_uint32),
     erl_nif_dirty_job_cpu_bound_macro("randombytes_uniform", 1,
                                       enif_randombytes_uniform),
 

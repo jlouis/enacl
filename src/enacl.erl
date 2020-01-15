@@ -123,7 +123,7 @@
 -export([
          %% EQC
          randombytes/1,
-         randombytes_int32/0,
+         randombytes_uint32/0,
          randombytes_uniform/1
 ]).
 
@@ -1124,11 +1124,11 @@ aead_chacha20poly1305_MESSAGEBYTES_MAX() ->
 randombytes(N) ->
     enacl_nif:randombytes(N).
 
-%% @doc randombytes_int32/0 produces an integer in the 32bit range
+%% @doc randombytes_uint32/0 produces an integer in the 32bit range
 %% @end
--spec randombytes_int32() -> integer().
-randombytes_int32() ->
-    enacl_nif:randombytes_int32().
+-spec randombytes_uint32() -> integer().
+randombytes_uint32() ->
+    enacl_nif:randombytes_uint32().
 
 %% @doc randombytes_uniform/1 produces a random integer in the space [0..N)
 %% That is with the upper bound excluded. Fails for integers above 32bit size
