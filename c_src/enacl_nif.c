@@ -211,6 +211,27 @@ enif_crypto_sign_ed25519_keypair(ErlNifEnv *env, int argc,
 }
 
 static ERL_NIF_TERM
+enif_crypto_sign_ed25519_sk_to_pk(ErlNifEnv *env, int argc,
+                                  ERL_NIF_TERM const argv[]) {
+  ErlNifBinary pk, sk;
+
+  if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &sk)) ||
+      (sk.size != crypto_sign_ed25519_SECRETKEYBYTES)) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_sign_ed25519_PUBLICKEYBYTES, &pk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (crypto_sign_ed25519_sk_to_pk(pk.data, sk.data) != 0) {
+    return nacl_error_tuple(env, "crypto_sign_ed25519_sk_to_pk_failed");
+  }
+
+  return enif_make_binary(env, &pk);
+}
+
+static ERL_NIF_TERM
 enif_crypto_sign_ed25519_public_to_curve25519(ErlNifEnv *env, int argc,
                                               ERL_NIF_TERM const argv[]) {
   ErlNifBinary curve25519_pk, ed25519_pk;
@@ -1832,6 +1853,7 @@ static ErlNifFunc nif_funcs[] = {
                                       enif_crypto_sign_detached),
     erl_nif_dirty_job_cpu_bound_macro("crypto_sign_verify_detached", 3,
                                       enif_crypto_sign_verify_detached),
+    {"crypto_sign_ed25519_sk_to_pk", 1, enif_crypto_sign_ed25519_sk_to_pk},
 
     {"crypto_box_SEALBYTES", 0, enif_crypto_box_SEALBYTES},
 
