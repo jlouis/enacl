@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
+- Implement multipart signature support, by Garry Hill.
 - Implement enacl:crypto_sign_seed_keypair/1, by Ole Andre Birkedal.
 - Implement enacl:crypto_sign_ed25519_sk_to_pk/1, by an anonymous contribution.
 - Added AEAD XChaCha20-Poly1305 support, thanks to Github/ECrownofFire.
@@ -24,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a nix shell for easier development
 
 ### Fixes
+- Fix a resource leak in generichash/sign init/update/final.
 - Clang static analysis warnings (Thomas Arts)
 - Replace a constant 31 with a computation from libsodium (Thomas Arts, from a security review)
 
