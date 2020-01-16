@@ -685,6 +685,7 @@ static ERL_NIF_TERM enif_crypto_sign_init(ErlNifEnv *env, int argc,
   }
 
   if (0 != crypto_sign_init(state)) {
+    enif_release_resource(state);
     return nacl_error_tuple(env, "sign_init_error");
   }
 
@@ -1891,6 +1892,7 @@ static ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc,
 
   // Call the library function
   if (0 != crypto_generichash_init(align64(state), k, key.size, hashSize)) {
+    enif_release_resource(state);
     return nacl_error_tuple(env, "hash_init_error");
   }
 
