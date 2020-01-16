@@ -33,7 +33,9 @@
          %% EQC
          sign_keypair_public_size/0,
          sign_keypair_secret_size/0,
+         sign_keypair_seed_size/0,
          sign_keypair/0,
+         sign_seed_keypair/1,
          sign/2,
          sign_open/2,
          sign_detached/2,
@@ -561,6 +563,10 @@ sign_keypair_public_size() ->
 sign_keypair_secret_size() ->
     enacl_nif:crypto_sign_SECRETKEYBYTES().
 
+%% @private
+sign_keypair_seed_size() ->
+    enacl_nif:crypto_sign_SEEDBYTES().
+
 %% @doc sign_keypair/0 returns a signature keypair for signing
 %%
 %% The returned value is a map in order to make it harder to misuse keys.
@@ -568,6 +574,17 @@ sign_keypair_secret_size() ->
 -spec sign_keypair() -> #{ atom() => binary() }.
 sign_keypair() ->
     {PK, SK} = enacl_nif:crypto_sign_keypair(),
+    #{ public => PK, secret => SK}.
+
+%% @doc sign_seed_keypair/1 returns a signature keypair based on seed for signing
+%%
+%% The returned value is a map in order to make it harder to misuse keys.
+%% @end
+-spec sign_seed_keypair(S) -> #{ atom() => binary() }
+    when
+	  S :: binary().
+sign_seed_keypair(S) ->
+    {PK, SK} = enacl_nif:crypto_sign_seed_keypair(S),
     #{ public => PK, secret => SK}.
 
 %% @doc sign/2 signs a message with a digital signature identified by a secret key.
