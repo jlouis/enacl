@@ -137,7 +137,7 @@ enif_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc,
   memcpy(bp, basepoint.data, crypto_scalarmult_curve25519_BYTES);
 
   /* Clear the high-bit. Better safe than sorry. */
-  bp[31] &= 0x7f;
+  bp[crypto_scalarmult_curve25519_BYTES - 1] &= 0x7f;
 
   do {
     if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
@@ -1174,7 +1174,6 @@ static void uint64_pack(unsigned char *y, ErlNifUInt64 x) {
   *y++ = x;
   x >>= 8;
   *y++ = x;
-  x >>= 8;
 }
 
 static ErlNifUInt64 uint64_unpack(const unsigned char *x) {
