@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
+- Implement enacl:crypto_sign_ed25519_sk_to_pk/1, by an anonymous contribution.
 - Added AEAD XChaCha20-Poly1305 support, thanks to Github/ECrownofFire.
 - The Password Hash Generation functions now support memory and operations limits,
   thanks to Github/ECrownofFire.
