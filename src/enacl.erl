@@ -1005,7 +1005,9 @@ crypto_sign_ed25519_keypair() ->
     {PK, SK} = enacl_nif:crypto_sign_ed25519_keypair(),
     #{ public => PK, secret => SK }.
 
-%% @doc TODO
+%% @doc crypto_sign_ed25519_sk_to_pk/1 derives an ed25519 public key from a secret key
+%% The ed25519 signatures secret keys contains enough information to dervice its corresponding
+%% public key. This function extracts the public key from the secret if needed.
 %% @end
 -spec crypto_sign_ed25519_sk_to_pk(Secret :: binary()) -> binary().
 crypto_sign_ed25519_sk_to_pk(Secret) ->
