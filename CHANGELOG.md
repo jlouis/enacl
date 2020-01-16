@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
-- The Password Hashfunctions now support memory and operations limits,
+- Added AEAD XChaCha20-Poly1305 support, thanks to Github/ECrownofFire.
+- The Password Hash Generation functions now support memory and operations limits,
   thanks to Github/ECrownofFire.
 - Implement enacl:randombytes_uint32/0. Returns a random 32bit unsigned
   integer, by means of the underlying random source.
@@ -19,6 +20,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   integer.
 - Added Win32 build support (Tino Breddin)
 - Added a nix shell for easier development
+
+### Fixes
+- Clang static analysis warnings (Thomas Arts)
+- Replace a constant 31 with a computation from libsodium (Thomas Arts, from a security review)
 
 ## [0.17.2]
 
