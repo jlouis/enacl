@@ -78,19 +78,23 @@ ERL_NIF_TERM enif_crypto_generichash_KEYBYTES_MAX(ErlNifEnv *env, int argc,
 ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
                                       ERL_NIF_TERM const argv[]) {
   ErlNifBinary hash, message, key;
-  unsigned hashSize;
+  unsigned hash_size;
   ERL_NIF_TERM ret;
 
   // Validate the arguments
-  if ((argc != 3) || (!enif_get_uint(env, argv[0], &hashSize)) ||
-      (!enif_inspect_binary(env, argv[1], &message)) ||
-      (!enif_inspect_binary(env, argv[2], &key)))
+  if (argc != 3)
+    goto bad_arg;
+  if (!enif_get_uint(env, argv[0], &hash_size))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[1], &message))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[2], &key))
     goto bad_arg;
 
   // Verify that hash size is
   // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
-  if ((hashSize <= crypto_generichash_BYTES_MIN) ||
-      (hashSize >= crypto_generichash_BYTES_MAX)) {
+  if ((hash_size <= crypto_generichash_BYTES_MIN) ||
+      (hash_size >= crypto_generichash_BYTES_MAX)) {
     ret = nacl_error_tuple(env, "invalid_hash_size");
     goto done;
   }
@@ -106,7 +110,7 @@ ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
   }
 
   // allocate memory for hash
-  if (!enif_alloc_binary(hashSize, &hash)) {
+  if (!enif_alloc_binary(hash_size, &hash)) {
     ret = nacl_error_tuple(env, "alloc_failed");
     goto done;
   }
@@ -140,13 +144,14 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   ERL_NIF_TERM ret;
 
   // Validate the arguments
-  if ((argc != 2) || (!enif_get_uint(env, argv[0], &hash_size)) ||
-      (!enif_inspect_binary(env, argv[1], &key))) {
+  if (argc != 2)
     goto bad_arg;
-  }
+  if (!enif_get_uint(env, argv[0], &hash_size))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[1], &key))
+    goto bad_arg;
 
-  // Verify that hash size is
-  // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
+  // Verify that hash size is valid
   if ((hash_size <= crypto_generichash_BYTES_MIN) ||
       (hash_size >= crypto_generichash_BYTES_MAX)) {
     ret = nacl_error_tuple(env, "invalid_hash_size");
@@ -184,7 +189,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   // Call the library function
   if (0 != crypto_generichash_init(obj->ctx, k, key.size, hash_size)) {
     ret = nacl_error_tuple(env, "hash_init_error");
-    goto done;
+    goto err;
   }
 
   // Create return values
@@ -202,6 +207,7 @@ err:
   if (obj != NULL) {
     if (obj->alive) {
       sodium_free(obj->ctx);
+      obj->alive = 0; // Maintain the invariant consistently
     }
   }
 done:
@@ -229,6 +235,11 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
     goto bad_arg;
   if (!enif_inspect_binary(env, argv[2], &data))
     goto bad_arg;
+
+  if (!obj->alive) {
+    ret = nacl_error_tuple(env, "finalized");
+    goto done;
+  }
 
   // Update hash state
   if (0 != crypto_generichash_update(obj->ctx, data.data, data.size)) {
@@ -264,6 +275,11 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
                          (void **)&obj))
     goto bad_arg;
 
+  if (!obj->alive) {
+    ret = nacl_error_tuple(env, "finalized");
+    goto done;
+  }
+
   if ((hash_size <= crypto_generichash_BYTES_MIN) ||
       (hash_size >= crypto_generichash_BYTES_MAX)) {
     ret = nacl_error_tuple(env, "invalid_hash_size");
@@ -279,6 +295,11 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
     ret = nacl_error_tuple(env, "hash_error");
     goto release;
   }
+
+  // Finalize the object such that it cannot be reused by accident
+  if (obj->ctx)
+    sodium_free(obj->ctx);
+  obj->alive = 0;
 
   ERL_NIF_TERM ok = enif_make_atom(env, ATOM_OK);
   ERL_NIF_TERM h = enif_make_binary(env, &hash);

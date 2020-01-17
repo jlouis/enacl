@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   following the style of the Erlang/OTP `crypto` library. While here, make sure
   we clean up correctly and that we don't accidentally mis-ref-count data. The
   code is a bit more goto heavy, but this style is surprisingly common in C code.
+- The code now rejects updates to generichash states which were already finalized.
 
 ### Fixes
 - Fix a resource leak in generichash/sign init/update/final.
