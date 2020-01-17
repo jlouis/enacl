@@ -162,8 +162,8 @@
          crypto_generichash_KEYBYTES_MAX/0,
          crypto_generichash/3,
          crypto_generichash_init/2,
-         crypto_generichash_update/3,
-         crypto_generichash_final/2
+         crypto_generichash_update/2,
+         crypto_generichash_final/1
         ]).
 
 %% Access to the RNG
@@ -202,8 +202,8 @@ crypto_generichash_KEYBYTES_MAX() -> erlang:nif_error(nif_not_loaded).
 crypto_generichash(_HashSize, _Message, _Key) -> erlang:nif_error(nif_not_loaded).
 
 crypto_generichash_init(_HashSize, _Key) ->  erlang:nif_error(nif_not_loaded).
-crypto_generichash_update(_HashSize, _HashState, _Message) ->  erlang:nif_error(nif_not_loaded).
-crypto_generichash_final(_HashSize, _HashState) ->  erlang:nif_error(nif_not_loaded).
+crypto_generichash_update(_HashState, _Message) ->  erlang:nif_error(nif_not_loaded).
+crypto_generichash_final(_HashState) ->  erlang:nif_error(nif_not_loaded).
 
 crypto_pwhash(_Password, _Salt, _Ops, _Mem) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str(_Password, _Ops, _Mem) -> erlang:nif_error(nif_not_loaded).

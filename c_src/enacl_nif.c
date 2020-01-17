@@ -1929,8 +1929,8 @@ static ErlNifFunc nif_funcs[] = {
      enif_crypto_generichash_KEYBYTES_MAX},
     {"crypto_generichash", 3, enacl_crypto_generichash},
     {"crypto_generichash_init", 2, enacl_crypto_generichash_init},
-    {"crypto_generichash_update", 3, enacl_crypto_generichash_update},
-    {"crypto_generichash_final", 2, enacl_crypto_generichash_final}
+    {"crypto_generichash_update", 2, enacl_crypto_generichash_update},
+    {"crypto_generichash_final", 1, enacl_crypto_generichash_final}
 
 };
 

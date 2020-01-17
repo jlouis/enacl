@@ -354,11 +354,11 @@ generichash(HashSize, Message) ->
 generichash_init(HashSize, Key) ->
     enacl_nif:crypto_generichash_init(HashSize, Key).
 
-generichash_update({hashstate, HashSize, HashState}, Message) ->
-    enacl_nif:crypto_generichash_update(HashSize, HashState, Message).
+generichash_update(State, Message) ->
+    enacl_nif:crypto_generichash_update(State, Message).
 
-generichash_final({hashstate, HashSize, HashState}) ->
-    enacl_nif:crypto_generichash_final(HashSize, HashState).
+generichash_final(State) ->
+    enacl_nif:crypto_generichash_final(State).
 
 
 -type pwhash_limit() :: interactive | moderate | sensitive | pos_integer().

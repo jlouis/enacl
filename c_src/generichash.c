@@ -6,10 +6,9 @@
 #include "generichash.h"
 
 typedef struct enacl_generichash_ctx {
-  // The hash state
-  crypto_generichash_state *ctx;
-  // Is the context alive?
-  int alive;
+  crypto_generichash_state *ctx; // Underlying hash state from sodium
+  int alive;  // Is the context still valid for updates/finalizes?
+  int outlen; // Final size of the hash
 } enacl_generichash_ctx;
 
 static ErlNifResourceType *enacl_generic_hash_ctx_rtype;
@@ -24,12 +23,9 @@ int enacl_init_generic_hash_ctx(ErlNifEnv *env) {
                               ERL_NIF_RT_CREATE | ERL_NIF_RT_TAKEOVER, NULL);
 
   if (enacl_generic_hash_ctx_rtype == NULL)
-    goto err;
+    return 0;
 
   return 1;
-
-err:
-  return 0;
 }
 
 static void enacl_generic_hash_ctx_dtor(ErlNifEnv *env,
@@ -38,7 +34,9 @@ static void enacl_generic_hash_ctx_dtor(ErlNifEnv *env,
     return;
   }
 
-  sodium_free(obj->ctx);
+  if (obj->ctx)
+    sodium_free(obj->ctx);
+
   return;
 }
 
@@ -179,25 +177,23 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   // And also protects the resource via guardpages
   obj->ctx = NULL;
   obj->alive = 0;
+  obj->outlen = 0;
+
   obj->ctx = (crypto_generichash_state *)sodium_malloc(
       crypto_generichash_statebytes());
   if (obj->ctx == NULL) {
     goto err;
   }
   obj->alive = 1;
+  obj->outlen = hash_size;
 
   // Call the library function
-  if (0 != crypto_generichash_init(obj->ctx, k, key.size, hash_size)) {
+  if (0 != crypto_generichash_init(obj->ctx, k, key.size, obj->outlen)) {
     ret = nacl_error_tuple(env, "hash_init_error");
     goto err;
   }
 
-  // Create return values
-  ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
-  ERL_NIF_TERM e2 = argv[0];
-  ERL_NIF_TERM e3 = enif_make_resource(env, obj);
-
-  ret = enif_make_tuple3(env, e1, e2, e3);
+  ret = enif_make_resource(env, obj);
   goto done;
 bad_arg:
   return enif_make_badarg(env);
@@ -225,15 +221,13 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
   enacl_generichash_ctx *obj = NULL;
 
   // Validate the arguments
-  if (argc != 3)
+  if (argc != 2)
     goto bad_arg;
-  if (!enif_get_uint(env, argv[0], &data_size))
-    goto bad_arg;
-  if (!enif_get_resource(env, argv[1],
+  if (!enif_get_resource(env, argv[0],
                          (ErlNifResourceType *)enacl_generic_hash_ctx_rtype,
                          (void **)&obj))
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[2], &data))
+  if (!enif_inspect_binary(env, argv[1], &data))
     goto bad_arg;
 
   if (!obj->alive) {
@@ -247,11 +241,7 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
     goto done;
   }
 
-  ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
-  ERL_NIF_TERM e2 = argv[0];
-  ERL_NIF_TERM e3 = argv[1];
-
-  ret = enif_make_tuple3(env, e1, e2, e3);
+  ret = argv[0];
   goto done;
 
 bad_arg:
@@ -264,12 +254,9 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
                                             ERL_NIF_TERM const argv[]) {
   ERL_NIF_TERM ret;
   ErlNifBinary hash;
-  unsigned int hash_size;
   enacl_generichash_ctx *obj = NULL;
 
-  if (argc != 2)
-    goto bad_arg;
-  if (!enif_get_uint(env, argv[0], &hash_size))
+  if (argc != 1)
     goto bad_arg;
   if (!enif_get_resource(env, argv[1], enacl_generic_hash_ctx_rtype,
                          (void **)&obj))
@@ -280,13 +267,7 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
     goto done;
   }
 
-  if ((hash_size <= crypto_generichash_BYTES_MIN) ||
-      (hash_size >= crypto_generichash_BYTES_MAX)) {
-    ret = nacl_error_tuple(env, "invalid_hash_size");
-    goto done;
-  }
-
-  if (!enif_alloc_binary(hash_size, &hash)) {
+  if (!enif_alloc_binary(obj->outlen, &hash)) {
     ret = nacl_error_tuple(env, "alloc_failed");
     goto done;
   }
