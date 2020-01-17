@@ -5,6 +5,7 @@
 
 #include "enacl.h"
 #include "generichash.h"
+#include "hash.h"
 
 #define CRYPTO_SIGN_STATE_RESOURCE "crypto_sign_state"
 
