@@ -1,15 +1,11 @@
 #include "erl_nif.h"
 
+#include <sodium.h>
 #include <string.h>
 
-#include <sodium.h>
+#include "enacl.h"
+#include "generichash.h"
 
-#define ATOM_OK "ok"
-#define ATOM_ERROR "error"
-#define ATOM_TRUE "true"
-#define ATOM_FALSE "false"
-
-#define CRYPTO_GENERICHASH_STATE_RESOURCE "crypto_generichash_state"
 #define CRYPTO_SIGN_STATE_RESOURCE "crypto_sign_state"
 
 #ifdef ERL_NIF_DIRTY_JOB_CPU_BOUND
@@ -25,21 +21,13 @@
 /* Errors */
 
 /* These are global variables for resource types */
-static ErlNifResourceType *generichash_state_type = NULL;
 static ErlNifResourceType *sign_state_type = NULL;
-
-static ERL_NIF_TERM nacl_error_tuple(ErlNifEnv *env, char *error_atom) {
-  return enif_make_tuple2(env, enif_make_atom(env, "error"),
-                          enif_make_atom(env, error_atom));
-}
 
 /* Initialization */
 static int enif_crypto_load(ErlNifEnv *env, void **priv_data,
                             ERL_NIF_TERM load_info) {
   // Create a new resource type for crypto_generichash_state
-  if (!(generichash_state_type = enif_open_resource_type(
-            env, NULL, CRYPTO_GENERICHASH_STATE_RESOURCE, NULL,
-            ERL_NIF_RT_CREATE, NULL))) {
+  if (!enacl_init_generic_hash_ctx(env)) {
     return -1;
   }
   // Create a new resource type for crypto_sign_state
@@ -50,25 +38,6 @@ static int enif_crypto_load(ErlNifEnv *env, void **priv_data,
   }
 
   return sodium_init();
-}
-
-/* Low-level functions (Hashing, String Equality, ...) */
-static ERL_NIF_TERM enif_crypto_hash(ErlNifEnv *env, int argc,
-                                     ERL_NIF_TERM const argv[]) {
-  ErlNifBinary input;
-  ErlNifBinary result;
-
-  if ((argc != 1) || (!enif_inspect_iolist_as_binary(env, argv[0], &input))) {
-    return enif_make_badarg(env);
-  }
-
-  if (!enif_alloc_binary(crypto_hash_BYTES, &result)) {
-    return nacl_error_tuple(env, "alloc_failed");
-  }
-
-  crypto_hash(result.data, input.data, input.size);
-
-  return enif_make_binary(env, &result);
 }
 
 static ERL_NIF_TERM enif_crypto_verify_16(ErlNifEnv *env, int argc,
@@ -1764,227 +1733,6 @@ enif_crypto_aead_xchacha20poly1305_decrypt(ErlNifEnv *env, int argc,
   return enif_make_binary(env, &message);
 }
 
-/*
- * Generic hash
- */
-static ERL_NIF_TERM enif_crypto_generichash_BYTES(ErlNifEnv *env, int argc,
-                                                  ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_generichash_BYTES);
-}
-
-static ERL_NIF_TERM
-enif_crypto_generichash_BYTES_MIN(ErlNifEnv *env, int argc,
-                                  ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_generichash_BYTES_MIN);
-}
-
-static ERL_NIF_TERM
-enif_crypto_generichash_BYTES_MAX(ErlNifEnv *env, int argc,
-                                  ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_generichash_BYTES_MAX);
-}
-
-static ERL_NIF_TERM
-enif_crypto_generichash_KEYBYTES(ErlNifEnv *env, int argc,
-                                 ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_generichash_KEYBYTES);
-}
-
-static ERL_NIF_TERM
-enif_crypto_generichash_KEYBYTES_MIN(ErlNifEnv *env, int argc,
-                                     ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_generichash_KEYBYTES_MIN);
-}
-
-static ERL_NIF_TERM
-enif_crypto_generichash_KEYBYTES_MAX(ErlNifEnv *env, int argc,
-                                     ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_generichash_KEYBYTES_MAX);
-}
-
-static ERL_NIF_TERM enif_crypto_generichash(ErlNifEnv *env, int argc,
-                                            ERL_NIF_TERM const argv[]) {
-  ErlNifBinary hash, message, key;
-
-  unsigned hashSize;
-
-  // Validate the arguments
-  if ((argc != 3) || (!enif_get_uint(env, argv[0], &hashSize)) ||
-      (!enif_inspect_binary(env, argv[1], &message)) ||
-      (!enif_inspect_binary(env, argv[2], &key))) {
-    return enif_make_badarg(env);
-  }
-
-  // Verify that hash size is
-  // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
-  if ((hashSize < crypto_generichash_BYTES_MIN) ||
-      (hashSize > crypto_generichash_BYTES_MAX)) {
-    return nacl_error_tuple(env, "invalid_hash_size");
-  }
-
-  // validate key size
-  unsigned char *k = key.data;
-  if (0 == key.size) {
-    k = NULL;
-  } else if (key.size < crypto_generichash_KEYBYTES_MIN ||
-             key.size > crypto_generichash_KEYBYTES_MAX) {
-    return nacl_error_tuple(env, "invalid_key_size");
-  }
-
-  // allocate memory for hash
-  if (!enif_alloc_binary(hashSize, &hash)) {
-    return nacl_error_tuple(env, "alloc_failed");
-  }
-
-  // calculate hash
-  if (0 != crypto_generichash(hash.data, hash.size, message.data, message.size,
-                              k, key.size)) {
-    enif_release_binary(&hash);
-    return nacl_error_tuple(env, "hash_error");
-  }
-
-  ERL_NIF_TERM ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret = enif_make_binary(env, &hash);
-
-  return enif_make_tuple2(env, ok, ret);
-}
-
-static crypto_generichash_state *align64(void *ptr) {
-  if ((unsigned long)ptr % 64 == 0)
-    return ptr;
-  return (unsigned long)ptr + (64 - ((unsigned long)ptr % 64));
-}
-
-static ERL_NIF_TERM enif_crypto_generichash_init(ErlNifEnv *env, int argc,
-                                                 ERL_NIF_TERM const argv[]) {
-  ErlNifBinary key;
-
-  unsigned hashSize;
-
-  // Validate the arguments
-  if ((argc != 2) || (!enif_get_uint(env, argv[0], &hashSize)) ||
-      (!enif_inspect_binary(env, argv[1], &key))) {
-    return enif_make_badarg(env);
-  }
-
-  // Verify that hash size is
-  // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
-  if ((hashSize < crypto_generichash_BYTES_MIN) ||
-      (hashSize > crypto_generichash_BYTES_MAX)) {
-    return nacl_error_tuple(env, "invalid_hash_size");
-  }
-
-  // validate key size
-  unsigned char *k = key.data;
-  if (0 == key.size) {
-    k = NULL;
-  } else if (key.size < crypto_generichash_KEYBYTES_MIN ||
-             key.size > crypto_generichash_KEYBYTES_MAX) {
-    return nacl_error_tuple(env, "invalid_key_size");
-  }
-
-  // Create a resource for hash state (+ 60 to make room for 64-byte alignment)
-  void *state = enif_alloc_resource(generichash_state_type,
-                                    crypto_generichash_statebytes() + 60);
-  if (!state) {
-    return nacl_error_tuple(env, "alloc_failed");
-  }
-
-  // Call the library function
-  if (0 != crypto_generichash_init(align64(state), k, key.size, hashSize)) {
-    enif_release_resource(state);
-    return nacl_error_tuple(env, "hash_init_error");
-  }
-
-  // Create return values
-  ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
-  ERL_NIF_TERM e2 = argv[0];
-  ERL_NIF_TERM e3 = enif_make_resource(env, state);
-
-  // release dynamically allocated memory to erlang to mange
-  enif_release_resource(state);
-
-  // return a tuple
-  return enif_make_tuple3(env, e1, e2, e3);
-}
-
-static ERL_NIF_TERM enif_crypto_generichash_update(ErlNifEnv *env, int argc,
-                                                   ERL_NIF_TERM const argv[]) {
-  ErlNifBinary message;
-
-  unsigned hashSize;
-
-  void *state;
-
-  // Validate the arguments
-  if ((argc != 3) || (!enif_get_uint(env, argv[0], &hashSize)) ||
-      (!enif_get_resource(env, argv[1], generichash_state_type,
-                          (void **)&state)) ||
-      (!enif_inspect_binary(env, argv[2], &message))) {
-    return enif_make_badarg(env);
-  }
-
-  // Verify that hash size is
-  // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
-  if ((hashSize < crypto_generichash_BYTES_MIN) ||
-      (hashSize > crypto_generichash_BYTES_MAX)) {
-    return nacl_error_tuple(env, "invalid_hash_size");
-  }
-
-  // Update hash state
-  if (0 !=
-      crypto_generichash_update(align64(state), message.data, message.size)) {
-    return nacl_error_tuple(env, "hash_update_error");
-  }
-
-  // Generate return value
-  ERL_NIF_TERM e1 = enif_make_atom(env, "hashstate");
-  ERL_NIF_TERM e2 = argv[0];
-  ERL_NIF_TERM e3 = enif_make_resource(env, state);
-
-  // return a tuple
-  return enif_make_tuple3(env, e1, e2, e3);
-}
-
-static ERL_NIF_TERM enif_crypto_generichash_final(ErlNifEnv *env, int argc,
-                                                  ERL_NIF_TERM const argv[]) {
-  ErlNifBinary hash;
-
-  unsigned hashSize;
-
-  void *state;
-
-  // Validate the arguments
-  if ((argc != 2) || (!enif_get_uint(env, argv[0], &hashSize)) ||
-      (!enif_get_resource(env, argv[1], generichash_state_type,
-                          (void **)&state))) {
-    return enif_make_badarg(env);
-  }
-
-  // Verify that hash size is
-  // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
-  if ((hashSize < crypto_generichash_BYTES_MIN) ||
-      (hashSize > crypto_generichash_BYTES_MAX)) {
-    return nacl_error_tuple(env, "invalid_hash_size");
-  }
-
-  // allocate memory for hash
-  if (!enif_alloc_binary(hashSize, &hash)) {
-    return nacl_error_tuple(env, "alloc_failed");
-  }
-
-  // calculate hash
-  if (0 != crypto_generichash_final(align64(state), hash.data, hash.size)) {
-    enif_release_binary(&hash);
-    return nacl_error_tuple(env, "hash_error");
-  }
-
-  ERL_NIF_TERM ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret = enif_make_binary(env, &hash);
-
-  return enif_make_tuple2(env, ok, ret);
-}
-
 /* Tie the knot to the Erlang world */
 static ErlNifFunc nif_funcs[] = {
     {"crypto_box_NONCEBYTES", 0, enif_crypto_box_NONCEBYTES},
@@ -2091,8 +1839,8 @@ static ErlNifFunc nif_funcs[] = {
     erl_nif_dirty_job_cpu_bound_macro("crypto_onetimeauth_verify", 3,
                                       enif_crypto_onetimeauth_verify),
 
-    {"crypto_hash_b", 1, enif_crypto_hash},
-    erl_nif_dirty_job_cpu_bound_macro("crypto_hash", 1, enif_crypto_hash),
+    {"crypto_hash_b", 1, enacl_crypto_hash},
+    erl_nif_dirty_job_cpu_bound_macro("crypto_hash", 1, enacl_crypto_hash),
     {"crypto_verify_16", 2, enif_crypto_verify_16},
     {"crypto_verify_32", 2, enif_crypto_verify_32},
     {"sodium_memzero", 1, enif_sodium_memzero},
@@ -2178,10 +1926,10 @@ static ErlNifFunc nif_funcs[] = {
      enif_crypto_generichash_KEYBYTES_MIN},
     {"crypto_generichash_KEYBYTES_MAX", 0,
      enif_crypto_generichash_KEYBYTES_MAX},
-    {"crypto_generichash", 3, enif_crypto_generichash},
-    {"crypto_generichash_init", 2, enif_crypto_generichash_init},
-    {"crypto_generichash_update", 3, enif_crypto_generichash_update},
-    {"crypto_generichash_final", 2, enif_crypto_generichash_final}
+    {"crypto_generichash", 3, enacl_crypto_generichash},
+    {"crypto_generichash_init", 2, enacl_crypto_generichash_init},
+    {"crypto_generichash_update", 3, enacl_crypto_generichash_update},
+    {"crypto_generichash_final", 2, enacl_crypto_generichash_final}
 
 };
 
