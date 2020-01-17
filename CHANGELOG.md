@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added Win32 build support (Tino Breddin)
 - Added a nix shell for easier development
 
+### Changed
+- Split the C code over multiple files for easier maintenance.
+- Rewrote the generichash routines to be more consistent. We are now more-or-less
+  following the style of the Erlang/OTP `crypto` library. While here, make sure
+  we clean up correctly and that we don't accidentally mis-ref-count data. The
+  code is a bit more goto heavy, but this style is surprisingly common in C code.
+
 ### Fixes
 - Fix a resource leak in generichash/sign init/update/final.
 - Clang static analysis warnings (Thomas Arts)
