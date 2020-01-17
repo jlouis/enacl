@@ -89,8 +89,8 @@ ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
 
   // Verify that hash size is
   // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
-  if ((hashSize < crypto_generichash_BYTES_MIN) ||
-      (hashSize > crypto_generichash_BYTES_MAX)) {
+  if ((hashSize <= crypto_generichash_BYTES_MIN) ||
+      (hashSize >= crypto_generichash_BYTES_MAX)) {
     ret = nacl_error_tuple(env, "invalid_hash_size");
     goto done;
   }
@@ -99,8 +99,8 @@ ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
   unsigned char *k = key.data;
   if (0 == key.size) {
     k = NULL;
-  } else if (key.size < crypto_generichash_KEYBYTES_MIN ||
-             key.size > crypto_generichash_KEYBYTES_MAX) {
+  } else if (key.size <= crypto_generichash_KEYBYTES_MIN ||
+             key.size >= crypto_generichash_KEYBYTES_MAX) {
     ret = nacl_error_tuple(env, "invalid_key_size");
     goto done;
   }
