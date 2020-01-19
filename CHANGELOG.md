@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a nix shell for easier development
 
 ### Changed
-- Split the C code over multiple files for easier maintenance.
+- Started a split the C code over multiple files for easier maintenance.
 - Rewrote the generichash routines to be more consistent. We are now more-or-less
   following the style of the Erlang/OTP `crypto` library. While here, make sure
   we clean up correctly and that we don't accidentally mis-ref-count data. The
