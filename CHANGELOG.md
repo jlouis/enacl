@@ -39,6 +39,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   resource rather than on the Erlang side. This avoids some checks in the code,
   and streamlines a good deal of the interface.
 - Split AEAD routines off from the main enacl_nif.c file
+- Renamed many routines from enif_* to enacl_*. This better reflects where they live
+  in the code base, and avoids pollution of the enif_* "namespace".
+- Split Sign Public Key routines from the rest. Modernize the handling of contexts.
 
 ### Fixes
 - Fix a resource leak in generichash/sign init/update/final.

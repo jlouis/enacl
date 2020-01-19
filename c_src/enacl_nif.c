@@ -7,6 +7,7 @@
 #include "enacl.h"
 #include "generichash.h"
 #include "hash.h"
+#include "sign.h"
 
 #define CRYPTO_SIGN_STATE_RESOURCE "crypto_sign_state"
 
@@ -18,13 +19,6 @@
   { a, b, c }
 #endif
 
-//{"crypto_box_keypair", 0, enif_crypto_box_keypair,
-// ERL_NIF_DIRTY_JOB_CPU_BOUND}
-/* Errors */
-
-/* These are global variables for resource types */
-static ErlNifResourceType *sign_state_type = NULL;
-
 /* Initialization */
 static int enif_crypto_load(ErlNifEnv *env, void **priv_data,
                             ERL_NIF_TERM load_info) {
@@ -32,10 +26,8 @@ static int enif_crypto_load(ErlNifEnv *env, void **priv_data,
   if (!enacl_init_generic_hash_ctx(env)) {
     return -1;
   }
-  // Create a new resource type for crypto_sign_state
-  if (!(sign_state_type =
-            enif_open_resource_type(env, NULL, CRYPTO_SIGN_STATE_RESOURCE, NULL,
-                                    ERL_NIF_RT_CREATE, NULL))) {
+
+  if (!enacl_init_sign_ctx(env)) {
     return -1;
   }
 
@@ -637,139 +629,6 @@ enif_crypto_sign_verify_detached(ErlNifEnv *env, int argc,
   } else {
     return enif_make_atom(env, "false");
   }
-}
-
-/*
-  int crypto_sign_init(crypto_sign_state *state)
- */
-
-static ERL_NIF_TERM enif_crypto_sign_init(ErlNifEnv *env, int argc,
-                                          ERL_NIF_TERM const argv[]) {
-  if ((argc != 0)) {
-    return enif_make_badarg(env);
-  }
-
-  void *state = enif_alloc_resource(sign_state_type, crypto_sign_statebytes());
-
-  if (!state) {
-    return nacl_error_tuple(env, "alloc_failed");
-  }
-
-  if (0 != crypto_sign_init(state)) {
-    enif_release_resource(state);
-    return nacl_error_tuple(env, "sign_init_error");
-  }
-
-  // Create return values
-  ERL_NIF_TERM e1 = enif_make_atom(env, "signstate");
-  ERL_NIF_TERM e2 = enif_make_resource(env, state);
-
-  // release dynamically allocated memory to erlang to mange
-  enif_release_resource(state);
-
-  // return a tuple
-  return enif_make_tuple2(env, e1, e2);
-}
-
-/*
-  int crypto_sign_update(crypto_sign_state *state,
-                        const unsigned char *m,
-                        unsigned long long mlen);
- */
-
-static ERL_NIF_TERM enif_crypto_sign_update(ErlNifEnv *env, int argc,
-                                            ERL_NIF_TERM const argv[]) {
-  ErlNifBinary data;
-
-  void *state;
-
-  // Validate the arguments
-  if ((argc != 2) ||
-      (!enif_get_resource(env, argv[0], sign_state_type, (void **)&state)) ||
-      (!enif_inspect_binary(env, argv[1], &data))) {
-    return enif_make_badarg(env);
-  }
-
-  if (0 != crypto_sign_update(state, data.data, data.size)) {
-    return nacl_error_tuple(env, "sign_update_error");
-  }
-
-  // Generate return value
-  ERL_NIF_TERM e1 = enif_make_atom(env, "signstate");
-  ERL_NIF_TERM e2 = enif_make_resource(env, state);
-
-  // return a tuple
-  return enif_make_tuple2(env, e1, e2);
-}
-
-/*
-  int crypto_sign_final_create(crypto_sign_state *state,
-                               unsigned char *sig,
-                               unsigned long long *siglen_p,
-                               const unsigned char *sk);
- */
-
-static ERL_NIF_TERM enif_crypto_sign_final_create(ErlNifEnv *env, int argc,
-                                                  ERL_NIF_TERM const argv[]) {
-  ErlNifBinary sk, sig;
-
-  void *state;
-
-  unsigned long long siglen;
-
-  if ((argc != 2) ||
-      (!enif_get_resource(env, argv[0], sign_state_type, (void **)&state)) ||
-      (!enif_inspect_binary(env, argv[1], &sk))) {
-    return enif_make_badarg(env);
-  }
-
-  if (sk.size != crypto_sign_SECRETKEYBYTES) {
-    return enif_make_badarg(env);
-  }
-
-  if (!enif_alloc_binary(crypto_sign_BYTES, &sig)) {
-    return nacl_error_tuple(env, "alloc_failed");
-  }
-
-  if (0 != crypto_sign_final_create(state, sig.data, &siglen, sk.data)) {
-    enif_release_binary(&sig);
-    return nacl_error_tuple(env, "sign_error");
-  }
-
-  ERL_NIF_TERM ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret = enif_make_binary(env, &sig);
-
-  return enif_make_tuple2(env, ok, ret);
-}
-
-/*
-  int crypto_sign_final_verify(crypto_sign_state *state,
-                               unsigned char *sig,
-                               const unsigned char *pk);
- */
-
-static ERL_NIF_TERM enif_crypto_sign_final_verify(ErlNifEnv *env, int argc,
-                                                  ERL_NIF_TERM const argv[]) {
-  ErlNifBinary pk, sig;
-
-  void *state;
-
-  if ((argc != 3) ||
-      (!enif_get_resource(env, argv[0], sign_state_type, (void **)&state)) ||
-      (!enif_inspect_binary(env, argv[1], &sig)) ||
-      (!enif_inspect_binary(env, argv[2], &pk))) {
-    return enif_make_badarg(env);
-  }
-
-  if (pk.size != crypto_sign_PUBLICKEYBYTES) {
-    return enif_make_badarg(env);
-  }
-
-  if (0 == crypto_sign_final_verify(state, sig.data, pk.data)) {
-    return enif_make_atom(env, ATOM_OK);
-  }
-
-  return nacl_error_tuple(env, "failed_verification");
 }
 
 /* Sealed box functions */
@@ -1584,12 +1443,12 @@ static ErlNifFunc nif_funcs[] = {
                                       enif_crypto_sign_detached),
     erl_nif_dirty_job_cpu_bound_macro("crypto_sign_verify_detached", 3,
                                       enif_crypto_sign_verify_detached),
-    {"crypto_sign_init", 0, enif_crypto_sign_init},
-    {"crypto_sign_update", 2, enif_crypto_sign_update},
+    {"crypto_sign_init", 0, enacl_crypto_sign_init},
+    {"crypto_sign_update", 2, enacl_crypto_sign_update},
     erl_nif_dirty_job_cpu_bound_macro("crypto_sign_final_create", 2,
-                                      enif_crypto_sign_final_create),
+                                      enacl_crypto_sign_final_create),
     erl_nif_dirty_job_cpu_bound_macro("crypto_sign_final_verify", 3,
-                                      enif_crypto_sign_final_verify),
+                                      enacl_crypto_sign_final_verify),
 
     {"crypto_sign_ed25519_sk_to_pk", 1, enif_crypto_sign_ed25519_sk_to_pk},
 
