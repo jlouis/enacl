@@ -258,7 +258,7 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
 
   if (argc != 1)
     goto bad_arg;
-  if (!enif_get_resource(env, argv[1], enacl_generic_hash_ctx_rtype,
+  if (!enif_get_resource(env, argv[0], enacl_generic_hash_ctx_rtype,
                          (void **)&obj))
     goto bad_arg;
 
