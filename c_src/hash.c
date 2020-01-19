@@ -4,8 +4,8 @@
 
 #include "hash.h"
 
-ERL_NIF_TERM enacl_crypto_hash_nif(ErlNifEnv *env, int argc,
-                                   ERL_NIF_TERM const argv[]) {
+ERL_NIF_TERM enacl_crypto_hash(ErlNifEnv *env, int argc,
+                               ERL_NIF_TERM const argv[]) {
   ErlNifBinary input;
   ErlNifBinary result;
   ERL_NIF_TERM ret;
