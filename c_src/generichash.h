@@ -3,19 +3,19 @@
 
 int enacl_init_generic_hash_ctx(ErlNifEnv *env);
 
-ERL_NIF_TERM enif_crypto_generichash_BYTES(ErlNifEnv *env, int argc,
-                                           const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM enif_crypto_generichash_BYTES_MIN(ErlNifEnv *env, int argc,
-                                               const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM enif_crypto_generichash_BYTES_MAX(ErlNifEnv *env, int argc,
-                                               const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM enacl_crypto_generichash_BYTES(ErlNifEnv *env, int argc,
+                                            const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM enacl_crypto_generichash_BYTES_MIN(ErlNifEnv *env, int argc,
+                                                const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM enacl_crypto_generichash_BYTES_MAX(ErlNifEnv *env, int argc,
+                                                const ERL_NIF_TERM argv[]);
 
-ERL_NIF_TERM enif_crypto_generichash_KEYBYTES(ErlNifEnv *env, int argc,
-                                              const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM enif_crypto_generichash_KEYBYTES_MIN(ErlNifEnv *env, int argc,
-                                                  const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM enif_crypto_generichash_KEYBYTES_MAX(ErlNifEnv *env, int argc,
-                                                  const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM enacl_crypto_generichash_KEYBYTES(ErlNifEnv *env, int argc,
+                                               const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM enacl_crypto_generichash_KEYBYTES_MIN(ErlNifEnv *env, int argc,
+                                                   const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM enacl_crypto_generichash_KEYBYTES_MAX(ErlNifEnv *env, int argc,
+                                                   const ERL_NIF_TERM argv[]);
 
 ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
                                       const ERL_NIF_TERM argv[]);

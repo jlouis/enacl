@@ -43,33 +43,33 @@ static void enacl_generic_hash_ctx_dtor(ErlNifEnv *env,
 /*
  * Generic hash
  */
-ERL_NIF_TERM enif_crypto_generichash_BYTES(ErlNifEnv *env, int argc,
-                                           ERL_NIF_TERM const argv[]) {
+ERL_NIF_TERM enacl_crypto_generichash_BYTES(ErlNifEnv *env, int argc,
+                                            ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_generichash_BYTES);
 }
 
-ERL_NIF_TERM enif_crypto_generichash_BYTES_MIN(ErlNifEnv *env, int argc,
-                                               ERL_NIF_TERM const argv[]) {
+ERL_NIF_TERM enacl_crypto_generichash_BYTES_MIN(ErlNifEnv *env, int argc,
+                                                ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_generichash_BYTES_MIN);
 }
 
-ERL_NIF_TERM enif_crypto_generichash_BYTES_MAX(ErlNifEnv *env, int argc,
-                                               ERL_NIF_TERM const argv[]) {
+ERL_NIF_TERM enacl_crypto_generichash_BYTES_MAX(ErlNifEnv *env, int argc,
+                                                ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_generichash_BYTES_MAX);
 }
 
-ERL_NIF_TERM enif_crypto_generichash_KEYBYTES(ErlNifEnv *env, int argc,
-                                              ERL_NIF_TERM const argv[]) {
+ERL_NIF_TERM enacl_crypto_generichash_KEYBYTES(ErlNifEnv *env, int argc,
+                                               ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_generichash_KEYBYTES);
 }
 
-ERL_NIF_TERM enif_crypto_generichash_KEYBYTES_MIN(ErlNifEnv *env, int argc,
-                                                  ERL_NIF_TERM const argv[]) {
+ERL_NIF_TERM enacl_crypto_generichash_KEYBYTES_MIN(ErlNifEnv *env, int argc,
+                                                   ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_generichash_KEYBYTES_MIN);
 }
 
-ERL_NIF_TERM enif_crypto_generichash_KEYBYTES_MAX(ErlNifEnv *env, int argc,
-                                                  ERL_NIF_TERM const argv[]) {
+ERL_NIF_TERM enacl_crypto_generichash_KEYBYTES_MAX(ErlNifEnv *env, int argc,
+                                                   ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_generichash_KEYBYTES_MAX);
 }
 

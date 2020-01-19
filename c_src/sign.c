@@ -10,9 +10,9 @@ typedef struct enacl_sign_ctx {
   int alive; // Is the context still valid for updates/finalization
 } enacl_sign_ctx;
 
-static ErlNifResourceType *enacl_sign_ctx_rtype = NULL;
+ErlNifResourceType *enacl_sign_ctx_rtype = NULL;
 
-static void enacl_sign_ctx_dtor(ErlNifEnv *env, enacl_sign_ctx *);
+void enacl_sign_ctx_dtor(ErlNifEnv *env, enacl_sign_ctx *);
 
 int enacl_init_sign_ctx(ErlNifEnv *env) {
   enacl_sign_ctx_rtype =
@@ -26,7 +26,7 @@ int enacl_init_sign_ctx(ErlNifEnv *env) {
   return 1;
 }
 
-static void enacl_sign_ctx_dtor(ErlNifEnv *env, enacl_sign_ctx *obj) {
+void enacl_sign_ctx_dtor(ErlNifEnv *env, enacl_sign_ctx *obj) {
   if (!obj->alive)
     return;
 
@@ -213,4 +213,279 @@ cleanup:
   obj->state = NULL;
 
   return ret;
+}
+
+/* Ed 25519 */
+ERL_NIF_TERM
+enacl_crypto_sign_ed25519_keypair(ErlNifEnv *env, int argc,
+                                  ERL_NIF_TERM const argv[]) {
+  ErlNifBinary pk, sk;
+
+  if (argc != 0) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_sign_ed25519_PUBLICKEYBYTES, &pk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (!enif_alloc_binary(crypto_sign_ed25519_SECRETKEYBYTES, &sk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  crypto_sign_ed25519_keypair(pk.data, sk.data);
+
+  return enif_make_tuple2(env, enif_make_binary(env, &pk),
+                          enif_make_binary(env, &sk));
+}
+
+ERL_NIF_TERM
+enacl_crypto_sign_ed25519_sk_to_pk(ErlNifEnv *env, int argc,
+                                   ERL_NIF_TERM const argv[]) {
+  ErlNifBinary pk, sk;
+
+  if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &sk)) ||
+      (sk.size != crypto_sign_ed25519_SECRETKEYBYTES)) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_sign_ed25519_PUBLICKEYBYTES, &pk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (crypto_sign_ed25519_sk_to_pk(pk.data, sk.data) != 0) {
+    return nacl_error_tuple(env, "crypto_sign_ed25519_sk_to_pk_failed");
+  }
+
+  return enif_make_binary(env, &pk);
+}
+
+ERL_NIF_TERM
+enacl_crypto_sign_ed25519_public_to_curve25519(ErlNifEnv *env, int argc,
+                                               ERL_NIF_TERM const argv[]) {
+  ErlNifBinary curve25519_pk, ed25519_pk;
+
+  if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &ed25519_pk)) ||
+      (ed25519_pk.size != crypto_sign_ed25519_PUBLICKEYBYTES)) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &curve25519_pk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (crypto_sign_ed25519_pk_to_curve25519(curve25519_pk.data,
+                                           ed25519_pk.data) != 0) {
+    return nacl_error_tuple(env, "ed25519_public_to_curve25519_failed");
+  }
+
+  return enif_make_binary(env, &curve25519_pk);
+}
+
+ERL_NIF_TERM
+enacl_crypto_sign_ed25519_secret_to_curve25519(ErlNifEnv *env, int argc,
+                                               ERL_NIF_TERM const argv[]) {
+  ErlNifBinary curve25519_sk, ed25519_sk;
+
+  if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &ed25519_sk)) ||
+      (ed25519_sk.size != crypto_sign_ed25519_SECRETKEYBYTES)) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &curve25519_sk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (crypto_sign_ed25519_sk_to_curve25519(curve25519_sk.data,
+                                           ed25519_sk.data) != 0) {
+    return nacl_error_tuple(env, "ed25519_secret_to_curve25519_failed");
+  }
+
+  return enif_make_binary(env, &curve25519_sk);
+}
+
+ERL_NIF_TERM
+enacl_crypto_sign_ed25519_PUBLICKEYBYTES(ErlNifEnv *env, int argc,
+                                         ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_sign_ed25519_PUBLICKEYBYTES);
+}
+
+ERL_NIF_TERM
+enacl_crypto_sign_ed25519_SECRETKEYBYTES(ErlNifEnv *env, int argc,
+                                         ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_sign_ed25519_SECRETKEYBYTES);
+}
+
+ERL_NIF_TERM enacl_crypto_sign_PUBLICKEYBYTES(ErlNifEnv *env, int argc,
+                                              ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_sign_PUBLICKEYBYTES);
+}
+
+ERL_NIF_TERM enacl_crypto_sign_SECRETKEYBYTES(ErlNifEnv *env, int argc,
+                                              ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_sign_SECRETKEYBYTES);
+}
+
+ERL_NIF_TERM enacl_crypto_sign_SEEDBYTES(ErlNifEnv *env, int argc,
+                                         ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_sign_SEEDBYTES);
+}
+
+ERL_NIF_TERM enacl_crypto_sign_keypair(ErlNifEnv *env, int argc,
+                                       ERL_NIF_TERM const argv[]) {
+  ErlNifBinary pk, sk;
+
+  if (argc != 0) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_sign_PUBLICKEYBYTES, &pk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (!enif_alloc_binary(crypto_sign_SECRETKEYBYTES, &sk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  crypto_sign_keypair(pk.data, sk.data);
+
+  return enif_make_tuple2(env, enif_make_binary(env, &pk),
+                          enif_make_binary(env, &sk));
+}
+
+ERL_NIF_TERM enacl_crypto_sign_seed_keypair(ErlNifEnv *env, int argc,
+                                            ERL_NIF_TERM const argv[]) {
+  ErlNifBinary pk, sk, seed;
+
+  if ((argc != 1) || (!enif_inspect_binary(env, argv[0], &seed))) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_sign_PUBLICKEYBYTES, &pk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (!enif_alloc_binary(crypto_sign_SECRETKEYBYTES, &sk)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  crypto_sign_seed_keypair(pk.data, sk.data, seed.data);
+
+  return enif_make_tuple2(env, enif_make_binary(env, &pk),
+                          enif_make_binary(env, &sk));
+}
+
+/*
+int crypto_sign(unsigned char *sm, unsigned long long *smlen,
+                const unsigned char *m, unsigned long long mlen,
+                const unsigned char *sk);
+ */
+ERL_NIF_TERM enacl_crypto_sign(ErlNifEnv *env, int argc,
+                               ERL_NIF_TERM const argv[]) {
+  ErlNifBinary m, sk, sm;
+  unsigned long long smlen;
+
+  if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+      (!enif_inspect_binary(env, argv[1], &sk))) {
+    return enif_make_badarg(env);
+  }
+
+  if (sk.size != crypto_sign_SECRETKEYBYTES) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(m.size + crypto_sign_BYTES, &sm)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  crypto_sign(sm.data, &smlen, m.data, m.size, sk.data);
+
+  return enif_make_sub_binary(env, enif_make_binary(env, &sm), 0, smlen);
+}
+
+/*
+int crypto_sign_open(unsigned char *m, unsigned long long *mlen,
+                     const unsigned char *sm, unsigned long long smlen,
+                     const unsigned char *pk);
+ */
+ERL_NIF_TERM enacl_crypto_sign_open(ErlNifEnv *env, int argc,
+                                    ERL_NIF_TERM const argv[]) {
+  ErlNifBinary m, sm, pk;
+  unsigned long long mlen;
+
+  if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &sm)) ||
+      (!enif_inspect_binary(env, argv[1], &pk))) {
+    return enif_make_badarg(env);
+  }
+
+  if (pk.size != crypto_sign_PUBLICKEYBYTES) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(sm.size, &m)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  if (0 == crypto_sign_open(m.data, &mlen, sm.data, sm.size, pk.data)) {
+    return enif_make_sub_binary(env, enif_make_binary(env, &m), 0, mlen);
+  } else {
+    enif_release_binary(&m);
+    return nacl_error_tuple(env, "failed_verification");
+  }
+}
+
+/*
+int crypto_sign_detached(unsigned char *sig, unsigned long long *siglen,
+                         const unsigned char *m, unsigned long long mlen,
+                         const unsigned char *sk);
+ */
+ERL_NIF_TERM enacl_crypto_sign_detached(ErlNifEnv *env, int argc,
+                                        ERL_NIF_TERM const argv[]) {
+  ErlNifBinary m, sk, sig;
+  unsigned long long siglen;
+
+  if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+      (!enif_inspect_binary(env, argv[1], &sk))) {
+    return enif_make_badarg(env);
+  }
+
+  if (sk.size != crypto_sign_SECRETKEYBYTES) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_sign_BYTES, &sig)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  crypto_sign_detached(sig.data, &siglen, m.data, m.size, sk.data);
+
+  return enif_make_binary(env, &sig);
+}
+
+/*
+int crypto_sign_verify_detached(const unsigned char *sig,
+                                const unsigned char *m,
+                                unsigned long long mlen,
+                                const unsigned char *pk);
+ */
+ERL_NIF_TERM
+enacl_crypto_sign_verify_detached(ErlNifEnv *env, int argc,
+                                  ERL_NIF_TERM const argv[]) {
+  ErlNifBinary m, sig, pk;
+
+  if ((argc != 3) || (!enif_inspect_binary(env, argv[0], &sig)) ||
+      (!enif_inspect_iolist_as_binary(env, argv[1], &m)) ||
+      (!enif_inspect_binary(env, argv[2], &pk))) {
+    return enif_make_badarg(env);
+  }
+
+  if (pk.size != crypto_sign_PUBLICKEYBYTES) {
+    return enif_make_badarg(env);
+  }
+
+  if (0 == crypto_sign_verify_detached(sig.data, m.data, m.size, pk.data)) {
+    return enif_make_atom(env, "true");
+  } else {
+    return enif_make_atom(env, "false");
+  }
 }
