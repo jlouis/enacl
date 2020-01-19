@@ -79,7 +79,7 @@ generichash_chunked(_Config) ->
     {ok, Expected} = enacl:generichash_final(State),
     ok.
 
-generichash_chunked(State, Msg, 0) -> State;
+generichash_chunked(State, _Msg, 0) -> State;
 generichash_chunked(State, Msg, N) ->
     State2 = enacl:generichash_update(State, Msg),
     generichash_chunked(State2, Msg, N-1).

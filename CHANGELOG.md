@@ -30,10 +30,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   following the style of the Erlang/OTP `crypto` library. While here, make sure
   we clean up correctly and that we don't accidentally mis-ref-count data. The
   code is a bit more goto heavy, but this style is surprisingly common in C code.
+- Use sodium's dynamic memory allocators. These guarantee 64bit alignment, and also
+  provide guard pages around the allocation, somewhat protecting it. It adds some
+  page table pressure compared to the current code, but is easier to maintain and
+  much cleaner code.
 - The code now rejects updates to generichash states which were already finalized.
 - We now track the desired outlen of a generichash operation in the opaque NIF
   resource rather than on the Erlang side. This avoids some checks in the code,
   and streamlines a good deal of the interface.
+- Split AEAD routines off from the main enacl_nif.c file
 
 ### Fixes
 - Fix a resource leak in generichash/sign init/update/final.
