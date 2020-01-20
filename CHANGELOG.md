@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Upcoming changes]
+
+Over time, a number of bad things have snuck themselves into these bindings. This
+is a list of changes which are planned for a 1.0 release.
+
+- The argument order in some of the AEAD constructions doesn't follow those of
+  sodium. They should.
+- The AEAD_chacha20_poly1305 construction does the nonce wrong. It assumes a 64bit
+  integer, though the real underlying construction accepts 12 bytes. The key isn't
+  generated like this. The AEAD_xchacha20_poly1305 construction does it correctly.
+
 ## [Unreleased]
 
 ### Added
