@@ -35,16 +35,19 @@ end_per_testcase(_Case, _Config) ->
     ok.
 
 groups() ->
-    GenericHashNeg = {generichash_neg, [shuffle, parallel],
+    Neg = {negative, [shuffle, parallel],
       [generichash_basic_neg]},
-    GenericHash = {generichash, [shuffle, parallel, {repeat, 100}],
+    Pos = {positive, [shuffle, parallel],
                     [generichash_basic_pos,
-                     generichash_chunked]},
+                     generichash_chunked,
+                     aead_xchacha20poly1305,
+                     aead_chacha20poly1305]},
 
-    [GenericHashNeg, GenericHash].
+    [Neg, Pos].
 
 all() ->
-    [{group, generichash}].
+    [{group, negative},
+     {group, positive}].
 
 %% -- BASIC --------------------------------------
 generichash_basic_neg(_Config) ->
@@ -84,3 +87,25 @@ generichash_chunked(State, Msg, N) ->
     State2 = enacl:generichash_update(State, Msg),
     generichash_chunked(State2, Msg, N-1).
 
+aead_xchacha20poly1305(_Config) ->
+    NonceLen = enacl:aead_xchacha20poly1305_NONCEBYTES(),
+    KLen = enacl:aead_xchacha20poly1305_KEYBYTES(),
+    Key = binary:copy(<<"K">>, KLen),
+    Msg = <<"test">>,
+    AD = <<1,2,3,4,5,6>>,
+    Nonce = binary:copy(<<"N">>, NonceLen),
+
+    CipherText = enacl:aead_xchacha20poly1305_encrypt(Key, Nonce, AD, Msg),
+    Msg = enacl:aead_xchacha20poly1305_decrypt(Key, Nonce, AD, CipherText),
+    ok.
+
+aead_chacha20poly1305(_Config) ->
+    KLen = enacl:aead_chacha20poly1305_KEYBYTES(),
+    Key = binary:copy(<<"K">>, KLen),
+    Msg = <<"test">>,
+    AD = <<1,2,3,4,5,6>>,
+    Nonce = 1337,
+
+    CipherText = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
+    Msg = enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, CipherText),
+    ok.
