@@ -41,7 +41,8 @@ groups() ->
                     [generichash_basic_pos,
                      generichash_chunked,
                      aead_xchacha20poly1305,
-                     aead_chacha20poly1305]},
+                     aead_chacha20poly1305,
+                     pwhash]},
 
     [Neg, Pos].
 
@@ -108,4 +109,15 @@ aead_chacha20poly1305(_Config) ->
 
     CipherText = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
     Msg = enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, CipherText),
+    ok.
+
+pwhash(_Config) ->
+    PW = <<"XYZZY">>,
+    Salt = <<"1234567890abcdef">>,
+    Hash1 = <<164,75,127,151,168,101,55,77,48,77,240,204,64,20,43,23,88,
+                 18,133,11,53,151,2,113,232,95,84,165,50,7,60,20>>,
+    {ok, Hash1} = enacl:pwhash(PW, Salt),
+    {ok, Str1} = enacl:pwhash_str(PW),
+    true = enacl:pwhash_str_verify(Str1, PW),
+    false = enacl:pwhash_str_verify(Str1, <<PW/binary, 1>>),
     ok.
