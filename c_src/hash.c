@@ -4,6 +4,38 @@
 
 #include "hash.h"
 
+ERL_NIF_TERM enacl_crypto_shorthash_BYTES(ErlNifEnv *env, int argc,
+                                          ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_shorthash_BYTES);
+}
+
+ERL_NIF_TERM enacl_crypto_shorthash_KEYBYTES(ErlNifEnv *env, int argc,
+                                             ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_shorthash_KEYBYTES);
+}
+
+ERL_NIF_TERM enacl_crypto_shorthash(ErlNifEnv *env, int argc,
+                                    ERL_NIF_TERM const argv[]) {
+  ErlNifBinary a, m, k;
+
+  if ((argc != 2) || (!enif_inspect_iolist_as_binary(env, argv[0], &m)) ||
+      (!enif_inspect_binary(env, argv[1], &k))) {
+    return enif_make_badarg(env);
+  }
+
+  if (k.size != crypto_shorthash_KEYBYTES) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(crypto_shorthash_BYTES, &a)) {
+    return nacl_error_tuple(env, "alloc_failed");
+  }
+
+  crypto_shorthash(a.data, m.data, m.size, k.data);
+
+  return enif_make_binary(env, &a);
+}
+
 ERL_NIF_TERM enacl_crypto_hash(ErlNifEnv *env, int argc,
                                ERL_NIF_TERM const argv[]) {
   ErlNifBinary input;

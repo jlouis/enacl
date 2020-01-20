@@ -15,6 +15,8 @@ is a list of changes which are planned for a 1.0 release.
 - The AEAD_chacha20_poly1305 construction does the nonce wrong. It assumes a 64bit
   integer, though the real underlying construction accepts 12 bytes. The key isn't
   generated like this. The AEAD_xchacha20_poly1305 construction does it correctly.
+- Plug some subtle allocation leaks in the kx code.
+- Plug some subtle memory leaks in the public API.
 
 ## [Unreleased]
 
