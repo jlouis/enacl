@@ -14,8 +14,6 @@
 #include "secret.h"
 #include "sign.h"
 
-#define CRYPTO_SIGN_STATE_RESOURCE "crypto_sign_state"
-
 #ifdef ERL_NIF_DIRTY_JOB_CPU_BOUND
 #define erl_nif_dirty_job_cpu_bound_macro(a, b, c)                             \
   { a, b, c, ERL_NIF_DIRTY_JOB_CPU_BOUND }
