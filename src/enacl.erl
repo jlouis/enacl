@@ -649,7 +649,7 @@ sign_verify_detached(SIG, M, PK) ->
         false -> {error, failed_verification}
     end.
 
--type sign_state() :: {signstate, reference()}.
+-type sign_state() :: reference().
 
 %% @doc sign_init/0 initialize a multi-part signature state.
 %%
@@ -665,7 +665,7 @@ sign_init() ->
 -spec sign_update(S, M) -> sign_state() | {error, sign_update_error}
     when S :: sign_state(),
          M :: iodata().
-sign_update({signstate, SignState}, M) ->
+sign_update(SignState, M) ->
     enacl_nif:crypto_sign_update(SignState, M).
 
 
@@ -675,7 +675,7 @@ sign_update({signstate, SignState}, M) ->
 -spec sign_final_create(S, SK) -> {ok, binary()} | {error, atom()}
     when S :: sign_state(),
          SK :: iodata().
-sign_final_create({signstate, SignState}, SK) ->
+sign_final_create(SignState, SK) ->
     enacl_nif:crypto_sign_final_create(SignState, SK).
 
 %% @doc sign_final_verify/3 verify a chunked signature
@@ -687,7 +687,7 @@ sign_final_create({signstate, SignState}, SK) ->
     when S :: sign_state(),
          SIG :: binary(),
          PK :: iodata().
-sign_final_verify({signstate, SignState}, SIG, PK) ->
+sign_final_verify(SignState, SIG, PK) ->
     enacl_nif:crypto_sign_final_verify(SignState, SIG, PK).
 
 %% @private

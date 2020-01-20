@@ -42,7 +42,8 @@ groups() ->
                      generichash_chunked,
                      aead_xchacha20poly1305,
                      aead_chacha20poly1305,
-                     pwhash]},
+                     pwhash,
+                     sign]},
 
     [Neg, Pos].
 
@@ -121,3 +122,20 @@ pwhash(_Config) ->
     true = enacl:pwhash_str_verify(Str1, PW),
     false = enacl:pwhash_str_verify(Str1, <<PW/binary, 1>>),
     ok.
+
+sign(_Config) ->
+    #{public := PK, secret := SK} = enacl:sign_keypair(),
+    Msg = <<"Test">>,
+    State = enacl:sign_init(),
+    Create = sign_chunked(State, Msg, 10000),
+    {ok, Signature} = enacl:sign_final_create(Create, SK),
+    StateVerify = enacl:sign_init(),
+    Verify = sign_chunked(StateVerify, Msg, 10000),
+    ok = enacl:sign_final_verify(Verify, Signature, PK),
+    ok.
+
+sign_chunked(S, _M, 0) -> S;
+sign_chunked(S, M, N) ->
+    S2 = enacl:sign_update(S, M),
+    sign_chunked(S2, M, N-1).
+
