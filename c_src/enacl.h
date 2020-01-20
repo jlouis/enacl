@@ -1,7 +1,7 @@
 #ifndef ENACL_H
 #define ENACL_H
 
-#include "erl_nif.h"
+#include <erl_nif.h>
 
 #define ATOM_OK "ok"
 #define ATOM_ERROR "error"

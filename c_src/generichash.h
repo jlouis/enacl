@@ -1,6 +1,8 @@
 #ifndef ENACL_GENERICHASH_H
 #define ENACL_GENERICHASH_H
 
+#include <erl_nif.h>
+
 int enacl_init_generic_hash_ctx(ErlNifEnv *env);
 
 ERL_NIF_TERM enacl_crypto_generichash_BYTES(ErlNifEnv *env, int argc,

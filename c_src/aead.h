@@ -1,7 +1,7 @@
 #ifndef ENACL_AEAD_H
 #define ENACL_AEAD_H
 
-#include "erl_nif.h"
+#include <erl_nif.h>
 
 /* AEAD ChaCha20 Poly1305 */
 ERL_NIF_TERM

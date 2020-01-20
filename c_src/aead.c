@@ -1,8 +1,9 @@
+#include <sodium.h>
+
+#include <erl_nif.h>
+
 #include "aead.h"
 #include "enacl.h"
-#include "erl_nif.h"
-
-#include <sodium.h>
 
 /*
  * AEAD ChaCha20 Poly1305

@@ -1,6 +1,6 @@
-#include "erl_nif.h"
-
 #include <sodium.h>
+
+#include <erl_nif.h>
 
 #include "enacl.h"
 #include "sign.h"

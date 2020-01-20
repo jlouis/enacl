@@ -1,13 +1,14 @@
 #include <sodium.h>
 #include <string.h>
 
-#include "erl_nif.h"
+#include <erl_nif.h>
 
 #include "aead.h"
 #include "enacl.h"
 #include "generichash.h"
 #include "hash.h"
 #include "pwhash.h"
+#include "randombytes.h"
 #include "sign.h"
 
 #define CRYPTO_SIGN_STATE_RESOURCE "crypto_sign_state"
@@ -755,49 +756,6 @@ static ERL_NIF_TERM enacl_crypto_onetimeauth_verify(ErlNifEnv *env, int argc,
   } else {
     return enif_make_atom(env, "false");
   }
-}
-
-static ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc,
-                                     ERL_NIF_TERM const argv[]) {
-  unsigned req_size;
-  ErlNifBinary result;
-
-  if ((argc != 1) || (!enif_get_uint(env, argv[0], &req_size))) {
-    return enif_make_badarg(env);
-  }
-
-  if (!enif_alloc_binary(req_size, &result)) {
-    return nacl_error_tuple(env, "alloc_failed");
-  }
-
-  randombytes(result.data, result.size);
-
-  return enif_make_binary(env, &result);
-}
-
-static ERL_NIF_TERM enif_randombytes_uint32(ErlNifEnv *env, int argc,
-                                            ERL_NIF_TERM const argv[]) {
-  ErlNifUInt64 result;
-
-  if (argc != 0) {
-    return enif_make_badarg(env);
-  }
-
-  result = randombytes_random();
-  return enif_make_uint64(env, result);
-}
-
-static ERL_NIF_TERM enif_randombytes_uniform(ErlNifEnv *env, int argc,
-                                             ERL_NIF_TERM const argv[]) {
-  unsigned upper_bound;
-  ErlNifUInt64 result;
-
-  if ((argc != 1) || (!enif_get_uint(env, argv[0], &upper_bound))) {
-    return enif_make_badarg(env);
-  }
-
-  result = randombytes_uniform(upper_bound);
-  return enif_make_uint64(env, result);
 }
 
 /* Key exchange */

@@ -1,7 +1,8 @@
 #include <sodium.h>
 
+#include <erl_nif.h>
+
 #include "enacl.h"
-#include "erl_nif.h"
 #include "pwhash.h"
 
 static size_t enacl_pwhash_opslimit(ErlNifEnv *env, ERL_NIF_TERM arg) {
