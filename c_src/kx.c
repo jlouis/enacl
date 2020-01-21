@@ -31,12 +31,12 @@ ERL_NIF_TERM enacl_crypto_kx_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_kx_PUBLICKEYBYTES, &pk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   if (!enif_alloc_binary(crypto_kx_SECRETKEYBYTES, &sk)) {
     enif_release_binary(&pk);
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_kx_keypair(pk.data, sk.data);
@@ -68,19 +68,19 @@ enacl_crypto_kx_server_session_keys(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!enif_alloc_binary(crypto_kx_SESSIONKEYBYTES, &rx)) {
-    ret = nacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
     goto done;
   }
 
   if (!enif_alloc_binary(crypto_kx_SESSIONKEYBYTES, &tx)) {
-    ret = nacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
     goto release_rx;
   }
 
   if (0 != crypto_kx_server_session_keys(rx.data, tx.data, server_pk.data,
                                          server_sk.data, client_pk.data)) {
     // suspicious client public key
-    ret = nacl_error_tuple(env, "invalid_client_public_key");
+    ret = enacl_error_tuple(env, "invalid_client_public_key");
     goto release_tx;
   }
 
@@ -121,19 +121,19 @@ enacl_crypto_kx_client_session_keys(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!enif_alloc_binary(crypto_kx_SESSIONKEYBYTES, &rx)) {
-    ret = nacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
     goto done;
   }
 
   if (!enif_alloc_binary(crypto_kx_SESSIONKEYBYTES, &tx)) {
-    ret = nacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
     goto release_rx;
   }
 
   if (0 != crypto_kx_client_session_keys(rx.data, tx.data, client_pk.data,
                                          client_sk.data, server_pk.data)) {
     // suspicious server public key
-    ret = nacl_error_tuple(env, "invalid_server_public_key");
+    ret = enacl_error_tuple(env, "invalid_server_public_key");
     goto release_tx;
   }
 

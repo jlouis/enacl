@@ -121,12 +121,12 @@ enacl_crypto_curve25519_scalarmult(ErlNifEnv *env, int argc,
 
   do {
     if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
-      result = nacl_error_tuple(env, "alloc_failed");
+      result = enacl_error_tuple(env, "alloc_failed");
       continue;
     }
 
     if (crypto_scalarmult_curve25519(output.data, secret.data, bp) < 0) {
-      result = nacl_error_tuple(env, "scalarmult_curve25519_failed");
+      result = enacl_error_tuple(env, "scalarmult_curve25519_failed");
       continue;
     }
 
@@ -151,12 +151,12 @@ enacl_crypto_curve25519_scalarmult_base(ErlNifEnv *env, int argc,
 
   do {
     if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
-      result = nacl_error_tuple(env, "alloc_failed");
+      result = enacl_error_tuple(env, "alloc_failed");
       continue;
     }
 
     if (crypto_scalarmult_curve25519_base(output.data, secret.data) < 0) {
-      result = nacl_error_tuple(env, "scalarmult_curve25519_base_failed");
+      result = enacl_error_tuple(env, "scalarmult_curve25519_base_failed");
       continue;
     }
 
@@ -238,7 +238,7 @@ static ERL_NIF_TERM enif_scramble_block_16(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(in.size, &out)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_block(out.data, in.data, key.data);

@@ -8,6 +8,6 @@
 #define ATOM_TRUE "true"
 #define ATOM_FALSE "false"
 
-ERL_NIF_TERM nacl_error_tuple(ErlNifEnv *, char *);
+ERL_NIF_TERM enacl_error_tuplee(ErlNifEnv *, char *);
 
 #endif

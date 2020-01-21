@@ -91,7 +91,7 @@ ERL_NIF_TERM enacl_crypto_secretbox(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(padded_msg.size, &padded_ciphertext)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_secretbox(padded_ciphertext.data, padded_msg.data, padded_msg.size,
@@ -120,14 +120,14 @@ ERL_NIF_TERM enacl_crypto_secretbox_open(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(padded_ciphertext.size, &padded_msg)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   if (crypto_secretbox_open(padded_msg.data, padded_ciphertext.data,
                             padded_ciphertext.size, nonce.data,
                             key.data) != 0) {
     enif_release_binary(&padded_msg);
-    return nacl_error_tuple(env, "failed_verification");
+    return enacl_error_tuple(env, "failed_verification");
   }
 
   return enif_make_sub_binary(
@@ -152,7 +152,7 @@ ERL_NIF_TERM enacl_crypto_stream_chacha20(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(clen, &c)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_stream_chacha20(c.data, c.size, n.data, k.data);
@@ -177,7 +177,7 @@ enacl_crypto_stream_chacha20_xor(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(m.size, &c)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_stream_chacha20_xor(c.data, m.data, m.size, n.data, k.data);
@@ -202,7 +202,7 @@ ERL_NIF_TERM enacl_crypto_stream(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(clen, &c)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_stream(c.data, c.size, n.data, k.data);
@@ -226,7 +226,7 @@ ERL_NIF_TERM enacl_crypto_stream_xor(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(m.size, &c)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_stream_xor(c.data, m.data, m.size, n.data, k.data);
@@ -248,7 +248,7 @@ ERL_NIF_TERM enacl_crypto_auth(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_auth_BYTES, &a)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_auth(a.data, m.data, m.size, k.data);
@@ -291,7 +291,7 @@ ERL_NIF_TERM enacl_crypto_onetimeauth(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_onetimeauth_BYTES, &a)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   crypto_onetimeauth(a.data, m.data, m.size, k.data);

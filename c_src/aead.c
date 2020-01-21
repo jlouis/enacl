@@ -57,14 +57,14 @@ enacl_crypto_aead_chacha20poly1305_encrypt(ErlNifEnv *env, int argc,
   if (!enif_alloc_binary(message.size +
                              crypto_aead_chacha20poly1305_ietf_ABYTES,
                          &ciphertext)) {
-    ret = nacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
     goto done;
   }
 
   if (crypto_aead_chacha20poly1305_ietf_encrypt(
           ciphertext.data, NULL, message.data, message.size, ad.data, ad.size,
           NULL, nonce.data, key.data) < 0) {
-    ret = nacl_error_tuple(env, "aead_chacha20poly1305_ietf_encrypt_failed");
+    ret = enacl_error_tuple(env, "aead_chacha20poly1305_ietf_encrypt_failed");
     goto release;
   }
 
@@ -106,14 +106,14 @@ enacl_crypto_aead_chacha20poly1305_decrypt(ErlNifEnv *env, int argc,
   if (!enif_alloc_binary(ciphertext.size -
                              crypto_aead_chacha20poly1305_ietf_ABYTES,
                          &message)) {
-    ret = nacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
     goto done;
   }
 
   if (crypto_aead_chacha20poly1305_ietf_decrypt(
           message.data, NULL, NULL, ciphertext.data, ciphertext.size, ad.data,
           ad.size, nonce.data, key.data) < 0) {
-    ret = nacl_error_tuple(env, "aead_chacha20poly1305_ietf_decrypt_failed");
+    ret = enacl_error_tuple(env, "aead_chacha20poly1305_ietf_decrypt_failed");
     goto release;
   }
 
@@ -172,13 +172,13 @@ enacl_crypto_aead_xchacha20poly1305_encrypt(ErlNifEnv *env, int argc,
   if (!enif_alloc_binary(message.size +
                              crypto_aead_xchacha20poly1305_ietf_ABYTES,
                          &ciphertext)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   if (crypto_aead_xchacha20poly1305_ietf_encrypt(
           ciphertext.data, NULL, message.data, message.size, ad.data, ad.size,
           NULL, nonce.data, key.data) < 0) {
-    return nacl_error_tuple(env, "aead_xchacha20poly1305_ietf_encrypt_failed");
+    return enacl_error_tuple(env, "aead_xchacha20poly1305_ietf_encrypt_failed");
   }
 
   return enif_make_binary(env, &ciphertext);
@@ -202,13 +202,13 @@ enacl_crypto_aead_xchacha20poly1305_decrypt(ErlNifEnv *env, int argc,
   if (!enif_alloc_binary(ciphertext.size -
                              crypto_aead_xchacha20poly1305_ietf_ABYTES,
                          &message)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   if (crypto_aead_xchacha20poly1305_ietf_decrypt(
           message.data, NULL, NULL, ciphertext.data, ciphertext.size, ad.data,
           ad.size, nonce.data, key.data) < 0) {
-    return nacl_error_tuple(env, "aead_xchacha20poly1305_ietf_decrypt_failed");
+    return enacl_error_tuple(env, "aead_xchacha20poly1305_ietf_decrypt_failed");
   }
 
   return enif_make_binary(env, &message);

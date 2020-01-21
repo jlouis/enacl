@@ -52,19 +52,19 @@ ERL_NIF_TERM enacl_crypto_sign_init(ErlNifEnv *env, int argc,
 
   if ((obj = enif_alloc_resource(enacl_sign_ctx_rtype,
                                  sizeof(enacl_sign_ctx))) == NULL) {
-    ret = nacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuplee(env, "alloc_failed");
     goto done;
   }
   obj->alive = 0;
   obj->state = enif_alloc(crypto_sign_statebytes());
   if (obj->state == NULL) {
-    ret = nacl_error_tuple(env, "state_malloc");
+    ret = enacl_error_tuplee(env, "state_malloc");
     goto release;
   }
   obj->alive = 1;
 
   if (0 != crypto_sign_init(obj->state)) {
-    ret = nacl_error_tuple(env, "sign_init_error");
+    ret = enacl_error_tuplee(env, "sign_init_error");
     goto free;
   }
 
@@ -111,12 +111,12 @@ ERL_NIF_TERM enacl_crypto_sign_update(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!obj->alive) {
-    ret = nacl_error_tuple(env, "finalized");
+    ret = enacl_error_tuplee(env, "finalized");
     goto done;
   }
 
   if (0 != crypto_sign_update(obj->state, data.data, data.size)) {
-    ret = nacl_error_tuple(env, "sign_update_error");
+    ret = enacl_error_tuplee(env, "sign_update_error");
     goto done;
   }
 
@@ -146,17 +146,17 @@ ERL_NIF_TERM enacl_crypto_sign_final_create(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!obj->alive) {
-    ret = nacl_error_tuple(env, "finalized");
+    ret = enacl_error_tuplee(env, "finalized");
     goto done;
   }
 
   if (!enif_alloc_binary(crypto_sign_BYTES, &sig)) {
-    ret = nacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuplee(env, "alloc_failed");
     goto done;
   }
 
   if (0 != crypto_sign_final_create(obj->state, sig.data, &siglen, sk.data)) {
-    ret = nacl_error_tuple(env, "sign_error");
+    ret = enacl_error_tuplee(env, "sign_error");
     goto release;
   }
 
@@ -198,7 +198,7 @@ ERL_NIF_TERM enacl_crypto_sign_final_verify(ErlNifEnv *env, int argc,
   if (0 == crypto_sign_final_verify(obj->state, sig.data, pk.data)) {
     ret = enif_make_atom(env, ATOM_OK);
   } else {
-    ret = nacl_error_tuple(env, "failed_verification");
+    ret = enacl_error_tuplee(env, "failed_verification");
   }
   // Mark as done
   goto cleanup;
@@ -226,11 +226,11 @@ enacl_crypto_sign_ed25519_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_sign_ed25519_PUBLICKEYBYTES, &pk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   if (!enif_alloc_binary(crypto_sign_ed25519_SECRETKEYBYTES, &sk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   crypto_sign_ed25519_keypair(pk.data, sk.data);
@@ -250,11 +250,11 @@ enacl_crypto_sign_ed25519_sk_to_pk(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_sign_ed25519_PUBLICKEYBYTES, &pk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   if (crypto_sign_ed25519_sk_to_pk(pk.data, sk.data) != 0) {
-    return nacl_error_tuple(env, "crypto_sign_ed25519_sk_to_pk_failed");
+    return enacl_error_tuplee(env, "crypto_sign_ed25519_sk_to_pk_failed");
   }
 
   return enif_make_binary(env, &pk);
@@ -271,12 +271,12 @@ enacl_crypto_sign_ed25519_public_to_curve25519(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &curve25519_pk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   if (crypto_sign_ed25519_pk_to_curve25519(curve25519_pk.data,
                                            ed25519_pk.data) != 0) {
-    return nacl_error_tuple(env, "ed25519_public_to_curve25519_failed");
+    return enacl_error_tuplee(env, "ed25519_public_to_curve25519_failed");
   }
 
   return enif_make_binary(env, &curve25519_pk);
@@ -293,12 +293,12 @@ enacl_crypto_sign_ed25519_secret_to_curve25519(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &curve25519_sk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   if (crypto_sign_ed25519_sk_to_curve25519(curve25519_sk.data,
                                            ed25519_sk.data) != 0) {
-    return nacl_error_tuple(env, "ed25519_secret_to_curve25519_failed");
+    return enacl_error_tuplee(env, "ed25519_secret_to_curve25519_failed");
   }
 
   return enif_make_binary(env, &curve25519_sk);
@@ -340,11 +340,11 @@ ERL_NIF_TERM enacl_crypto_sign_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_sign_PUBLICKEYBYTES, &pk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   if (!enif_alloc_binary(crypto_sign_SECRETKEYBYTES, &sk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   crypto_sign_keypair(pk.data, sk.data);
@@ -362,11 +362,11 @@ ERL_NIF_TERM enacl_crypto_sign_seed_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_sign_PUBLICKEYBYTES, &pk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   if (!enif_alloc_binary(crypto_sign_SECRETKEYBYTES, &sk)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   crypto_sign_seed_keypair(pk.data, sk.data, seed.data);
@@ -395,7 +395,7 @@ ERL_NIF_TERM enacl_crypto_sign(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(m.size + crypto_sign_BYTES, &sm)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   crypto_sign(sm.data, &smlen, m.data, m.size, sk.data);
@@ -423,14 +423,14 @@ ERL_NIF_TERM enacl_crypto_sign_open(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(sm.size, &m)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   if (0 == crypto_sign_open(m.data, &mlen, sm.data, sm.size, pk.data)) {
     return enif_make_sub_binary(env, enif_make_binary(env, &m), 0, mlen);
   } else {
     enif_release_binary(&m);
-    return nacl_error_tuple(env, "failed_verification");
+    return enacl_error_tuplee(env, "failed_verification");
   }
 }
 
@@ -454,7 +454,7 @@ ERL_NIF_TERM enacl_crypto_sign_detached(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_sign_BYTES, &sig)) {
-    return nacl_error_tuple(env, "alloc_failed");
+    return enacl_error_tuplee(env, "alloc_failed");
   }
 
   crypto_sign_detached(sig.data, &siglen, m.data, m.size, sk.data);
