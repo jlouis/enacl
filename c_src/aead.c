@@ -36,76 +36,95 @@ enacl_crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX(ErlNifEnv *env, int argc,
 ERL_NIF_TERM
 enacl_crypto_aead_chacha20poly1305_encrypt(ErlNifEnv *env, int argc,
                                            ERL_NIF_TERM const argv[]) {
-  ERL_NIF_TERM result;
+  ERL_NIF_TERM ret;
   ErlNifBinary key, nonce, ad, message, ciphertext;
 
-  if ((argc != 4) || (!enif_inspect_binary(env, argv[0], &key)) ||
-      (!enif_inspect_binary(env, argv[1], &nonce)) ||
-      (!enif_inspect_binary(env, argv[2], &ad)) ||
-      (!enif_inspect_binary(env, argv[3], &message)) ||
-      (key.size != crypto_aead_chacha20poly1305_ietf_KEYBYTES) ||
-      (nonce.size != crypto_aead_chacha20poly1305_ietf_NPUBBYTES)) {
-    return enif_make_badarg(env);
+  if (argc != 4)
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[0], &key))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[1], &nonce))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[2], &ad))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[3], &message))
+    goto bad_arg;
+  if (key.size != crypto_aead_chacha20poly1305_ietf_KEYBYTES)
+    goto bad_arg;
+  if (nonce.size != crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
+    goto bad_arg;
+
+  if (!enif_alloc_binary(message.size +
+                             crypto_aead_chacha20poly1305_ietf_ABYTES,
+                         &ciphertext)) {
+    ret = nacl_error_tuple(env, "alloc_failed");
+    goto done;
   }
 
-  do {
-    if (!enif_alloc_binary(message.size +
-                               crypto_aead_chacha20poly1305_ietf_ABYTES,
-                           &ciphertext)) {
-      result = nacl_error_tuple(env, "alloc_failed");
-      continue;
-    }
+  if (crypto_aead_chacha20poly1305_ietf_encrypt(
+          ciphertext.data, NULL, message.data, message.size, ad.data, ad.size,
+          NULL, nonce.data, key.data) < 0) {
+    ret = nacl_error_tuple(env, "aead_chacha20poly1305_ietf_encrypt_failed");
+    goto release;
+  }
 
-    if (crypto_aead_chacha20poly1305_ietf_encrypt(
-            ciphertext.data, NULL, message.data, message.size, ad.data, ad.size,
-            NULL, nonce.data, key.data) < 0) {
-      result =
-          nacl_error_tuple(env, "aead_chacha20poly1305_ietf_encrypt_failed");
-      continue;
-    }
+  ret = enif_make_binary(env, &ciphertext);
+  goto done;
 
-    result = enif_make_binary(env, &ciphertext);
-  } while (0);
-
-  return result;
+bad_arg:
+  return enif_make_badarg(env);
+release:
+  enif_release_binary(&ciphertext);
+done:
+  return ret;
 }
 
 ERL_NIF_TERM
 enacl_crypto_aead_chacha20poly1305_decrypt(ErlNifEnv *env, int argc,
                                            ERL_NIF_TERM const argv[]) {
-  ERL_NIF_TERM result;
+  ERL_NIF_TERM ret;
   ErlNifBinary key, nonce, ad, message, ciphertext;
 
-  if ((argc != 4) || (!enif_inspect_binary(env, argv[0], &key)) ||
-      (!enif_inspect_binary(env, argv[1], &nonce)) ||
-      (!enif_inspect_binary(env, argv[2], &ad)) ||
-      (!enif_inspect_binary(env, argv[3], &ciphertext)) ||
-      (ciphertext.size < crypto_aead_chacha20poly1305_ietf_ABYTES) ||
-      (key.size != crypto_aead_chacha20poly1305_ietf_KEYBYTES) ||
-      (nonce.size != crypto_aead_chacha20poly1305_ietf_NPUBBYTES)) {
-    return enif_make_badarg(env);
+  if (argc != 4)
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[0], &key))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[1], &nonce))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[2], &ad))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[3], &ciphertext))
+    goto bad_arg;
+
+  if (ciphertext.size < crypto_aead_chacha20poly1305_ietf_ABYTES)
+    goto bad_arg;
+  if (key.size != crypto_aead_chacha20poly1305_ietf_KEYBYTES)
+    goto bad_arg;
+  if (nonce.size != crypto_aead_chacha20poly1305_ietf_NPUBBYTES)
+    goto bad_arg;
+
+  if (!enif_alloc_binary(ciphertext.size -
+                             crypto_aead_chacha20poly1305_ietf_ABYTES,
+                         &message)) {
+    ret = nacl_error_tuple(env, "alloc_failed");
+    goto done;
   }
 
-  do {
-    if (!enif_alloc_binary(ciphertext.size -
-                               crypto_aead_chacha20poly1305_ietf_ABYTES,
-                           &message)) {
-      result = nacl_error_tuple(env, "alloc_failed");
-      continue;
-    }
+  if (crypto_aead_chacha20poly1305_ietf_decrypt(
+          message.data, NULL, NULL, ciphertext.data, ciphertext.size, ad.data,
+          ad.size, nonce.data, key.data) < 0) {
+    ret = nacl_error_tuple(env, "aead_chacha20poly1305_ietf_decrypt_failed");
+    goto release;
+  }
 
-    if (crypto_aead_chacha20poly1305_ietf_decrypt(
-            message.data, NULL, NULL, ciphertext.data, ciphertext.size, ad.data,
-            ad.size, nonce.data, key.data) < 0) {
-      result =
-          nacl_error_tuple(env, "aead_chacha20poly1305_ietf_decrypt_failed");
-      continue;
-    }
-
-    result = enif_make_binary(env, &message);
-  } while (0);
-
-  return result;
+  ret = enif_make_binary(env, &message);
+  goto done;
+bad_arg:
+  return enif_make_badarg(env);
+release:
+  enif_release_binary(&message);
+done:
+  return ret;
 }
 
 /*
