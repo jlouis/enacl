@@ -9,33 +9,33 @@
  * AEAD ChaCha20 Poly1305
  */
 ERL_NIF_TERM
-enacl_crypto_aead_chacha20poly1305_KEYBYTES(ErlNifEnv *env, int argc,
-                                            ERL_NIF_TERM const argv[]) {
+enacl_crypto_aead_chacha20poly1305_ietf_KEYBYTES(ErlNifEnv *env, int argc,
+                                                 ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_aead_chacha20poly1305_ietf_KEYBYTES);
 }
 
 ERL_NIF_TERM
-enacl_crypto_aead_chacha20poly1305_NPUBBYTES(ErlNifEnv *env, int argc,
-                                             ERL_NIF_TERM const argv[]) {
+enacl_crypto_aead_chacha20poly1305_ietf_NPUBBYTES(ErlNifEnv *env, int argc,
+                                                  ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_aead_chacha20poly1305_ietf_NPUBBYTES);
 }
 
 ERL_NIF_TERM
-enacl_crypto_aead_chacha20poly1305_ABYTES(ErlNifEnv *env, int argc,
-                                          ERL_NIF_TERM const argv[]) {
+enacl_crypto_aead_chacha20poly1305_ietf_ABYTES(ErlNifEnv *env, int argc,
+                                               ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_aead_chacha20poly1305_ietf_ABYTES);
 }
 
 ERL_NIF_TERM
-enacl_crypto_aead_chacha20poly1305_MESSAGEBYTES_MAX(ErlNifEnv *env, int argc,
-                                                    ERL_NIF_TERM const argv[]) {
+enacl_crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX(
+    ErlNifEnv *env, int argc, ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env,
                          crypto_aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX);
 }
 
 ERL_NIF_TERM
-enacl_crypto_aead_chacha20poly1305_encrypt(ErlNifEnv *env, int argc,
-                                           ERL_NIF_TERM const argv[]) {
+enacl_crypto_aead_chacha20poly1305_ietf_encrypt(ErlNifEnv *env, int argc,
+                                                ERL_NIF_TERM const argv[]) {
   ERL_NIF_TERM ret;
   ErlNifBinary key, nonce, ad, message, ciphertext;
 
@@ -80,8 +80,8 @@ done:
 }
 
 ERL_NIF_TERM
-enacl_crypto_aead_chacha20poly1305_decrypt(ErlNifEnv *env, int argc,
-                                           ERL_NIF_TERM const argv[]) {
+enacl_crypto_aead_chacha20poly1305_ietf_decrypt(ErlNifEnv *env, int argc,
+                                                ERL_NIF_TERM const argv[]) {
   ERL_NIF_TERM ret;
   ErlNifBinary key, nonce, ad, message, ciphertext;
 

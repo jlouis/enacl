@@ -10,17 +10,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Over time, a number of bad things have snuck themselves into these bindings. This
 is a list of changes which are planned for a 1.0 release.
 
-- The argument order in some of the AEAD constructions doesn't follow those of
-  sodium. They should.
-- The AEAD_chacha20_poly1305 construction does the nonce wrong. It assumes a 64bit
-  integer, though the real underlying construction accepts 12 bytes. The key isn't
-  generated like this. The AEAD_xchacha20_poly1305 construction does it correctly.
-- Plug some subtle allocation leaks in the kx code.
 - Plug some subtle memory leaks in the public API.
 
 ## [Unreleased]
 
+### Compatibility
+- If you used `aead_chacha20poly1305_*` functions, please read through the changelog
+  carefully as we have made changes to these functions. TL;DR: look for
+  `aead_chacha20poly1305_ietf_*` but note it is *not* just a simple substitution
+  into your code.
+
+### Removed
+- The functions of the form `aead_chacha20poly1305_*` were removed. They implement
+  the IETF variant, and the argument order for them were wrong. Also, they used
+  severely limited nonce values, which is somewhat dangerous. The `..._NONCEBYTES`
+  name was changed to the consistent `..._NPUBBYTES`.
+
 ### Added
+- Added `aead_chacha20poly1305_ietf_*` variants.
 - Implement multipart signature support, by Garry Hill.
 - Implement enacl:crypto_sign_seed_keypair/1, by Ole Andre Birkedal.
 - Implement enacl:crypto_sign_ed25519_sk_to_pk/1, by an anonymous contribution.
@@ -58,8 +65,9 @@ is a list of changes which are planned for a 1.0 release.
 
 ### Fixes
 - Fix a resource leak in generichash/sign init/update/final.
-- Clang static analysis warnings (Thomas Arts)
-- Replace a constant 31 with a computation from libsodium (Thomas Arts, from a security review)
+- Clang static analysis warnings (Thomas Arts).
+- Replace a constant 31 with a computation from libsodium (Thomas Arts, from a security review).
+- Some subtle memory leaks in the error path for kx operations were plugged.
 
 ## [0.17.2]
 

@@ -41,7 +41,7 @@ groups() ->
                     [generichash_basic_pos,
                      generichash_chunked,
                      aead_xchacha20poly1305,
-                     aead_chacha20poly1305,
+                     aead_chacha20poly1305_ietf,
                      pwhash,
                      sign,
                      kx]},
@@ -102,16 +102,16 @@ aead_xchacha20poly1305(_Config) ->
     Msg = enacl:aead_xchacha20poly1305_decrypt(Key, Nonce, AD, CipherText),
     ok.
 
-aead_chacha20poly1305(_Config) ->
-    NonceLen = enacl:aead_chacha20poly1305_NPUBBYTES(),
-    KLen = enacl:aead_chacha20poly1305_KEYBYTES(),
+aead_chacha20poly1305_ietf(_Config) ->
+    NonceLen = enacl:aead_chacha20poly1305_ietf_NPUBBYTES(),
+    KLen = enacl:aead_chacha20poly1305_ietf_KEYBYTES(),
     Key = binary:copy(<<"K">>, KLen),
     Msg = <<"test">>,
     AD = <<1,2,3,4,5,6>>,
     Nonce = binary:copy(<<"N">>, NonceLen),
 
-    CipherText = enacl:aead_chacha20poly1305_encrypt(Msg, AD, Nonce, Key),
-    Msg = enacl:aead_chacha20poly1305_decrypt(CipherText, AD, Nonce, Key),
+    CipherText = enacl:aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    Msg = enacl:aead_chacha20poly1305_ietf_decrypt(CipherText, AD, Nonce, Key),
     ok.
 
 pwhash(_Config) ->
