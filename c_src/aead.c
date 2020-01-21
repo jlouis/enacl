@@ -41,13 +41,13 @@ enacl_crypto_aead_chacha20poly1305_encrypt(ErlNifEnv *env, int argc,
 
   if (argc != 4)
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[0], &key))
+  if (!enif_inspect_binary(env, argv[0], &message))
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[1], &nonce))
+  if (!enif_inspect_binary(env, argv[1], &ad))
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[2], &ad))
+  if (!enif_inspect_binary(env, argv[2], &nonce))
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[3], &message))
+  if (!enif_inspect_binary(env, argv[3], &key))
     goto bad_arg;
   if (key.size != crypto_aead_chacha20poly1305_ietf_KEYBYTES)
     goto bad_arg;
@@ -87,13 +87,13 @@ enacl_crypto_aead_chacha20poly1305_decrypt(ErlNifEnv *env, int argc,
 
   if (argc != 4)
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[0], &key))
+  if (!enif_inspect_binary(env, argv[0], &ciphertext))
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[1], &nonce))
+  if (!enif_inspect_binary(env, argv[1], &ad))
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[2], &ad))
+  if (!enif_inspect_binary(env, argv[2], &nonce))
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[3], &ciphertext))
+  if (!enif_inspect_binary(env, argv[3], &message))
     goto bad_arg;
 
   if (ciphertext.size < crypto_aead_chacha20poly1305_ietf_ABYTES)

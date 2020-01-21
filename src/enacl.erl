@@ -69,7 +69,7 @@
          aead_chacha20poly1305_encrypt/4,
          aead_chacha20poly1305_decrypt/4,
          aead_chacha20poly1305_KEYBYTES/0,
-         aead_chacha20poly1305_NONCEBYTES/0,
+         aead_chacha20poly1305_NPUBBYTES/0,
          aead_chacha20poly1305_ABYTES/0,
          aead_chacha20poly1305_MESSAGEBYTES_MAX/0,
 
@@ -1169,28 +1169,26 @@ kx_secret_key_size() ->
 %% `AD' using `Key' and `Nonce'. Returns the encrypted message followed by
 %% `aead_chacha20poly1305_ABYTES/0' bytes of MAC.
 %% @end
--spec aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg) -> binary() | {error, term()}
+-spec aead_chacha20poly1305_encrypt(Msg, AD, Nonce, Key) -> binary() | {error, term()}
     when Key :: binary(),
-         Nonce :: pos_integer(),
+         Nonce :: binary(),
          AD :: binary(),
          Msg :: binary().
-aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg) ->
-    NonceBin = <<0:32, Nonce:64/little-unsigned-integer>>,
-    enacl_nif:crypto_aead_chacha20poly1305_encrypt(Key, NonceBin, AD, Msg).
+aead_chacha20poly1305_encrypt(Msg, AD, Nonce, Key) ->
+    enacl_nif:crypto_aead_chacha20poly1305_encrypt(Msg, AD, Nonce, Key).
 
 %% @doc aead_chacha20poly1305_decrypt/4 decrypts ciphertext `CT' with additional
 %% data `AD' using `Key' and `Nonce'. Note: `CipherText' should contain
 %% `aead_chacha20poly1305_ABYTES/0' bytes that is the MAC. Returns the decrypted
 %% message.
 %% @end
--spec aead_chacha20poly1305_decrypt(Key, Nonce, AD, CT) -> binary() | {error, term()}
+-spec aead_chacha20poly1305_decrypt(CT, AD, Nonce, Key) -> binary() | {error, term()}
     when Key :: binary(),
-         Nonce :: pos_integer(),
+         Nonce :: binary(),
          AD :: binary(),
          CT :: binary().
-aead_chacha20poly1305_decrypt(Key, Nonce, AD, CT) ->
-    NonceBin = <<0:32, Nonce:64/little-unsigned-integer>>,
-    enacl_nif:crypto_aead_chacha20poly1305_decrypt(Key, NonceBin, AD, CT).
+aead_chacha20poly1305_decrypt(CT, AD, Nonce, Key) ->
+    enacl_nif:crypto_aead_chacha20poly1305_decrypt(CT, AD, Nonce, Key).
 
 %% @doc aead_chacha20poly1305_KEYBYTES/0 returns the number of bytes
 %% of the key used in AEAD ChaCha20 Poly1305 encryption/decryption.
@@ -1199,11 +1197,11 @@ aead_chacha20poly1305_decrypt(Key, Nonce, AD, CT) ->
 aead_chacha20poly1305_KEYBYTES() ->
     enacl_nif:crypto_aead_chacha20poly1305_KEYBYTES().
 
-%% @doc aead_chacha20poly1305_NONCEBYTES/0 returns the number of bytes
+%% @doc aead_chacha20poly1305_NPUBBYTES/0 returns the number of bytes
 %% of the Nonce in AEAD ChaCha20 Poly1305 encryption/decryption.
 %% @end
--spec aead_chacha20poly1305_NONCEBYTES() -> pos_integer().
-aead_chacha20poly1305_NONCEBYTES() ->
+-spec aead_chacha20poly1305_NPUBBYTES() -> pos_integer().
+aead_chacha20poly1305_NPUBBYTES() ->
     enacl_nif:crypto_aead_chacha20poly1305_NPUBBYTES().
 
 %% @doc aead_chacha20poly1305_ABYTES/0 returns the number of bytes

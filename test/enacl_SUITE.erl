@@ -103,14 +103,15 @@ aead_xchacha20poly1305(_Config) ->
     ok.
 
 aead_chacha20poly1305(_Config) ->
+    NonceLen = enacl:aead_chacha20poly1305_NPUBBYTES(),
     KLen = enacl:aead_chacha20poly1305_KEYBYTES(),
     Key = binary:copy(<<"K">>, KLen),
     Msg = <<"test">>,
     AD = <<1,2,3,4,5,6>>,
-    Nonce = 1337,
+    Nonce = binary:copy(<<"N">>, NonceLen),
 
-    CipherText = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
-    Msg = enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, CipherText),
+    CipherText = enacl:aead_chacha20poly1305_encrypt(Msg, AD, Nonce, Key),
+    Msg = enacl:aead_chacha20poly1305_decrypt(CipherText, AD, Nonce, Key),
     ok.
 
 pwhash(_Config) ->
