@@ -43,7 +43,8 @@ groups() ->
                      aead_xchacha20poly1305,
                      aead_chacha20poly1305,
                      pwhash,
-                     sign]},
+                     sign,
+                     kx]},
 
     [Neg, Pos].
 
@@ -139,3 +140,12 @@ sign_chunked(S, M, N) ->
     S2 = enacl:sign_update(S, M),
     sign_chunked(S2, M, N-1).
 
+kx(_Config) ->
+    #{ public := CPK, secret := CSK} = enacl:kx_keypair(),
+    #{ public := SPK, secret := SSK} = enacl:kx_keypair(),
+    #{ client_tx := CTX, client_rx := CRX} = enacl:kx_client_session_keys(CPK, CSK, SPK),
+    #{ server_tx := STX, server_rx := SRX} = enacl:kx_server_session_keys(SPK, SSK, CPK),
+    %% Verify we got a shared keypair
+    CTX = SRX,
+    STX = CRX,
+    ok.
