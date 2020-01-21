@@ -15,7 +15,7 @@ ERL_NIF_TERM enif_randombytes(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(req_size, &result)) {
-    return enacl_error_tuplee(env, "alloc_failed");
+    return enacl_error_tuple(env, "alloc_failed");
   }
 
   randombytes(result.data, result.size);

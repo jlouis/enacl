@@ -93,7 +93,7 @@ ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
   // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
   if ((hash_size <= crypto_generichash_BYTES_MIN) ||
       (hash_size >= crypto_generichash_BYTES_MAX)) {
-    ret = enacl_error_tuplee(env, "invalid_hash_size");
+    ret = enacl_error_tuple(env, "invalid_hash_size");
     goto done;
   }
 
@@ -103,20 +103,20 @@ ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
     k = NULL;
   } else if (key.size <= crypto_generichash_KEYBYTES_MIN ||
              key.size >= crypto_generichash_KEYBYTES_MAX) {
-    ret = enacl_error_tuplee(env, "invalid_key_size");
+    ret = enacl_error_tuple(env, "invalid_key_size");
     goto done;
   }
 
   // allocate memory for hash
   if (!enif_alloc_binary(hash_size, &hash)) {
-    ret = enacl_error_tuplee(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
     goto done;
   }
 
   // calculate hash
   if (0 != crypto_generichash(hash.data, hash.size, message.data, message.size,
                               k, key.size)) {
-    ret = enacl_error_tuplee(env, "hash_error");
+    ret = enacl_error_tuple(env, "hash_error");
     goto release;
   }
 
@@ -152,7 +152,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   // Verify that hash size is valid
   if ((hash_size <= crypto_generichash_BYTES_MIN) ||
       (hash_size >= crypto_generichash_BYTES_MAX)) {
-    ret = enacl_error_tuplee(env, "invalid_hash_size");
+    ret = enacl_error_tuple(env, "invalid_hash_size");
     goto done;
   }
 
@@ -162,7 +162,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
     k = NULL;
   } else if (key.size <= crypto_generichash_KEYBYTES_MIN ||
              key.size >= crypto_generichash_KEYBYTES_MAX) {
-    ret = enacl_error_tuplee(env, "invalid_key_size");
+    ret = enacl_error_tuple(env, "invalid_key_size");
     goto done;
   }
 
@@ -189,7 +189,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
 
   // Call the library function
   if (0 != crypto_generichash_init(obj->ctx, k, key.size, obj->outlen)) {
-    ret = enacl_error_tuplee(env, "hash_init_error");
+    ret = enacl_error_tuple(env, "hash_init_error");
     goto err;
   }
 
@@ -199,7 +199,7 @@ bad_arg:
   return enif_make_badarg(env);
 
 err:
-  ret = enacl_error_tuplee(env, "internal_error");
+  ret = enacl_error_tuple(env, "internal_error");
   if (obj != NULL) {
     if (obj->alive) {
       sodium_free(obj->ctx);
@@ -231,13 +231,13 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!obj->alive) {
-    ret = enacl_error_tuplee(env, "finalized");
+    ret = enacl_error_tuple(env, "finalized");
     goto done;
   }
 
   // Update hash state
   if (0 != crypto_generichash_update(obj->ctx, data.data, data.size)) {
-    ret = enacl_error_tuplee(env, "hash_update_error");
+    ret = enacl_error_tuple(env, "hash_update_error");
     goto done;
   }
 
@@ -263,17 +263,17 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!obj->alive) {
-    ret = enacl_error_tuplee(env, "finalized");
+    ret = enacl_error_tuple(env, "finalized");
     goto done;
   }
 
   if (!enif_alloc_binary(obj->outlen, &hash)) {
-    ret = enacl_error_tuplee(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
     goto done;
   }
 
   if (0 != crypto_generichash_final(obj->ctx, hash.data, hash.size)) {
-    ret = enacl_error_tuplee(env, "hash_error");
+    ret = enacl_error_tuple(env, "hash_error");
     goto release;
   }
 
