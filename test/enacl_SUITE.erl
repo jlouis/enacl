@@ -91,15 +91,15 @@ generichash_chunked(State, Msg, N) ->
     generichash_chunked(State2, Msg, N-1).
 
 aead_xchacha20poly1305(_Config) ->
-    NonceLen = enacl:aead_xchacha20poly1305_NONCEBYTES(),
-    KLen = enacl:aead_xchacha20poly1305_KEYBYTES(),
+    NonceLen = enacl:aead_xchacha20poly1305_ietf_NPUBBYTES(),
+    KLen = enacl:aead_xchacha20poly1305_ietf_KEYBYTES(),
     Key = binary:copy(<<"K">>, KLen),
     Msg = <<"test">>,
     AD = <<1,2,3,4,5,6>>,
     Nonce = binary:copy(<<"N">>, NonceLen),
 
-    CipherText = enacl:aead_xchacha20poly1305_encrypt(Key, Nonce, AD, Msg),
-    Msg = enacl:aead_xchacha20poly1305_decrypt(Key, Nonce, AD, CipherText),
+    CipherText = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    Msg = enacl:aead_xchacha20poly1305_ietf_decrypt(CipherText, AD, Nonce, Key),
     ok.
 
 aead_chacha20poly1305_ietf(_Config) ->

@@ -74,12 +74,12 @@
          aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX/0,
 
          %% No Tests!
-         aead_xchacha20poly1305_encrypt/4,
-         aead_xchacha20poly1305_decrypt/4,
-         aead_xchacha20poly1305_KEYBYTES/0,
-         aead_xchacha20poly1305_NONCEBYTES/0,
-         aead_xchacha20poly1305_ABYTES/0,
-         aead_xchacha20poly1305_MESSAGEBYTES_MAX/0,
+         aead_xchacha20poly1305_ietf_encrypt/4,
+         aead_xchacha20poly1305_ietf_decrypt/4,
+         aead_xchacha20poly1305_ietf_KEYBYTES/0,
+         aead_xchacha20poly1305_ietf_NPUBBYTES/0,
+         aead_xchacha20poly1305_ietf_ABYTES/0,
+         aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX/0,
 
          %% EQC
          stream_key_size/0,
@@ -1224,54 +1224,54 @@ aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX() ->
 %% `AD' using `Key' and `Nonce'. Returns the encrypted message followed by
 %% `aead_xchacha20poly1305_ABYTES/0' bytes of MAC.
 %% @end
--spec aead_xchacha20poly1305_encrypt(Key, Nonce, AD, Msg) -> binary() | {error, term()}
+-spec aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key) -> binary() | {error, term()}
     when Key :: binary(),
          Nonce :: binary(),
          AD :: binary(),
          Msg :: binary().
-aead_xchacha20poly1305_encrypt(Key, Nonce, AD, Msg) ->
-    enacl_nif:crypto_aead_xchacha20poly1305_encrypt(Key, Nonce, AD, Msg).
+aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key) ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key).
 
 %% @doc aead_xchacha20poly1305_decrypt/4 decrypts ciphertext `CT' with additional
 %% data `AD' using `Key' and `Nonce'. Note: `CipherText' should contain
 %% `aead_xchacha20poly1305_ABYTES/0' bytes that is the MAC. Returns the decrypted
 %% message.
 %% @end
--spec aead_xchacha20poly1305_decrypt(Key, Nonce, AD, CT) -> binary() | {error, term()}
+-spec aead_xchacha20poly1305_ietf_decrypt(CT, AD, Nonce, Key) -> binary() | {error, term()}
     when Key :: binary(),
          Nonce :: binary(),
          AD :: binary(),
          CT :: binary().
-aead_xchacha20poly1305_decrypt(Key, Nonce, AD, CT) ->
-    enacl_nif:crypto_aead_xchacha20poly1305_decrypt(Key, Nonce, AD, CT).
+aead_xchacha20poly1305_ietf_decrypt(CT, AD, Nonce, Key) ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_decrypt(CT, AD, Nonce, Key).
 
 %% @doc aead_xchacha20poly1305_KEYBYTES/0 returns the number of bytes
 %% of the key used in AEAD XChaCha20 Poly1305 encryption/decryption.
 %% @end
--spec aead_xchacha20poly1305_KEYBYTES() -> pos_integer().
-aead_xchacha20poly1305_KEYBYTES() ->
-    enacl_nif:crypto_aead_xchacha20poly1305_KEYBYTES().
+-spec aead_xchacha20poly1305_ietf_KEYBYTES() -> pos_integer().
+aead_xchacha20poly1305_ietf_KEYBYTES() ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_KEYBYTES().
 
-%% @doc aead_xchacha20poly1305_NONCEBYTES/0 returns the number of bytes
+%% @doc aead_xchacha20poly1305_NPUBBYTES/0 returns the number of bytes
 %% of the Nonce in AEAD XChaCha20 Poly1305 encryption/decryption.
 %% @end
--spec aead_xchacha20poly1305_NONCEBYTES() -> pos_integer().
-aead_xchacha20poly1305_NONCEBYTES() ->
-    enacl_nif:crypto_aead_xchacha20poly1305_NPUBBYTES().
+-spec aead_xchacha20poly1305_ietf_NPUBBYTES() -> pos_integer().
+aead_xchacha20poly1305_ietf_NPUBBYTES() ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_NPUBBYTES().
 
 %% @doc aead_xchacha20poly1305_ABYTES/0 returns the number of bytes
 %% of the MAC in AEAD XChaCha20 Poly1305 encryption/decryption.
 %% @end
--spec aead_xchacha20poly1305_ABYTES() -> pos_integer().
-aead_xchacha20poly1305_ABYTES() ->
-    enacl_nif:crypto_aead_xchacha20poly1305_ABYTES().
+-spec aead_xchacha20poly1305_ietf_ABYTES() -> pos_integer().
+aead_xchacha20poly1305_ietf_ABYTES() ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_ABYTES().
 
 %% @doc aead_xchacha20poly1305_MESSAGEBYTES_MAX/0 returns the max number of bytes
 %% allowed in a message in AEAD XChaCha20 Poly1305 encryption/decryption.
 %% @end
--spec aead_xchacha20poly1305_MESSAGEBYTES_MAX() -> pos_integer().
-aead_xchacha20poly1305_MESSAGEBYTES_MAX() ->
-    enacl_nif:crypto_aead_xchacha20poly1305_MESSAGEBYTES_MAX().
+-spec aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX() -> pos_integer().
+aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX() ->
+    enacl_nif:crypto_aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX().
 
 %% Obtaining random bytes
 
