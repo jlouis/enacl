@@ -81,7 +81,7 @@ enacl_crypto_kx_server_session_keys(ErlNifEnv *env, int argc,
                                          server_sk.data, client_pk.data)) {
     // suspicious client public key
     ret = enacl_error_tuple(env, "invalid_client_public_key");
-    goto release_tx;
+    goto release_tx_rx;
   }
 
   ret = enif_make_tuple2(env, enif_make_binary(env, &rx),
@@ -90,7 +90,7 @@ enacl_crypto_kx_server_session_keys(ErlNifEnv *env, int argc,
 
 bad_arg:
   return enif_make_badarg(env);
-release_tx:
+release_tx_rx:
   enif_release_binary(&tx);
 release_rx:
   enif_release_binary(&rx);
@@ -134,7 +134,7 @@ enacl_crypto_kx_client_session_keys(ErlNifEnv *env, int argc,
                                          client_sk.data, server_pk.data)) {
     // suspicious server public key
     ret = enacl_error_tuple(env, "invalid_server_public_key");
-    goto release_tx;
+    goto release_tx_rx;
   }
 
   ret = enif_make_tuple2(env, enif_make_binary(env, &rx),
@@ -142,7 +142,7 @@ enacl_crypto_kx_client_session_keys(ErlNifEnv *env, int argc,
   goto done;
 bad_arg:
   return enif_make_badarg(env);
-release_tx:
+release_tx_rx:
   enif_release_binary(&tx);
 release_rx:
   enif_release_binary(&rx);
