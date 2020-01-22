@@ -103,10 +103,8 @@ ERL_NIF_TERM enacl_crypto_sign_update(ErlNifEnv *env, int argc,
   // Validate the arguments
   if (argc != 2)
     goto bad_arg;
-
   if (!enif_get_resource(env, argv[0], enacl_sign_ctx_rtype, (void **)&obj))
     goto bad_arg;
-
   if (!enif_inspect_binary(env, argv[1], &data))
     goto bad_arg;
 
@@ -165,6 +163,7 @@ ERL_NIF_TERM enacl_crypto_sign_final_create(ErlNifEnv *env, int argc,
 
   ret = enif_make_tuple2(env, ok, signature);
   goto cleanup;
+
 bad_arg:
   return enif_make_badarg(env);
 release:
@@ -230,6 +229,7 @@ enacl_crypto_sign_ed25519_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_sign_ed25519_SECRETKEYBYTES, &sk)) {
+    enif_release_binary(&pk);
     return enacl_error_tuple(env, "alloc_failed");
   }
 
@@ -254,6 +254,7 @@ enacl_crypto_sign_ed25519_sk_to_pk(ErlNifEnv *env, int argc,
   }
 
   if (crypto_sign_ed25519_sk_to_pk(pk.data, sk.data) != 0) {
+    enif_release_binary(&pk);
     return enacl_error_tuple(env, "crypto_sign_ed25519_sk_to_pk_failed");
   }
 
@@ -276,6 +277,7 @@ enacl_crypto_sign_ed25519_public_to_curve25519(ErlNifEnv *env, int argc,
 
   if (crypto_sign_ed25519_pk_to_curve25519(curve25519_pk.data,
                                            ed25519_pk.data) != 0) {
+    enif_release_binary(&curve25519_pk);
     return enacl_error_tuple(env, "ed25519_public_to_curve25519_failed");
   }
 
@@ -298,6 +300,7 @@ enacl_crypto_sign_ed25519_secret_to_curve25519(ErlNifEnv *env, int argc,
 
   if (crypto_sign_ed25519_sk_to_curve25519(curve25519_sk.data,
                                            ed25519_sk.data) != 0) {
+    enif_release_binary(&curve25519_sk);
     return enacl_error_tuple(env, "ed25519_secret_to_curve25519_failed");
   }
 
@@ -344,6 +347,7 @@ ERL_NIF_TERM enacl_crypto_sign_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_sign_SECRETKEYBYTES, &sk)) {
+    enif_release_binary(&pk);
     return enacl_error_tuple(env, "alloc_failed");
   }
 
@@ -366,6 +370,7 @@ ERL_NIF_TERM enacl_crypto_sign_seed_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_sign_SECRETKEYBYTES, &sk)) {
+    enif_release_binary(&pk);
     return enacl_error_tuple(env, "alloc_failed");
   }
 
@@ -484,8 +489,8 @@ enacl_crypto_sign_verify_detached(ErlNifEnv *env, int argc,
   }
 
   if (0 == crypto_sign_verify_detached(sig.data, m.data, m.size, pk.data)) {
-    return enif_make_atom(env, "true");
+    return enif_make_atom(env, ATOM_TRUE);
   } else {
-    return enif_make_atom(env, "false");
+    return enif_make_atom(env, ATOM_FALSE);
   }
 }

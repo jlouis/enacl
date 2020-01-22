@@ -195,9 +195,9 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
 
   ret = enif_make_resource(env, obj);
   goto done;
+
 bad_arg:
   return enif_make_badarg(env);
-
 err:
   ret = enacl_error_tuple(env, "internal_error");
   if (obj != NULL) {
