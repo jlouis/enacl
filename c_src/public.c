@@ -36,6 +36,11 @@ ERL_NIF_TERM enacl_crypto_box_BEFORENMBYTES(ErlNifEnv *env, int argc,
   return enif_make_int64(env, crypto_box_BEFORENMBYTES);
 }
 
+ERL_NIF_TERM enacl_crypto_box_SEALBYTES(ErlNifEnv *env, int argc,
+                                        ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_box_SEALBYTES);
+}
+
 ERL_NIF_TERM enacl_crypto_box_keypair(ErlNifEnv *env, int argc,
                                       ERL_NIF_TERM const argv[]) {
   ErlNifBinary pk, sk;
@@ -49,6 +54,7 @@ ERL_NIF_TERM enacl_crypto_box_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_box_SECRETKEYBYTES, &sk)) {
+    enif_release_binary(&pk);
     return enacl_error_tuple(env, "alloc_failed");
   }
 
@@ -61,34 +67,50 @@ ERL_NIF_TERM enacl_crypto_box_keypair(ErlNifEnv *env, int argc,
 ERL_NIF_TERM enacl_crypto_box(ErlNifEnv *env, int argc,
                               ERL_NIF_TERM const argv[]) {
   ErlNifBinary padded_msg, nonce, pk, sk, result;
+  ERL_NIF_TERM ret;
 
-  if ((argc != 4) ||
-      (!enif_inspect_iolist_as_binary(env, argv[0], &padded_msg)) ||
-      (!enif_inspect_binary(env, argv[1], &nonce)) ||
-      (!enif_inspect_binary(env, argv[2], &pk)) ||
-      (!enif_inspect_binary(env, argv[3], &sk))) {
-    return enif_make_badarg(env);
-  }
+  if (argc != 4)
+    goto bad_arg;
+  if (!enif_inspect_iolist_as_binary(env, argv[0], &padded_msg))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[1], &nonce))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[2], &pk))
+    goto bad_arg;
+  if (!enif_inspect_binary(env, argv[3], &sk))
+    goto bad_arg;
 
-  if ((nonce.size != crypto_box_NONCEBYTES) ||
-      (pk.size != crypto_box_PUBLICKEYBYTES) ||
-      (sk.size != crypto_box_SECRETKEYBYTES) ||
-      (padded_msg.size < crypto_box_ZEROBYTES)) {
-    return enif_make_badarg(env);
-  }
+  if (nonce.size != crypto_box_NONCEBYTES)
+    goto bad_arg;
+  if (pk.size != crypto_box_PUBLICKEYBYTES)
+    goto bad_arg;
+  if (sk.size != crypto_box_SECRETKEYBYTES)
+    goto bad_arg;
+  if (padded_msg.size < crypto_box_ZEROBYTES)
+    goto bad_arg;
 
   if (!enif_alloc_binary(padded_msg.size, &result)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    ret = enacl_error_tuple(env, "alloc_failed");
+    goto done;
   }
 
   if (0 != crypto_box(result.data, padded_msg.data, padded_msg.size, nonce.data,
                       pk.data, sk.data)) {
-    return enacl_error_tuple(env, "box_error");
+    ret = enacl_error_tuple(env, "box_error");
+    goto release;
   }
 
-  return enif_make_sub_binary(env, enif_make_binary(env, &result),
-                              crypto_box_BOXZEROBYTES,
-                              padded_msg.size - crypto_box_BOXZEROBYTES);
+  ret = enif_make_sub_binary(env, enif_make_binary(env, &result),
+                             crypto_box_BOXZEROBYTES,
+                             padded_msg.size - crypto_box_BOXZEROBYTES);
+  goto done;
+
+bad_arg:
+  return enif_make_badarg(env);
+release:
+  enif_release_binary(&result);
+done:
+  return ret;
 }
 
 ERL_NIF_TERM enacl_crypto_box_open(ErlNifEnv *env, int argc,
@@ -145,6 +167,7 @@ ERL_NIF_TERM enacl_crypto_box_beforenm(ErlNifEnv *env, int argc,
 
   if (0 != crypto_box_beforenm(k.data, pk.data, sk.data)) {
     // error
+    enif_release_binary(&k);
     return enacl_error_tuple(env, "error_gen_shared_secret");
   }
 
@@ -204,11 +227,6 @@ ERL_NIF_TERM enacl_crypto_box_open_afternm(ErlNifEnv *env, int argc,
 }
 
 /* Sealed box functions */
-
-ERL_NIF_TERM enacl_crypto_box_SEALBYTES(ErlNifEnv *env, int argc,
-                                        ERL_NIF_TERM const argv[]) {
-  return enif_make_int64(env, crypto_box_SEALBYTES);
-}
 
 ERL_NIF_TERM enacl_crypto_box_seal(ErlNifEnv *env, int argc,
                                    ERL_NIF_TERM const argv[]) {

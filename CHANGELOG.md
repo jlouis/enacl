@@ -11,10 +11,9 @@ Over time, a number of bad things have snuck themselves into these bindings. Thi
 is a list of changes which are planned for a 1.0 release.
 
 - Plug some subtle memory leaks in API:
-  - Public
   - Secret
 
-Under errors, the current code can leak binaries. I don't want that to happen, so we
+Under failure, the current code can leak binaries. I don't want that to happen, so we
 are going to use a better cleanup scheme in the code base.
 
 ## [Unreleased]
@@ -68,12 +67,13 @@ are going to use a better cleanup scheme in the code base.
   in the code base, and avoids pollution of the enif_* "namespace".
 - Split Sign Public Key routines from the rest. Modernize the handling of contexts.
 
-### Fixes
+### Fixed
 - Fix a resource leak in generichash/sign init/update/final.
 - Clang static analysis warnings (Thomas Arts).
 - Replace a constant 31 with a computation from libsodium (Thomas Arts, from a security review).
 - Some subtle memory leaks in the error path for kx operations were plugged.
 - The multi-part generichash interface is now properly process/thread safe.
+- The sign interface is now properly process/thread safe.
 
 ## [0.17.2]
 
