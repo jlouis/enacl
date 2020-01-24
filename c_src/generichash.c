@@ -194,7 +194,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   obj->outlen = hash_size;
 
   if ((obj->mtx = enif_mutex_create("enacl.generichash")) == NULL) {
-    ret = enacl_error_tuple(env, "generichash_mutex_error");
+    ret = enacl_error_tuple(env, "mutex_create");
     goto err;
   }
 

@@ -6,6 +6,7 @@
 #include "sign.h"
 
 typedef struct enacl_sign_ctx {
+  ErlNifMutex *mtx;
   crypto_sign_state *state; // The underlying signature state
   int alive; // Is the context still valid for updates/finalization
 } enacl_sign_ctx;
@@ -35,6 +36,9 @@ void enacl_sign_ctx_dtor(ErlNifEnv *env, enacl_sign_ctx *obj) {
     enif_free(obj->state);
   }
 
+  if (obj->mtx != NULL)
+    enif_mutex_destroy(obj->mtx);
+
   return;
 }
 
@@ -63,6 +67,11 @@ ERL_NIF_TERM enacl_crypto_sign_init(ErlNifEnv *env, int argc,
   }
   obj->alive = 1;
 
+  if ((obj->mtx = enif_mutex_create("enacl.sign")) == NULL) {
+    ret = enacl_error_tuple(env, "mutex_create");
+    goto free;
+  }
+
   if (0 != crypto_sign_init(obj->state)) {
     ret = enacl_error_tuple(env, "sign_init_error");
     goto free;
@@ -83,6 +92,7 @@ free:
       obj->state = NULL;
     }
 release:
+  // This also frees the mutex via the destructor
   enif_release_resource(obj);
 done:
   return ret;
@@ -108,6 +118,7 @@ ERL_NIF_TERM enacl_crypto_sign_update(ErlNifEnv *env, int argc,
   if (!enif_inspect_binary(env, argv[1], &data))
     goto bad_arg;
 
+  enif_mutex_lock(obj->mtx);
   if (!obj->alive) {
     ret = enacl_error_tuple(env, "finalized");
     goto done;
@@ -124,6 +135,7 @@ ERL_NIF_TERM enacl_crypto_sign_update(ErlNifEnv *env, int argc,
 bad_arg:
   return enif_make_badarg(env);
 done:
+  enif_mutex_unlock(obj->mtx);
   return ret;
 }
 
@@ -143,6 +155,7 @@ ERL_NIF_TERM enacl_crypto_sign_final_create(ErlNifEnv *env, int argc,
   if (sk.size != crypto_sign_SECRETKEYBYTES)
     goto bad_arg;
 
+  enif_mutex_lock(obj->mtx);
   if (!obj->alive) {
     ret = enacl_error_tuple(env, "finalized");
     goto done;
@@ -174,6 +187,7 @@ cleanup:
   enif_free(obj->state);
   obj->state = NULL;
 done:
+  enif_mutex_unlock(obj->mtx);
   return ret;
 }
 
@@ -194,6 +208,12 @@ ERL_NIF_TERM enacl_crypto_sign_final_verify(ErlNifEnv *env, int argc,
   if (pk.size != crypto_sign_PUBLICKEYBYTES)
     goto bad_arg;
 
+  enif_mutex_lock(obj->mtx);
+  if (!obj->alive) {
+    ret = enacl_error_tuple(env, "finalized");
+    goto done;
+  }
+
   if (0 == crypto_sign_final_verify(obj->state, sig.data, pk.data)) {
     ret = enif_make_atom(env, ATOM_OK);
   } else {
@@ -210,7 +230,8 @@ cleanup:
   sodium_memzero(obj->state, crypto_sign_statebytes());
   enif_free(obj->state);
   obj->state = NULL;
-
+done:
+  enif_mutex_unlock(obj->mtx);
   return ret;
 }
 
