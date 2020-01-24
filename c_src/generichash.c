@@ -6,9 +6,11 @@
 #include "generichash.h"
 
 typedef struct enacl_generichash_ctx {
+  ErlNifMutex *mtx;
   crypto_generichash_state *ctx; // Underlying hash state from sodium
   int alive;  // Is the context still valid for updates/finalizes?
   int outlen; // Final size of the hash
+
 } enacl_generichash_ctx;
 
 static ErlNifResourceType *enacl_generic_hash_ctx_rtype;
@@ -36,6 +38,9 @@ static void enacl_generic_hash_ctx_dtor(ErlNifEnv *env,
 
   if (obj->ctx)
     sodium_free(obj->ctx);
+
+  if (obj->mtx != NULL)
+    enif_mutex_destroy(obj->mtx);
 
   return;
 }
@@ -175,6 +180,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   // Allocate the state context via libsodium
   // Note that this ensures a 64byte alignment for the resource
   // And also protects the resource via guardpages
+  obj->mtx = NULL;
   obj->ctx = NULL;
   obj->alive = 0;
   obj->outlen = 0;
@@ -186,6 +192,11 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   }
   obj->alive = 1;
   obj->outlen = hash_size;
+
+  if ((obj->mtx = enif_mutex_create("enacl.generichash")) == NULL) {
+    ret = enacl_error_tuple(env, "generichash_mutex_error");
+    goto err;
+  }
 
   // Call the library function
   if (0 != crypto_generichash_init(obj->ctx, k, key.size, obj->outlen)) {
@@ -230,6 +241,8 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
   if (!enif_inspect_binary(env, argv[1], &data))
     goto bad_arg;
 
+  enif_mutex_lock(obj->mtx);
+
   if (!obj->alive) {
     ret = enacl_error_tuple(env, "finalized");
     goto done;
@@ -247,6 +260,7 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
 bad_arg:
   return enif_make_badarg(env);
 done:
+  enif_mutex_unlock(obj->mtx);
   return ret;
 }
 
@@ -262,6 +276,7 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
                          (void **)&obj))
     goto bad_arg;
 
+  enif_mutex_lock(obj->mtx);
   if (!obj->alive) {
     ret = enacl_error_tuple(env, "finalized");
     goto done;
@@ -293,5 +308,6 @@ bad_arg:
 release:
   enif_release_binary(&hash);
 done:
+  enif_mutex_unlock(obj->mtx);
   return ret;
 }

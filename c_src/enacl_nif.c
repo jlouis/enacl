@@ -445,8 +445,10 @@ static ErlNifFunc nif_funcs[] = {
      enacl_crypto_generichash_KEYBYTES_MAX},
     {"crypto_generichash", 3, enacl_crypto_generichash},
     {"crypto_generichash_init", 2, enacl_crypto_generichash_init},
-    {"crypto_generichash_update", 2, enacl_crypto_generichash_update},
-    {"crypto_generichash_final", 1, enacl_crypto_generichash_final}
+    erl_nif_dirty_job_cpu_bound_macro("crypto_generichash_update", 2,
+                                      enacl_crypto_generichash_update),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_generichash_final", 1,
+                                      enacl_crypto_generichash_final)
 
 };
 

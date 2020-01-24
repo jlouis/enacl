@@ -18,7 +18,6 @@ Under errors, the current code can leak binaries. I don't want that to happen, s
 are going to use a better cleanup scheme in the code base.
 
 - Play the mutex game with:
-  - Generic Hash multi-part types
   - Sign multi-part types
 
 The resource-variant structs need to be mutex-protected. Otherwise we run the risk of
@@ -81,6 +80,7 @@ sections applied. The current code is subtly in error!
 - Clang static analysis warnings (Thomas Arts).
 - Replace a constant 31 with a computation from libsodium (Thomas Arts, from a security review).
 - Some subtle memory leaks in the error path for kx operations were plugged.
+- The multi-part generichash interface is now properly process/thread safe.
 
 ## [0.17.2]
 
