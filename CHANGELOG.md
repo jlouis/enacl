@@ -5,17 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Upcoming changes]
-
-Over time, a number of bad things have snuck themselves into these bindings. This
-is a list of changes which are planned for a 1.0 release.
-
-- Plug some subtle memory leaks in API:
-  - Secret
-
-Under failure, the current code can leak binaries. I don't want that to happen, so we
-are going to use a better cleanup scheme in the code base.
-
 ## [Unreleased]
 
 ### Compatibility
