@@ -525,20 +525,22 @@ prop_secretbox_failure_integrity() ->
 %% ------------------------------------------------------------
 %% * aead_chacha20poly1305_encrypt/4,
 %% * aead_chacha20poly1305_decrypt/4,
-prop_aead_chacha20poly1305() ->
+prop_aead_chacha20poly1305_ietf() ->
+  NPubBytes = enacl:aead_chacha20poly1305_ietf_NPUBBYTES(),
   ?FORALL({Key, Msg, AD, Nonce},
-          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), binary(NPubBytes)},
   begin
-    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
-    equals(enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, EncryptMsg), Msg)
+    EncryptMsg = enacl:aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    equals(enacl:aead_chacha20poly1305_ietf_decrypt(EncryptMsg, AD, Nonce, Key), Msg)
   end).
 
-prop_aead_chacha20poly1305_fail() ->
+prop_aead_chacha20poly1305_ietf_fail() ->
+  NPubBytes = enacl:aead_chacha20poly1305_ietf_NPUBBYTES(),
   ?FORALL({Key, Msg, AD, Nonce},
-          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), binary(NPubBytes)},
   begin
-    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
-    case enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, <<0:8, EncryptMsg/binary>>) of
+    EncryptMsg = enacl:aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    case enacl:aead_chacha20poly1305_ietf_decrypt(<<0:8, EncryptMsg/binary>>, AD, Nonce, Key) of
         {error, _} -> true;
         _          -> false
     end
