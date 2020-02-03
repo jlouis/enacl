@@ -93,7 +93,7 @@ enacl_crypto_aead_chacha20poly1305_ietf_decrypt(ErlNifEnv *env, int argc,
     goto bad_arg;
   if (!enif_inspect_binary(env, argv[2], &nonce))
     goto bad_arg;
-  if (!enif_inspect_binary(env, argv[3], &message))
+  if (!enif_inspect_binary(env, argv[3], &key))
     goto bad_arg;
 
   if (ciphertext.size < crypto_aead_chacha20poly1305_ietf_ABYTES)
