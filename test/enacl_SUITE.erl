@@ -59,9 +59,9 @@ generichash_basic_neg(_Config) ->
             "I've watched C-beams glitter in the dark near the Tannhäuser Gate. "
             "All those... moments... will be lost... in time, like... tears... in rain">>,
     Key = <<"Hash Key 123456789">>,
-    {error, invalid_hash_size} = enacl:generichash(9, Msg, Key),
-    {error, invalid_hash_size} = enacl:generichash(65, Msg, Key),
-    {error, invalid_key_size} = enacl:generichash(32, Msg, <<"Small">>),
+    {'EXIT', {badarg, _}} = (catch enacl:generichash(9, Msg, Key)),
+    {'EXIT', {badarg, _}} = (catch enacl:generichash(65, Msg, Key)),
+    {'EXIT', {badarg, _}} = (catch enacl:generichash(32, Msg, <<"Small">>)),
     ok.
 
 generichash_basic_pos(_Config) ->
@@ -69,8 +69,8 @@ generichash_basic_pos(_Config) ->
             "I've watched C-beams glitter in the dark near the Tannhäuser Gate. "
             "All those... moments... will be lost... in time, like... tears... in rain">>,
     Key = <<"Hash Key 123456789">>,
-    {ok,<<189,104,45,187,170,229,212,4,121,43,137,74,241,173,181,77,
-          67,211,133,70,196,6,128,97>>} = enacl:generichash(24, Msg, Key),
+    <<189,104,45,187,170,229,212,4,121,43,137,74,241,173,181,77,
+          67,211,133,70,196,6,128,97>> = enacl:generichash(24, Msg, Key),
     ok.
 
 generichash_chunked(_Config) ->
@@ -82,7 +82,7 @@ generichash_chunked(_Config) ->
     State = generichash_chunked(State, Msg, 10000),
     Expected = <<46,49,32,18,13,186,182,105,106,122,253,139,89,176,169,141,
                  73,93,99,6,41,216,110,41>>,
-    {ok, Expected} = enacl:generichash_final(State),
+    Expected = enacl:generichash_final(State),
     ok.
 
 generichash_chunked(State, _Msg, 0) -> State;
@@ -119,8 +119,8 @@ pwhash(_Config) ->
     Salt = <<"1234567890abcdef">>,
     Hash1 = <<164,75,127,151,168,101,55,77,48,77,240,204,64,20,43,23,88,
                  18,133,11,53,151,2,113,232,95,84,165,50,7,60,20>>,
-    {ok, Hash1} = enacl:pwhash(PW, Salt),
-    {ok, Str1} = enacl:pwhash_str(PW),
+    Hash1 = enacl:pwhash(PW, Salt),
+    Str1 = enacl:pwhash_str(PW),
     true = enacl:pwhash_str_verify(Str1, PW),
     false = enacl:pwhash_str_verify(Str1, <<PW/binary, 1>>),
     ok.

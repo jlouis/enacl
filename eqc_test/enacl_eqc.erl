@@ -726,7 +726,7 @@ prop_pwhash_str_verify() ->
             begin
                 case v_iodata(Passwd) of
                     true ->
-                        {ok, Ascii} = enacl:pwhash_str(Passwd),
+                        Ascii = enacl:pwhash_str(Passwd),
                         S = enacl:pwhash_str_verify(Ascii, Passwd),
                         equals(S, true);
                     false ->

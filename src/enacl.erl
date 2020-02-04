@@ -338,7 +338,7 @@ unsafe_memzero(_) ->
 %% either 16, 32 or 64 bytes
 %% @end
 -type generichash_bytes() :: 10..64.
--spec generichash(generichash_bytes(), iodata(), binary()) -> {ok, binary()} | {error, term()}.
+-spec generichash(generichash_bytes(), iodata(), binary()) -> binary().
 generichash(HashSize, Message, Key) ->
     enacl_nif:crypto_generichash(HashSize, Message, Key).
 
@@ -347,13 +347,13 @@ generichash(HashSize, Message, Key) ->
 %% This function generates a hash of the message. The hash size is
 %% either 16, 32 or 64 bytes
 %% @end
--spec generichash(generichash_bytes(), iodata()) -> {ok, binary()} | {error, term()}.
+-spec generichash(generichash_bytes(), iodata()) -> binary().
 generichash(HashSize, Message) ->
     enacl_nif:crypto_generichash(HashSize, Message, <<>>).
 
 %% @doc generichash_init/2 initializes a multi-part hash.
 %% @end
--spec generichash_init(generichash_bytes(), binary()) -> reference() | notsup.
+-spec generichash_init(generichash_bytes(), binary()) -> reference().
 generichash_init(HashSize, Key) ->
     enacl_nif:crypto_generichash_init(HashSize, Key).
 
@@ -374,7 +374,7 @@ generichash_final(State) ->
 %% This function generates a fixed size salted hash of a user defined password.
 %% Defaults to interactive/interactive limits.
 %% @end
--spec pwhash(iodata(), binary()) -> {ok, binary()} | {error, term()}.
+-spec pwhash(iodata(), binary()) -> binary().
 pwhash(Password, Salt) ->
     pwhash(Password, Salt, interactive, interactive).
 
@@ -383,7 +383,7 @@ pwhash(Password, Salt) ->
 %% This function generates a fixed size salted hash of a user defined password given Ops and Mem
 %% limits.
 %% @end
--spec pwhash(Password, Salt, Ops, Mem) -> {ok, binary()} | {error, term()}
+-spec pwhash(Password, Salt, Ops, Mem) -> binary()
     when
       Password :: iodata(),
       Salt     :: binary(),
@@ -397,7 +397,7 @@ pwhash(Password, Salt, Ops, Mem) ->
 %% This function generates a fixed size, salted, ASCII encoded hash of a user defined password.
 %% Defaults to interactive/interactive limits.
 %% @end
--spec pwhash_str(iodata()) -> {ok, iodata()} | {error, term()}.
+-spec pwhash_str(iodata()) -> iodata().
 pwhash_str(Password) ->
     pwhash_str(Password, interactive, interactive).
 
@@ -406,18 +406,13 @@ pwhash_str(Password) ->
 %% This function generates a fixed size, salted, ASCII encoded hash of a user defined password
 %% given Ops and Mem limits.
 %% @end
--spec pwhash_str(Password, Ops, Mem) -> {ok, iodata()} | {error, term()}
+-spec pwhash_str(Password, Ops, Mem) -> iodata()
     when
       Password :: iodata(),
       Ops :: pwhash_limit(),
       Mem :: pwhash_limit().
 pwhash_str(Password, Ops, Mem) ->
-    case enacl_nif:crypto_pwhash_str(Password, Ops, Mem) of
-        {ok, ASCII} ->
-            {ok, strip_null_terminate(ASCII)};
-        {error, Reason} ->
-            {error, Reason}
-    end.
+    strip_null_terminate(enacl_nif:crypto_pwhash_str(Password, Ops, Mem)).
 
 strip_null_terminate(Binary) ->
     [X, _] = binary:split(Binary, <<0>>),

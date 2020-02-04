@@ -78,25 +78,22 @@ ERL_NIF_TERM enacl_crypto_pwhash(ErlNifEnv *env, int argc,
 
   // Check Salt size
   if (s.size != crypto_pwhash_SALTBYTES) {
-    return enacl_error_tuple(env, "invalid_salt_size");
+    return enif_make_badarg(env);
   }
 
   // Allocate memory for return binary
   if (!enif_alloc_binary(crypto_box_SEEDBYTES, &h)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   if (crypto_pwhash(h.data, h.size, (char *)p.data, p.size, s.data, o, m,
                     crypto_pwhash_ALG_DEFAULT) != 0) {
     /* out of memory */
     enif_release_binary(&h);
-    return enacl_error_tuple(env, "out_of_memory");
+    return enacl_internal_error(env);
   }
 
-  ERL_NIF_TERM ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret = enif_make_binary(env, &h);
-
-  return enif_make_tuple2(env, ok, ret);
+  return enif_make_binary(env, &h);
 }
 
 ERL_NIF_TERM enacl_crypto_pwhash_str(ErlNifEnv *env, int argc,
@@ -119,19 +116,16 @@ ERL_NIF_TERM enacl_crypto_pwhash_str(ErlNifEnv *env, int argc,
 
   // Allocate memory for return binary
   if (!enif_alloc_binary(crypto_pwhash_STRBYTES, &h)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   if (crypto_pwhash_str((char *)h.data, (char *)p.data, p.size, o, m) != 0) {
     /* out of memory */
     enif_release_binary(&h);
-    return enacl_error_tuple(env, "out_of_memory");
+    return enacl_internal_error(env);
   }
 
-  ERL_NIF_TERM ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret = enif_make_binary(env, &h);
-
-  return enif_make_tuple2(env, ok, ret);
+  return enif_make_binary(env, &h);
 }
 
 ERL_NIF_TERM enacl_crypto_pwhash_str_verify(ErlNifEnv *env, int argc,
