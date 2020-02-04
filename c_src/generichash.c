@@ -157,8 +157,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   // Verify that hash size is valid
   if ((hash_size <= crypto_generichash_BYTES_MIN) ||
       (hash_size >= crypto_generichash_BYTES_MAX)) {
-    ret = enacl_error_tuple(env, "invalid_hash_size");
-    goto done;
+    goto bad_arg;
   }
 
   // validate key size
@@ -167,8 +166,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
     k = NULL;
   } else if (key.size <= crypto_generichash_KEYBYTES_MIN ||
              key.size >= crypto_generichash_KEYBYTES_MAX) {
-    ret = enacl_error_tuple(env, "invalid_key_size");
-    goto done;
+    goto bad_arg;
   }
 
   // Create the resource
@@ -210,7 +208,7 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
 bad_arg:
   return enif_make_badarg(env);
 err:
-  ret = enacl_error_tuple(env, "internal_error");
+  ret = enif_make_atom(env, "notsup");
   if (obj != NULL) {
     if (obj->alive) {
       sodium_free(obj->ctx);
@@ -244,14 +242,12 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
   enif_mutex_lock(obj->mtx);
 
   if (!obj->alive) {
-    ret = enacl_error_tuple(env, "finalized");
-    goto done;
+    goto err;
   }
 
   // Update hash state
   if (0 != crypto_generichash_update(obj->ctx, data.data, data.size)) {
-    ret = enacl_error_tuple(env, "hash_update_error");
-    goto done;
+    goto err;
   }
 
   ret = argv[0];
@@ -259,6 +255,8 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
 
 bad_arg:
   return enif_make_badarg(env);
+err:
+  ret = enif_make_badarg(env);
 done:
   enif_mutex_unlock(obj->mtx);
   return ret;
@@ -278,17 +276,14 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
 
   enif_mutex_lock(obj->mtx);
   if (!obj->alive) {
-    ret = enacl_error_tuple(env, "finalized");
-    goto done;
+    goto err;
   }
 
   if (!enif_alloc_binary(obj->outlen, &hash)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
     goto done;
   }
 
   if (0 != crypto_generichash_final(obj->ctx, hash.data, hash.size)) {
-    ret = enacl_error_tuple(env, "hash_error");
     goto release;
   }
 
@@ -305,6 +300,8 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
 
 bad_arg:
   return enif_make_badarg(env);
+err:
+  ret = enif_make_badarg(env);
 release:
   enif_release_binary(&hash);
 done:

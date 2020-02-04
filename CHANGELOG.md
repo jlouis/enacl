@@ -11,13 +11,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   Pretty large change, but OTOH, this ought to happen before a 1.0 release as well.
   - AEAD
   - enacl
-  - generichash
   - hash
   - kx
   - pwhash
   - randombytes
   - secret
   - sign
+
+- Implement missing EQC tests
+  - Generichash
+  - Multi-part generic hash
 
 ## [Unreleased]
 
@@ -71,6 +74,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Renamed many routines from enif_* to enacl_*. This better reflects where they live
   in the code base, and avoids pollution of the enif_* "namespace".
 - Split Sign Public Key routines from the rest. Modernize the handling of contexts.
+- The multi-part generic hash routines now follow the structure of the crypto
+  modules multi-part constructions in API and style.
 
 ### Fixed
 - Fix a resource leak in generichash/sign init/update/final.

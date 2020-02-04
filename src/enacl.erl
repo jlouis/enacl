@@ -351,15 +351,22 @@ generichash(HashSize, Message, Key) ->
 generichash(HashSize, Message) ->
     enacl_nif:crypto_generichash(HashSize, Message, <<>>).
 
+%% @doc generichash_init/2 initializes a multi-part hash.
+%% @end
+-spec generichash_init(generichash_bytes(), binary()) -> reference() | notsup.
 generichash_init(HashSize, Key) ->
     enacl_nif:crypto_generichash_init(HashSize, Key).
 
+%% @doc generichash_update/2 updates a multi-part hash with new data.
+%% @end
+-spec generichash_update(reference(), iodata()) -> reference().
 generichash_update(State, Message) ->
     enacl_nif:crypto_generichash_update(State, Message).
 
+%% @doc generichash_final/1 finalizes a multi-part hash.
+-spec generichash_final(reference()) -> binary().
 generichash_final(State) ->
     enacl_nif:crypto_generichash_final(State).
-
 
 -type pwhash_limit() :: interactive | moderate | sensitive | pos_integer().
 %% @doc pwhash/2 hash a password
