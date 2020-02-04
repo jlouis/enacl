@@ -100,9 +100,12 @@ ERL_NIF_TERM enacl_crypto_box(ErlNifEnv *env, int argc,
     goto release;
   }
 
-  ret = enif_make_sub_binary(env, enif_make_binary(env, &result),
-                             crypto_box_BOXZEROBYTES,
-                             padded_msg.size - crypto_box_BOXZEROBYTES);
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin = enif_make_sub_binary(
+      env, enif_make_binary(env, &result), crypto_box_BOXZEROBYTES,
+      padded_msg.size - crypto_box_BOXZEROBYTES);
+  ret = enif_make_tuple2(env, ret_ok, ret_bin);
+
   goto done;
 
 bad_arg:
@@ -143,9 +146,12 @@ ERL_NIF_TERM enacl_crypto_box_open(ErlNifEnv *env, int argc,
     return enacl_error_tuple(env, "failed_verification");
   }
 
-  return enif_make_sub_binary(env, enif_make_binary(env, &result),
-                              crypto_box_ZEROBYTES,
-                              padded_ciphertext.size - crypto_box_ZEROBYTES);
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin = enif_make_sub_binary(
+      env, enif_make_binary(env, &result), crypto_box_ZEROBYTES,
+      padded_ciphertext.size - crypto_box_ZEROBYTES);
+
+  return enif_make_tuple2(env, ret_ok, ret_bin);
 }
 
 /* Precomputed crypto boxes */
@@ -171,7 +177,9 @@ ERL_NIF_TERM enacl_crypto_box_beforenm(ErlNifEnv *env, int argc,
     return enacl_error_tuple(env, "error_gen_shared_secret");
   }
 
-  return enif_make_binary(env, &k);
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin = enif_make_binary(env, &k);
+  return enif_make_tuple2(env, ret_ok, ret_bin);
 }
 
 ERL_NIF_TERM enacl_crypto_box_afternm(ErlNifEnv *env, int argc,
@@ -193,9 +201,11 @@ ERL_NIF_TERM enacl_crypto_box_afternm(ErlNifEnv *env, int argc,
 
   crypto_box_afternm(result.data, m.data, m.size, nonce.data, k.data);
 
-  return enif_make_sub_binary(env, enif_make_binary(env, &result),
-                              crypto_box_BOXZEROBYTES,
-                              m.size - crypto_box_BOXZEROBYTES);
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin = enif_make_sub_binary(
+      env, enif_make_binary(env, &result), crypto_box_BOXZEROBYTES,
+      m.size - crypto_box_BOXZEROBYTES);
+  return enif_make_tuple2(env, ret_ok, ret_bin);
 }
 
 ERL_NIF_TERM enacl_crypto_box_open_afternm(ErlNifEnv *env, int argc,
@@ -221,9 +231,11 @@ ERL_NIF_TERM enacl_crypto_box_open_afternm(ErlNifEnv *env, int argc,
     return enacl_error_tuple(env, "failed_verification");
   }
 
-  return enif_make_sub_binary(env, enif_make_binary(env, &result),
-                              crypto_box_ZEROBYTES,
-                              m.size - crypto_box_ZEROBYTES);
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin =
+      enif_make_sub_binary(env, enif_make_binary(env, &result),
+                           crypto_box_ZEROBYTES, m.size - crypto_box_ZEROBYTES);
+  return enif_make_tuple2(env, ret_ok, ret_bin);
 }
 
 /* Sealed box functions */

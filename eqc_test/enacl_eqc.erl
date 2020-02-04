@@ -183,10 +183,10 @@ prop_box_correct() ->
         begin
             case v_iodata(Msg) andalso nonce_valid(Nonce) andalso keypair_valid(PK1, SK1) andalso keypair_valid(PK2, SK2) of
                 true ->
-                    Key = enacl:box_beforenm(PK2, SK1),
-                    Key = enacl:box_beforenm(PK1, SK2),
-                    CipherText = enacl:box(Msg, Nonce, PK2, SK1),
-                    CipherText = enacl:box_afternm(Msg, Nonce, Key),
+                    {ok, Key} = enacl:box_beforenm(PK2, SK1),
+                    {ok, Key} = enacl:box_beforenm(PK1, SK2),
+                    {ok, CipherText} = enacl:box(Msg, Nonce, PK2, SK1),
+                    {ok, CipherText} = enacl:box_afternm(Msg, Nonce, Key),
                     {ok, DecodedMsg} = enacl:box_open(CipherText, Nonce, PK1, SK2),
                     {ok, DecodedMsg} = enacl:box_open_afternm(CipherText, Nonce, Key),
                     equals(iolist_to_binary(Msg), DecodedMsg);
@@ -210,8 +210,8 @@ prop_box_failure_integrity() ->
                  andalso keypair_valid(PK1, SK1)
                  andalso keypair_valid(PK2, SK2) of
                 true ->
-                    Key = enacl:box_beforenm(PK2, SK1),
-                    CipherText = enacl:box(Msg, Nonce, PK2, SK1),
+                    {ok, Key} = enacl:box_beforenm(PK2, SK1),
+                    {ok, CipherText} = enacl:box(Msg, Nonce, PK2, SK1),
                     Err = enacl:box_open([<<"x">>, CipherText], Nonce, PK1, SK2),
                     Err = enacl:box_open_afternm([<<"x">>, CipherText], Nonce, Key),
                     equals(Err, {error, failed_verification});

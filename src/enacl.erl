@@ -446,7 +446,7 @@ box_keypair() ->
 %% Encrypt a `Msg' to the party identified by public key `PK' using your own secret key `SK' to
 %% authenticate yourself. Requires a `Nonce' in addition. Returns the ciphered message.
 %% @end
--spec box(Msg, Nonce, PK, SK) -> CipherText
+-spec box(Msg, Nonce, PK, SK) -> {ok, CipherText} | {error, term()}
     when
       Msg :: iodata(),
       Nonce :: binary(),
@@ -470,14 +470,11 @@ box(Msg, Nonce, PK, SK) ->
       SK :: binary(),
       Msg :: binary().
 box_open(CipherText, Nonce, PK, SK) ->
-    case enacl_nif:crypto_box_open([?P_BOXZEROBYTES, CipherText], Nonce, PK, SK) of
-        {error, Err} -> {error, Err};
-        Bin when is_binary(Bin) -> {ok, Bin}
-    end.
+    enacl_nif:crypto_box_open([?P_BOXZEROBYTES, CipherText], Nonce, PK, SK).
 
 %% @doc box_beforenm/2 precomputes a box shared key for a PK/SK keypair
 %% @end
--spec box_beforenm(PK, SK) -> binary()
+-spec box_beforenm(PK, SK) -> {ok, binary()} | {error, term()}
     when
       PK :: binary(),
       SK :: binary().
@@ -492,7 +489,7 @@ box_beforenm(PK, SK) ->
 %% if you had called `box(M, Nonce, PK, SK)'. Except that it avoids computations in the elliptic curve Curve25519,
 %% and thus is a much faster operation.
 %% @end
--spec box_afternm(Msg, Nonce, K) -> CipherText
+-spec box_afternm(Msg, Nonce, K) -> {ok, CipherText} | {error, term()}
     when
       Msg :: iodata(),
       Nonce :: binary(),
@@ -522,23 +519,10 @@ box_afternm(Msg, Nonce, Key) ->
 box_open_afternm(CipherText, Nonce, Key) ->
     case iolist_size(CipherText) of
         K when K =< ?BOX_AFTERNM_SIZE ->
-            R =
-                case enacl_nif:crypto_box_open_afternm_b(
-                       [?P_BOXZEROBYTES, CipherText], Nonce, Key) of
-                    {error, Err} ->
-                        {error, Err};
-                    Bin when is_binary(Bin) ->
-                        {ok, Bin}
-                end,
+            R = enacl_nif:crypto_box_open_afternm_b([?P_BOXZEROBYTES, CipherText], Nonce, Key),
             bump(R, ?BOX_AFTERNM_REDUCTIONS, ?BOX_AFTERNM_SIZE, K);
         _ ->
-            case enacl_nif:crypto_box_open_afternm(
-                   [?P_BOXZEROBYTES, CipherText], Nonce, Key) of
-                {error, Err} ->
-                    {error, Err};
-                Bin when is_binary(Bin) ->
-                    {ok, Bin}
-            end
+            enacl_nif:crypto_box_open_afternm([?P_BOXZEROBYTES, CipherText], Nonce, Key)
     end.
 
 %% @doc box_nonce_size/0 return the byte-size of the nonce
