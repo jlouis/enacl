@@ -90,21 +90,17 @@ ERL_NIF_TERM enacl_crypto_box(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!enif_alloc_binary(padded_msg.size, &result)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
     goto done;
   }
 
   if (0 != crypto_box(result.data, padded_msg.data, padded_msg.size, nonce.data,
                       pk.data, sk.data)) {
-    ret = enacl_error_tuple(env, "box_error");
     goto release;
   }
 
-  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret_bin = enif_make_sub_binary(
-      env, enif_make_binary(env, &result), crypto_box_BOXZEROBYTES,
-      padded_msg.size - crypto_box_BOXZEROBYTES);
-  ret = enif_make_tuple2(env, ret_ok, ret_bin);
+  ret = enif_make_sub_binary(env, enif_make_binary(env, &result),
+                             crypto_box_BOXZEROBYTES,
+                             padded_msg.size - crypto_box_BOXZEROBYTES);
 
   goto done;
 
@@ -112,6 +108,8 @@ bad_arg:
   return enif_make_badarg(env);
 release:
   enif_release_binary(&result);
+err:
+  ret = enacl_internal_error(env);
 done:
   return ret;
 }
@@ -136,7 +134,7 @@ ERL_NIF_TERM enacl_crypto_box_open(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(padded_ciphertext.size, &result)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   if (0 != crypto_box_open(result.data, padded_ciphertext.data,
@@ -168,18 +166,18 @@ ERL_NIF_TERM enacl_crypto_box_beforenm(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_box_BEFORENMBYTES, &k)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    goto err;
   }
 
   if (0 != crypto_box_beforenm(k.data, pk.data, sk.data)) {
     // error
     enif_release_binary(&k);
-    return enacl_error_tuple(env, "error_gen_shared_secret");
+    goto err;
   }
 
-  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret_bin = enif_make_binary(env, &k);
-  return enif_make_tuple2(env, ret_ok, ret_bin);
+  return enif_make_binary(env, &k);
+err:
+  return enacl_internal_error(env);
 }
 
 ERL_NIF_TERM enacl_crypto_box_afternm(ErlNifEnv *env, int argc,
@@ -196,16 +194,14 @@ ERL_NIF_TERM enacl_crypto_box_afternm(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(m.size, &result)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   crypto_box_afternm(result.data, m.data, m.size, nonce.data, k.data);
 
-  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret_bin = enif_make_sub_binary(
-      env, enif_make_binary(env, &result), crypto_box_BOXZEROBYTES,
-      m.size - crypto_box_BOXZEROBYTES);
-  return enif_make_tuple2(env, ret_ok, ret_bin);
+  return enif_make_sub_binary(env, enif_make_binary(env, &result),
+                              crypto_box_BOXZEROBYTES,
+                              m.size - crypto_box_BOXZEROBYTES);
 }
 
 ERL_NIF_TERM enacl_crypto_box_open_afternm(ErlNifEnv *env, int argc,
@@ -222,7 +218,7 @@ ERL_NIF_TERM enacl_crypto_box_open_afternm(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(m.size, &result)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   if (0 != crypto_box_open_afternm(result.data, m.data, m.size, nonce.data,
@@ -250,14 +246,12 @@ ERL_NIF_TERM enacl_crypto_box_seal(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(msg.size + crypto_box_SEALBYTES, &ciphertext)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   crypto_box_seal(ciphertext.data, msg.data, msg.size, key.data);
 
-  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
-  ERL_NIF_TERM ret_bin = enif_make_binary(env, &ciphertext);
-  return enif_make_tuple2(env, ret_ok, ret_bin);
+  return enif_make_binary(env, &ciphertext);
 }
 
 ERL_NIF_TERM enacl_crypto_box_seal_open(ErlNifEnv *env, int argc,
@@ -276,7 +270,7 @@ ERL_NIF_TERM enacl_crypto_box_seal_open(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(ciphertext.size - crypto_box_SEALBYTES, &msg)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   if (crypto_box_seal_open(msg.data, ciphertext.data, ciphertext.size, pk.data,

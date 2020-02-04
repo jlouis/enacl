@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [TODO]
 
-- Go through all calls and make them return {ok, _} | {error, _} if applicable.
+- Go through all calls and make them return streamlined exceptions if applicable.
   Pretty large change, but OTOH, this ought to happen before a 1.0 release as well.
   - AEAD
   - enacl
   - hash
   - kx
+  - generichash
   - pwhash
   - randombytes
   - secret
@@ -25,8 +26,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Compatibility
-- Many functions returned the type `value() | {error, term()}`. They have been
-  updated to return the more erlang-idiomatic `{ok, value()} | {error, term()}`.
+- Some functions have been streamlined to badarg in certain cases where it made more
+  sense to do so than returning back an error to the caller.
+- Functions generally don't return error values for internal errors. They now raise
+  exceptions when this happens. If you can't allocate a binary, there is usually not
+  much the programmer can do with that information, sans crashing.
 - If you used `aead_chacha20poly1305_*` functions, please read through the changelog
   carefully as we have made changes to these functions. TL;DR: look for
   `aead_chacha20poly1305_ietf_*` but note it is *not* just a simple substitution

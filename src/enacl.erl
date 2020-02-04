@@ -453,7 +453,7 @@ box_keypair() ->
 %% Encrypt a `Msg' to the party identified by public key `PK' using your own secret key `SK' to
 %% authenticate yourself. Requires a `Nonce' in addition. Returns the ciphered message.
 %% @end
--spec box(Msg, Nonce, PK, SK) -> {ok, CipherText} | {error, term()}
+-spec box(Msg, Nonce, PK, SK) -> CipherText
     when
       Msg :: iodata(),
       Nonce :: binary(),
@@ -481,7 +481,7 @@ box_open(CipherText, Nonce, PK, SK) ->
 
 %% @doc box_beforenm/2 precomputes a box shared key for a PK/SK keypair
 %% @end
--spec box_beforenm(PK, SK) -> {ok, binary()} | {error, term()}
+-spec box_beforenm(PK, SK) -> binary()
     when
       PK :: binary(),
       SK :: binary().
@@ -496,7 +496,7 @@ box_beforenm(PK, SK) ->
 %% if you had called `box(M, Nonce, PK, SK)'. Except that it avoids computations in the elliptic curve Curve25519,
 %% and thus is a much faster operation.
 %% @end
--spec box_afternm(Msg, Nonce, K) -> {ok, CipherText} | {error, term()}
+-spec box_afternm(Msg, Nonce, K) -> CipherText
     when
       Msg :: iodata(),
       Nonce :: binary(),
@@ -692,7 +692,7 @@ box_secret_key_bytes() ->
 %% keypair and then uses `box'. Ephemeral public key will sent to other party. Returns the
 %% enciphered message `SealedCipherText' which includes ephemeral public key at head.
 %% @end
--spec box_seal(Msg, PK) -> {ok, SealedCipherText} | {error, term()}
+-spec box_seal(Msg, PK) -> SealedCipherText
     when
       Msg :: iodata(),
       PK :: binary(),

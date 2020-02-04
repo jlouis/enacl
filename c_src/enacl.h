@@ -9,5 +9,6 @@
 #define ATOM_FALSE "false"
 
 ERL_NIF_TERM enacl_error_tuple(ErlNifEnv *, char *);
+ERL_NIF_TERM enacl_internal_error(ErlNifEnv *);
 
 #endif
