@@ -431,7 +431,7 @@ prop_seal_box_failure_integrity() ->
       begin
          case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
            true ->
-             CT = enacl:box_seal(Msg, PK1),
+             {ok, CT} = enacl:box_seal(Msg, PK1),
              Err = enacl:box_seal_open([<<"x">>, CT], PK1, SK1),
              equals(Err, {error, failed_verification});
            false ->
@@ -450,7 +450,7 @@ prop_seal_box_correct() ->
      begin
          case v_iodata(Msg) andalso keypair_valid(PK1, SK1) of
              true ->
-                 SealedCipherText = enacl:box_seal(Msg, PK1),
+                 {ok, SealedCipherText} = enacl:box_seal(Msg, PK1),
                  {ok, DecodedMsg} = enacl:box_seal_open(SealedCipherText, PK1, SK1),
                  equals(iolist_to_binary(Msg), DecodedMsg);
              false ->

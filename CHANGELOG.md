@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - generichash
   - hash
   - kx
-  - public
   - pwhash
   - randombytes
   - secret

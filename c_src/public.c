@@ -255,7 +255,9 @@ ERL_NIF_TERM enacl_crypto_box_seal(ErlNifEnv *env, int argc,
 
   crypto_box_seal(ciphertext.data, msg.data, msg.size, key.data);
 
-  return enif_make_binary(env, &ciphertext);
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin = enif_make_binary(env, &ciphertext);
+  return enif_make_tuple2(env, ret_ok, ret_bin);
 }
 
 ERL_NIF_TERM enacl_crypto_box_seal_open(ErlNifEnv *env, int argc,
@@ -283,5 +285,8 @@ ERL_NIF_TERM enacl_crypto_box_seal_open(ErlNifEnv *env, int argc,
     return enacl_error_tuple(env, "failed_verification");
   }
 
-  return enif_make_binary(env, &msg);
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin = enif_make_binary(env, &msg);
+
+  return enif_make_tuple2(env, ret_ok, ret_bin);
 }

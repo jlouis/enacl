@@ -685,7 +685,7 @@ box_secret_key_bytes() ->
 %% keypair and then uses `box'. Ephemeral public key will sent to other party. Returns the
 %% enciphered message `SealedCipherText' which includes ephemeral public key at head.
 %% @end
--spec box_seal(Msg, PK) -> SealedCipherText
+-spec box_seal(Msg, PK) -> {ok, SealedCipherText} | {error, term()}
     when
       Msg :: iodata(),
       PK :: binary(),
@@ -706,10 +706,7 @@ box_seal(Msg, PK) ->
       SK :: binary(),
       Msg :: binary().
 box_seal_open(SealedCipherText, PK, SK) ->
-    case enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK) of
-        {error, Err} -> {error, Err};
-        Bin when is_binary(Bin) -> {ok, Bin}
-    end.
+    enacl_nif:crypto_box_seal_open(SealedCipherText, PK, SK).
 
 %% @doc secretbox/3 encrypts a message with a key
 %%
