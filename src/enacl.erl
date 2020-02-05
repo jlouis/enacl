@@ -1152,7 +1152,7 @@ kx_secret_key_size() ->
 %% `AD' using `Key' and `Nonce'. Returns the encrypted message followed by
 %% `aead_chacha20poly1305_ABYTES/0' bytes of MAC.
 %% @end
--spec aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key) -> binary() | {error, term()}
+-spec aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key) -> binary()
     when Key :: binary(),
          Nonce :: binary(),
          AD :: binary(),
@@ -1207,7 +1207,7 @@ aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX() ->
 %% `AD' using `Key' and `Nonce'. Returns the encrypted message followed by
 %% `aead_xchacha20poly1305_ABYTES/0' bytes of MAC.
 %% @end
--spec aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key) -> binary() | {error, term()}
+-spec aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key) -> binary()
     when Key :: binary(),
          Nonce :: binary(),
          AD :: binary(),

@@ -57,24 +57,20 @@ enacl_crypto_aead_chacha20poly1305_ietf_encrypt(ErlNifEnv *env, int argc,
   if (!enif_alloc_binary(message.size +
                              crypto_aead_chacha20poly1305_ietf_ABYTES,
                          &ciphertext)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
-    goto done;
+    goto err;
   }
 
-  if (crypto_aead_chacha20poly1305_ietf_encrypt(
-          ciphertext.data, NULL, message.data, message.size, ad.data, ad.size,
-          NULL, nonce.data, key.data) < 0) {
-    ret = enacl_error_tuple(env, "aead_chacha20poly1305_ietf_encrypt_failed");
-    goto release;
-  }
+  crypto_aead_chacha20poly1305_ietf_encrypt(ciphertext.data, NULL, message.data,
+                                            message.size, ad.data, ad.size,
+                                            NULL, nonce.data, key.data);
 
   ret = enif_make_binary(env, &ciphertext);
   goto done;
 
 bad_arg:
   return enif_make_badarg(env);
-release:
-  enif_release_binary(&ciphertext);
+err:
+  ret = enacl_internal_error(env);
 done:
   return ret;
 }
@@ -106,14 +102,13 @@ enacl_crypto_aead_chacha20poly1305_ietf_decrypt(ErlNifEnv *env, int argc,
   if (!enif_alloc_binary(ciphertext.size -
                              crypto_aead_chacha20poly1305_ietf_ABYTES,
                          &message)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
-    goto done;
+    return enacl_internal_error(env);
   }
 
   if (crypto_aead_chacha20poly1305_ietf_decrypt(
           message.data, NULL, NULL, ciphertext.data, ciphertext.size, ad.data,
-          ad.size, nonce.data, key.data) < 0) {
-    ret = enacl_error_tuple(env, "aead_chacha20poly1305_ietf_decrypt_failed");
+          ad.size, nonce.data, key.data) != 0) {
+    ret = enacl_error_tuple(env, "failed_verification");
     goto release;
   }
 
@@ -180,24 +175,20 @@ enacl_crypto_aead_xchacha20poly1305_ietf_encrypt(ErlNifEnv *env, int argc,
   if (!enif_alloc_binary(message.size +
                              crypto_aead_xchacha20poly1305_ietf_ABYTES,
                          &ciphertext)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
-    goto done;
+    goto err;
   }
 
-  if (crypto_aead_xchacha20poly1305_ietf_encrypt(
-          ciphertext.data, NULL, message.data, message.size, ad.data, ad.size,
-          NULL, nonce.data, key.data) < 0) {
-    ret = enacl_error_tuple(env, "aead_xchacha20poly1305_ietf_encrypt_failed");
-    goto release;
-  }
+  crypto_aead_xchacha20poly1305_ietf_encrypt(
+      ciphertext.data, NULL, message.data, message.size, ad.data, ad.size, NULL,
+      nonce.data, key.data);
 
   ret = enif_make_binary(env, &ciphertext);
   goto done;
 
 bad_arg:
   return enif_make_badarg(env);
-release:
-  enif_release_binary(&ciphertext);
+err:
+  ret = enacl_internal_error(env);
 done:
   return ret;
 }
@@ -229,14 +220,13 @@ enacl_crypto_aead_xchacha20poly1305_ietf_decrypt(ErlNifEnv *env, int argc,
   if (!enif_alloc_binary(ciphertext.size -
                              crypto_aead_xchacha20poly1305_ietf_ABYTES,
                          &message)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
-    goto done;
+    return enacl_internal_error(env);
   }
 
   if (crypto_aead_xchacha20poly1305_ietf_decrypt(
           message.data, NULL, NULL, ciphertext.data, ciphertext.size, ad.data,
-          ad.size, nonce.data, key.data) < 0) {
-    ret = enacl_error_tuple(env, "aead_xchacha20poly1305_ietf_decrypt_failed");
+          ad.size, nonce.data, key.data) != 0) {
+    ret = enacl_error_tuple(env, "failed_verification");
     goto release;
   }
 

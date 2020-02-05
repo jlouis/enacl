@@ -546,6 +546,29 @@ prop_aead_chacha20poly1305_ietf_fail() ->
     end
   end).
 
+%% * aead_xchacha20poly1305_encrypt/4,
+%% * aead_xchacha20poly1305_decrypt/4,
+prop_aead_xchacha20poly1305_ietf() ->
+  NPubBytes = enacl:aead_xchacha20poly1305_ietf_NPUBBYTES(),
+  ?FORALL({Key, Msg, AD, Nonce},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), binary(NPubBytes)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    equals(enacl:aead_xchacha20poly1305_ietf_decrypt(EncryptMsg, AD, Nonce, Key), Msg)
+  end).
+
+prop_aead_xchacha20poly1305_ietf_fail() ->
+  NPubBytes = enacl:aead_xchacha20poly1305_ietf_NPUBBYTES(),
+  ?FORALL({Key, Msg, AD, Nonce},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), binary(NPubBytes)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    case enacl:aead_xchacha20poly1305_ietf_decrypt(<<0:8, EncryptMsg/binary>>, AD, Nonce, Key) of
+        {error, _} -> true;
+        _          -> false
+    end
+  end).
+
 %% CRYPTO STREAM
 %% ------------------------------------------------------------
 %% * stream/3

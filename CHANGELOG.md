@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Go through all calls and make them return streamlined exceptions if applicable.
   Pretty large change, but OTOH, this ought to happen before a 1.0 release as well.
-  - AEAD
   - hash
   - kx
   - randombytes
