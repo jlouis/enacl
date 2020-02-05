@@ -783,6 +783,25 @@ prop_crypto_hash_neq() ->
         enacl:hash(X) /= enacl:hash(Y)
     ).
 
+prop_crypto_shorthash_eq() ->
+  ?FORALL(X, g_iodata(),
+    case v_iodata(X) of
+      true -> equals(enacl:hash(X), enacl:hash(X));
+      false ->
+        try
+          enacl:hash(X),
+          false
+        catch
+          error:badarg -> true
+        end
+      end
+    ).
+
+prop_crypto_shorthash_neq() ->
+  ?FORALL({X, Y}, diff_pair(),
+    enacl:hash(X) /= enacl:hash(Y)
+  ).
+
 %% STRING COMPARISON
 %% -------------------------
 %% * verify_16/2,
@@ -842,7 +861,8 @@ prop_randombytes() ->
     ?FORALL(X, g_nat(),
         case is_nat(X) of
             true ->
-                is_binary(enacl:randombytes(X));
+              R = enacl:randombytes(X),
+              is_binary(R) andalso (byte_size(R) == X);
             false ->
                 try
                     enacl:randombytes(X),
@@ -852,6 +872,13 @@ prop_randombytes() ->
                        true
                 end
        end).
+
+prop_randombytes_uint32() ->
+  ?FORALL(_, return(x),
+    begin
+      V = enacl:randombytes_uint32(),
+      is_integer(V)
+    end).
 
 %% SCRAMBLING
 prop_scramble_block() ->

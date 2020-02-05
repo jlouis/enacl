@@ -953,6 +953,10 @@ shorthash_size() ->
 %%
 %% Given a `Msg' and a `Key' produce a MAC/Authenticator for that message. The key can be reused for several such Msg/Authenticator pairs.
 %% An eavesdropper will not learn anything extra about the message structure.
+%%
+%% The intended use is to generate a random key and use it as a hash table or bloom filter function.
+%% This avoids an enemy their ability to predict where a collision would occur in the data structure,
+%% since they don't know the key.
 %% @end
 -spec shorthash(Msg, Key) -> Authenticator
     when

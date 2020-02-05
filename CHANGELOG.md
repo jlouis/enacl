@@ -9,9 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Go through all calls and make them return streamlined exceptions if applicable.
   Pretty large change, but OTOH, this ought to happen before a 1.0 release as well.
-  - hash
   - kx
-  - randombytes
   - secret
   - sign
   - enacl_nif
@@ -79,6 +77,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Split Sign Public Key routines from the rest. Modernize the handling of contexts.
 - The multi-part generic hash routines now follow the structure of the crypto
   modules multi-part constructions in API and style.
+- The AEAD constructions have been streamlined so they follow the rules of libsodium
+  closer than before. In particular, some dead code has been removed as a result.
 
 ### Fixed
 - Fix a resource leak in generichash/sign init/update/final.

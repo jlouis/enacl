@@ -2,6 +2,7 @@
 
 #include <erl_nif.h>
 
+#include "enacl.h"
 #include "hash.h"
 
 ERL_NIF_TERM enacl_crypto_shorthash_BYTES(ErlNifEnv *env, int argc,
@@ -28,7 +29,7 @@ ERL_NIF_TERM enacl_crypto_shorthash(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_shorthash_BYTES, &a)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   crypto_shorthash(a.data, m.data, m.size, k.data);
@@ -54,9 +55,8 @@ ERL_NIF_TERM enacl_crypto_hash(ErlNifEnv *env, int argc,
 
 bad_arg:
   return enif_make_badarg(env);
-
 err:
-  ret = enacl_error_tuple(env, "alloc_failed");
+  ret = enacl_internal_error(env);
 done:
   return ret;
 }
