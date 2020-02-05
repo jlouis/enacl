@@ -77,7 +77,7 @@ ERL_NIF_TERM enif_scramble_block_16(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(in.size, &out)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   crypto_block(out.data, in.data, key.data);
