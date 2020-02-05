@@ -762,12 +762,14 @@ pwhash_str_verify(PasswdHash, Passwd) ->
   end.
 
 prop_pwhash_str_verify() ->
-    ?FORALL({Passwd},
-            {?FAULT_RATE(1, 40, g_iodata())},
+    ?FORALL({Passwd, OLimit, MLimit},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             elements([interactive, moderate, sensitive]),
+             elements([interactive, moderate, sensitive])},
             begin
                 case v_iodata(Passwd) of
                     true ->
-                        Ascii = enacl:pwhash_str(Passwd),
+                        Ascii = enacl:pwhash_str(Passwd, OLimit, MLimit),
                         S = enacl:pwhash_str_verify(Ascii, Passwd),
                         equals(S, true);
                     false ->

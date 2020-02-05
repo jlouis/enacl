@@ -13,10 +13,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - sign
 
 - Implement missing EQC tests
-  - Generichash
-  - Multi-part generic hash
-  - pwhash
-    - Extend with limit for ops and memory as well.
 
 ## [Unreleased]
 
