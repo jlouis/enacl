@@ -10,15 +10,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Go through all calls and make them return streamlined exceptions if applicable.
   Pretty large change, but OTOH, this ought to happen before a 1.0 release as well.
   - kx
+    - Rename the key sizes so they follow libsodium.
   - secret
   - sign
-  - enacl_nif
 
 - Implement missing EQC tests
   - Generichash
   - Multi-part generic hash
   - pwhash
     - Extend with limit for ops and memory as well.
+  - kx
 
 ## [Unreleased]
 

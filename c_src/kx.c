@@ -31,12 +31,12 @@ ERL_NIF_TERM enacl_crypto_kx_keypair(ErlNifEnv *env, int argc,
   }
 
   if (!enif_alloc_binary(crypto_kx_PUBLICKEYBYTES, &pk)) {
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   if (!enif_alloc_binary(crypto_kx_SECRETKEYBYTES, &sk)) {
     enif_release_binary(&pk);
-    return enacl_error_tuple(env, "alloc_failed");
+    return enacl_internal_error(env);
   }
 
   crypto_kx_keypair(pk.data, sk.data);
@@ -68,12 +68,12 @@ enacl_crypto_kx_server_session_keys(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!enif_alloc_binary(crypto_kx_SESSIONKEYBYTES, &rx)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
+    ret = enacl_internal_error(env);
     goto done;
   }
 
   if (!enif_alloc_binary(crypto_kx_SESSIONKEYBYTES, &tx)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
+    ret = enacl_internal_error(env);
     goto release_rx;
   }
 
@@ -121,12 +121,12 @@ enacl_crypto_kx_client_session_keys(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!enif_alloc_binary(crypto_kx_SESSIONKEYBYTES, &rx)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
+    ret = enacl_internal_error(env);
     goto done;
   }
 
   if (!enif_alloc_binary(crypto_kx_SESSIONKEYBYTES, &tx)) {
-    ret = enacl_error_tuple(env, "alloc_failed");
+    ret = enacl_internal_error(env);
     goto release_rx;
   }
 

@@ -122,6 +122,24 @@ keypair_bad() ->
 keypair() ->
     ?FAULT(keypair_bad(), keypair_good()).
 
+kx_keypair_good() ->
+  #{ public := PK, secret := SK} = enacl:kx_keypair(),
+  {PK, SK}.
+
+kx_keypair_bad() ->
+  ?LET(X, elements([pk, sk]),
+  begin
+    #{ public := PK, secret := SK} = enacl:box_keypair(),
+    case X of
+      pk ->
+        PKBytes = enacl:kx_public_key_size(),
+        {oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= PKBytes)]), SK};
+      sk ->
+        SKBytes = enacl:kx_secret_key_size(),
+        {PK, oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= SKBytes)])}
+    end
+  end).
+
 %% CRYPTO BOX
 %% ---------------------------
 %% * box/4
@@ -879,6 +897,17 @@ prop_randombytes_uint32() ->
       V = enacl:randombytes_uint32(),
       is_integer(V)
     end).
+
+%% KX
+%% ---------------------------
+prop_kx() ->
+  ?FORALL({{CPK, CSK}, {SPK, SSK}}, {kx_keypair_good(), kx_keypair_good()},
+  begin
+    #{ client_tx := CTX, client_rx := CRX} = enacl:kx_client_session_keys(CPK, CSK, SPK),
+    #{ server_tx := STX, server_rx := SRX} = enacl:kx_server_session_keys(SPK, SSK, CPK),
+    %% This keypair must be shared in both directions
+    conjunction([{ctx_srx, equals(CTX, SRX)}, {stx_crx, equals(STX, CRX)}])
+  end).
 
 %% SCRAMBLING
 prop_scramble_block() ->
