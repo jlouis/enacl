@@ -44,8 +44,7 @@ groups() ->
                      aead_chacha20poly1305_ietf,
                      pwhash,
                      sign,
-                     kx,
-                     randombytes]},
+                     kx]},
 
     [Neg, Pos].
 

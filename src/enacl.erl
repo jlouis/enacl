@@ -171,9 +171,9 @@
          kx_keypair/0,
          kx_client_session_keys/3,
          kx_server_session_keys/3,
-         kx_public_key_size/0,
-         kx_secret_key_size/0,
-         kx_session_key_size/0
+         kx_PUBLICKEYBYTES/0,
+         kx_SECRETKEYBYTES/0,
+         kx_SESSIONKEYBYTES/0
 ]).
 
 %% Internal verification of the system
@@ -1132,22 +1132,22 @@ kx_server_session_keys(ServerPk, ServerSk, ClientPk) ->
     {Rx, Tx} = enacl_nif:crypto_kx_server_session_keys(ServerPk, ServerSk, ClientPk),
     #{ server_rx => Rx, server_tx => Tx}.
 
-%% @doc kx_session_key_size/0 returns the number of bytes of the generated during key exchange session key.
+%% @doc kx_SESSIONKEYBYTES/0 returns the number of bytes of the generated during key exchange session key.
 %% @end
--spec kx_session_key_size() -> pos_integer().
-kx_session_key_size() ->
+-spec kx_SESSIONKEYBYTES() -> pos_integer().
+kx_SESSIONKEYBYTES() ->
     enacl_nif:crypto_kx_SESSIONKEYBYTES().
 
-%% @doc kx_public_key_size/0 returns the number of bytes of the public key used in key exchange.
+%% @doc kx_PUBLICKEYBYTES/0 returns the number of bytes of the public key used in key exchange.
 %% @end
--spec kx_public_key_size() -> pos_integer().
-kx_public_key_size() ->
+-spec kx_PUBLICKEYBYTES() -> pos_integer().
+kx_PUBLICKEYBYTES() ->
     enacl_nif:crypto_kx_PUBLICKEYBYTES().
 
-%% @doc kx_secret_key_size/0 returns the number of bytes of the secret key used in key exchange.
+%% @doc kx_SECRETKEYBYTES/0 returns the number of bytes of the secret key used in key exchange.
 %% @end
--spec kx_secret_key_size() -> pos_integer().
-kx_secret_key_size() ->
+-spec kx_SECRETKEYBYTES() -> pos_integer().
+kx_SECRETKEYBYTES() ->
     enacl_nif:crypto_kx_SECRETKEYBYTES().
 
 %% AEAD ChaCha20 Poly1305
