@@ -83,6 +83,18 @@ generichash_chunked(_Config) ->
     Expected = <<46,49,32,18,13,186,182,105,106,122,253,139,89,176,169,141,
                  73,93,99,6,41,216,110,41>>,
     Expected = enacl:generichash_final(State),
+    try enacl:generichash_final(State) of
+        _ -> ct:fail(must_finalize)
+    catch
+        error:enacl_finalized ->
+            ok
+    end,
+    try enacl:generichash_update(State, <<"x">>) of
+        _ -> ct:fail(must_finalize)
+    catch
+        error:enacl_finalized ->
+            ok
+    end,
     ok.
 
 generichash_chunked(State, _Msg, 0) -> State;

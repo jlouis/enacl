@@ -235,7 +235,6 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   enif_mutex_lock(obj->mtx);
-
   if (!obj->alive) {
     goto err;
   }
@@ -251,7 +250,7 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
 bad_arg:
   return enif_make_badarg(env);
 err:
-  ret = enacl_internal_error(env);
+  ret = enacl_error_finalized(env);
 done:
   enif_mutex_unlock(obj->mtx);
   return ret;
@@ -271,7 +270,8 @@ ERL_NIF_TERM enacl_crypto_generichash_final(ErlNifEnv *env, int argc,
 
   enif_mutex_lock(obj->mtx);
   if (!obj->alive) {
-    goto bad_arg;
+    ret = enacl_error_finalized(env);
+    goto done;
   }
 
   if (!enif_alloc_binary(obj->outlen, &hash)) {
@@ -295,7 +295,7 @@ bad_arg:
 release:
   enif_release_binary(&hash);
 err:
-  ret = enif_make_badarg(env);
+  ret = enacl_internal_error(env);
 done:
   enif_mutex_unlock(obj->mtx);
   return ret;
