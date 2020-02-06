@@ -74,6 +74,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   closer than before. In particular, some dead code has been removed as a result.
 - Constants are now named by their libsodium counterpart. This should make it easier
   to find the correct names given the libsodium documentation.
+- Generichash now checks if a `_final` call has already happened and rejects further
+  hashing on the object. The rejection is an error: if you ever do this, your code
+  is definitely wrong and there is no recovery possible.
 
 ### Fixed
 - Fix a resource leak in generichash/sign init/update/final.
