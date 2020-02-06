@@ -133,7 +133,7 @@ sign(_Config) ->
     {ok, Signature} = enacl:sign_final_create(Create, SK),
     StateVerify = enacl:sign_init(),
     Verify = sign_chunked(StateVerify, Msg, 10000),
-    ok = enacl:sign_final_verify(Verify, Signature, PK),
+    true = enacl:sign_final_verify(Verify, Signature, PK),
     ok.
 
 sign_chunked(S, _M, 0) -> S;

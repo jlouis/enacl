@@ -83,8 +83,8 @@ v_binary(_, _) -> false.
 
 
 %% Typical generators based on the binaries
-nonce() -> g_binary(enacl:box_nonce_size()).
-nonce_valid(N) -> v_binary(enacl:box_nonce_size(), N).
+nonce() -> g_binary(enacl:box_NONCEBYTES()).
+nonce_valid(N) -> v_binary(enacl:box_NONCEBYTES(), N).
 
 %% Generator of natural numbers
 g_nat() ->
@@ -111,10 +111,10 @@ keypair_bad() ->
         #{ public := PK, secret := SK} = enacl:box_keypair(),
         case X of
             pk ->
-              PKBytes = enacl:box_public_key_bytes(),
+              PKBytes = enacl:box_PUBLICKEYBYTES(),
               {oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= PKBytes)]), SK};
             sk ->
-              SKBytes = enacl:box_secret_key_bytes(),
+              SKBytes = enacl:box_SECRETKEYBYTES(),
               {PK, oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= SKBytes)])}
         end
       end).
@@ -159,8 +159,8 @@ g_generichash_size() ->
 %% * box_afternm/3
 %% * box_open_afternm/3
 keypair_valid(PK, SK) when is_binary(PK), is_binary(SK) ->
-    PKBytes = enacl:box_public_key_bytes(),
-    SKBytes = enacl:box_secret_key_bytes(),
+    PKBytes = enacl:box_PUBLICKEYBYTES(),
+    SKBytes = enacl:box_SECRETKEYBYTES(),
     byte_size(PK) == PKBytes andalso byte_size(SK) == SKBytes;
 keypair_valid(_PK, _SK) -> false.
 
@@ -264,11 +264,11 @@ beforenm_key() ->
                 oneof([
                   elements([a,b,c]),
                   real(),
-                  ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:box_beforenm_bytes())
+                  ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:box_BEFORENMBYTES())
                   ])
         end).
 
-v_key(K) when is_binary(K) -> byte_size(K) == enacl:box_beforenm_bytes();
+v_key(K) when is_binary(K) -> byte_size(K) == enacl:box_BEFORENMBYTES();
 v_key(_) -> false.
 
 prop_beforenm_correct() ->
@@ -324,11 +324,11 @@ sign_keypair_bad() ->
       KP = enacl:sign_keypair(),
       case X of
         pk ->
-          Sz = enacl:sign_keypair_public_size(),
+          Sz = enacl:sign_PUBLICBYTES(),
           ?LET(Wrong, oneof([a, int(), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)]),
             KP#{ public := Wrong });
         sk ->
-          Sz = enacl:sign_keypair_secret_size(),
+          Sz = enacl:sign_SECRETBYTES(),
           ?LET(Wrong, oneof([a, int(), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)]),
             KP#{ secret := Wrong })
       end
@@ -342,12 +342,12 @@ sign_keypair() ->
 
 sign_keypair_public_valid(#{ public := Public })
   when is_binary(Public) ->
-    byte_size(Public) == enacl:sign_keypair_public_size();
+    byte_size(Public) == enacl:sign_PUBLICBYTES();
 sign_keypair_public_valid(_) -> false.
 
 sign_keypair_secret_valid(#{ secret := Secret })
   when is_binary(Secret) ->
-    byte_size(Secret) == enacl:sign_keypair_secret_size();
+    byte_size(Secret) == enacl:sign_SECRETBYTES();
 sign_keypair_secret_valid(_) -> false.
 
 sign_keypair_valid(KP) ->
@@ -408,11 +408,11 @@ signed_message_good_d(M) ->
                end)}]).
 
 signed_message_bad() ->
-    Sz = enacl:sign_keypair_public_size(),
+    Sz = enacl:sign_PUBLICBYTES(),
     {binary(), oneof([a, int(), ?SUCHTHAT(B, binary(Sz), byte_size(B) /= Sz)])}.
 
 signed_message_bad_d() ->
-    Sz = enacl:sign_keypair_public_size(),
+    Sz = enacl:sign_PUBLICBYTES(),
     {binary(), oneof([a, int(), ?SUCHTHAT(B, binary(Sz), byte_size(B) /= Sz)])}.
 
 signed_message(M) ->
@@ -496,19 +496,19 @@ prop_seal_box_correct() ->
 %% * secretbox/3
 %% * secretbo_open/3
 secret_key_good() ->
-	Sz = enacl:secretbox_key_size(),
+	Sz = enacl:secretbox_KEYBYTES(),
 	binary(Sz).
 
 secret_key_bad() ->
 	oneof([return(a),
 	       nat(),
-	       ?SUCHTHAT(B, binary(), byte_size(B) /= enacl:secretbox_key_size())]).
+	       ?SUCHTHAT(B, binary(), byte_size(B) /= enacl:secretbox_KEYBYTES())]).
 
 secret_key() ->
 	?FAULT(secret_key_bad(), secret_key_good()).
 
 secret_key_valid(SK) when is_binary(SK) ->
-	Sz = enacl:secretbox_key_size(),
+	Sz = enacl:secretbox_KEYBYTES(),
 	byte_size(SK) == Sz;
 secret_key_valid(_SK) -> false.
 
@@ -618,6 +618,27 @@ xor_bytes(<<A, As/binary>>, <<B, Bs/binary>>) ->
     [A bxor B | xor_bytes(As, Bs)];
 xor_bytes(<<>>, <<>>) -> [].
 
+positive() ->
+  ?LET(N, nat(), N+1).
+
+chacha20_nonce() ->
+  Sz = enacl:stream_chacha20_NONCEBYTES(),
+  binary(Sz).
+
+chacha20_key() ->
+  Sz = enacl:stream_chacha20_KEYBYTES(),
+  binary(Sz).
+
+prop_stream_chacha20_correct() ->
+  ?FORALL(Len, positive(),
+    ?FORALL({Msg, Nonce, Key}, {binary(Len), chacha20_nonce(), chacha20_key()},
+      begin
+        CT = enacl:stream_chacha20_xor(Msg, Nonce, Key),
+        Stream = enacl:stream_chacha20(Len, Nonce, Key),
+        CT2 = list_to_binary(xor_bytes(Stream, Msg)),
+        equals(CT, CT2)
+      end)).
+
 %% CRYPTO AUTH
 %% ------------------------------------------------------------
 %% * auth/2
@@ -635,19 +656,19 @@ prop_auth_correct() ->
        end).
 
 authenticator_bad() ->
-    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:auth_size())]).
+    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:auth_BYTES())]).
 
 authenticator_good(Msg, Key) when is_binary(Key) ->
-    Sz = enacl:secretbox_key_size(),
+    Sz = enacl:secretbox_KEYBYTES(),
     case v_iodata(Msg) andalso byte_size(Key) == Sz of
       true ->
-        frequency([{1, ?LAZY({invalid, binary(enacl:auth_size())})},
+        frequency([{1, ?LAZY({invalid, binary(enacl:auth_BYTES())})},
                    {3, return({valid, enacl:auth(Msg, Key)})}]);
       false ->
-        binary(enacl:auth_size())
+        binary(enacl:auth_BYTES())
     end;
 authenticator_good(_Msg, _Key) ->
-    binary(enacl:auth_size()).
+    binary(enacl:auth_BYTES()).
 
 authenticator(Msg, Key) ->
   ?FAULT(authenticator_bad(), authenticator_good(Msg, Key)).
@@ -690,19 +711,19 @@ prop_onetimeauth_correct() ->
        end).
 
 ot_authenticator_bad() ->
-    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:onetime_auth_size())]).
+    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:onetime_auth_BYTES())]).
 
 ot_authenticator_good(Msg, Key) when is_binary(Key) ->
-    Sz = enacl:secretbox_key_size(),
+    Sz = enacl:secretbox_KEYBYTES(),
     case v_iodata(Msg) andalso byte_size(Key) == Sz of
       true ->
-        frequency([{1, ?LAZY({invalid, binary(enacl:onetime_auth_size())})},
+        frequency([{1, ?LAZY({invalid, binary(enacl:onetime_auth_BYTES())})},
                    {3, return({valid, enacl:onetime_auth(Msg, Key)})}]);
       false ->
-        binary(enacl:onetime_auth_size())
+        binary(enacl:onetime_auth_BYTES())
     end;
 ot_authenticator_good(_Msg, _Key) ->
-    binary(enacl:auth_size()).
+    binary(enacl:auth_BYTES()).
 
 ot_authenticator(Msg, Key) ->
   ?FAULT(ot_authenticator_bad(), ot_authenticator_good(Msg, Key)).

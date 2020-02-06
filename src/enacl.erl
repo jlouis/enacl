@@ -25,14 +25,14 @@
          box_beforenm/2,
          box_afternm/3,
          box_open_afternm/3,
-         box_nonce_size/0,
-         box_public_key_bytes/0,
-         box_secret_key_bytes/0,
-         box_beforenm_bytes/0,
+         box_NONCEBYTES/0,
+         box_PUBLICKEYBYTES/0,
+         box_SECRETKEYBYTES/0,
+         box_BEFORENMBYTES/0,
 
-         sign_keypair_public_size/0,
-         sign_keypair_secret_size/0,
-         sign_keypair_seed_size/0,
+         sign_PUBLICBYTES/0,
+         sign_SECRETBYTES/0,
+         sign_SEEDBYTES/0,
          sign_keypair/0,
          sign_seed_keypair/1,
          sign/2,
@@ -52,14 +52,14 @@
 %% Secret key crypto
 -export([
          %% EQC
-         secretbox_key_size/0,
-         secretbox_nonce_size/0,
+         secretbox_KEYBYTES/0,
+         secretbox_NONCEBYTES/0,
          secretbox/3,
          secretbox_open/3,
 
          %% No Tests!
-         stream_chacha20_key_size/0,
-         stream_chacha20_nonce_size/0,
+         stream_chacha20_KEYBYTES/0,
+         stream_chacha20_NONCEBYTES/0,
          stream_chacha20/3,
          stream_chacha20_xor/3,
 
@@ -79,22 +79,22 @@
          aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX/0,
 
          %% EQC
-         stream_key_size/0,
-         stream_nonce_size/0,
+         stream_KEYBYTES/0,
+         stream_NONCEBYTES/0,
          stream/3,
 
          %% No Tests!
          stream_xor/3,
 
          %% EQC
-         auth_key_size/0,
-         auth_size/0,
+         auth_KEYBYTES/0,
+         auth_BYTES/0,
          auth/2,
          auth_verify/3,
 
          %% EQC
-         onetime_auth_key_size/0,
-         onetime_auth_size/0,
+         onetime_auth_KEYBYTES/0,
+         onetime_auth_BYTES/0,
          onetime_auth/2,
          onetime_auth_verify/3
 ]).
@@ -189,9 +189,9 @@
 -define(SECRETBOX_OPEN_REDUCTIONS, 17 * 2).
 -define(STREAM_SIZE, 16 * 1024).
 -define(STREAM_REDUCTIONS, 17 * 2).
--define(AUTH_SIZE, 4 * 1024).
+-define(auth_BYTES, 4 * 1024).
 -define(AUTH_REDUCTIONS, 17 * 2).
--define(ONETIME_AUTH_SIZE, 16 * 1024).
+-define(ONETIME_auth_BYTES, 16 * 1024).
 -define(ONETIME_AUTH_REDUCTIONS, 16 * 2).
 -define(ED25519_PUBLIC_TO_CURVE_REDS, 20 * 2).
 -define(ED25519_SECRET_TO_CURVE_REDS, 20 * 2).
@@ -522,35 +522,35 @@ box_open_afternm(CipherText, Nonce, Key) ->
             enacl_nif:crypto_box_open_afternm([?P_BOXZEROBYTES, CipherText], Nonce, Key)
     end.
 
-%% @doc box_nonce_size/0 return the byte-size of the nonce
+%% @doc box_NONCEBYTES()/0 return the byte-size of the nonce
 %%
 %% Used to obtain the size of the nonce.
 %% @end.
--spec box_nonce_size() -> pos_integer().
-box_nonce_size() ->
+-spec box_NONCEBYTES() -> pos_integer().
+box_NONCEBYTES() ->
     enacl_nif:crypto_box_NONCEBYTES().
 
 %% @private
--spec box_public_key_bytes() -> pos_integer().
-box_public_key_bytes() ->
+-spec box_PUBLICKEYBYTES() -> pos_integer().
+box_PUBLICKEYBYTES() ->
     enacl_nif:crypto_box_PUBLICKEYBYTES().
 
 %% @private
-box_beforenm_bytes() ->
+box_BEFORENMBYTES() ->
     enacl_nif:crypto_box_BEFORENMBYTES().
 
 %% Signatures
 
 %% @private
-sign_keypair_public_size() ->
+sign_PUBLICBYTES() ->
     enacl_nif:crypto_sign_PUBLICKEYBYTES().
 
 %% @private
-sign_keypair_secret_size() ->
+sign_SECRETBYTES() ->
     enacl_nif:crypto_sign_SECRETKEYBYTES().
 
 %% @private
-sign_keypair_seed_size() ->
+sign_SEEDBYTES() ->
     enacl_nif:crypto_sign_SEEDBYTES().
 
 %% @doc sign_keypair/0 returns a signature keypair for signing
@@ -666,8 +666,8 @@ sign_final_verify(SignState, SIG, PK) ->
     enacl_nif:crypto_sign_final_verify(SignState, SIG, PK).
 
 %% @private
--spec box_secret_key_bytes() -> pos_integer().
-box_secret_key_bytes() ->
+-spec box_SECRETKEYBYTES() -> pos_integer().
+box_SECRETKEYBYTES() ->
     enacl_nif:crypto_box_SECRETKEYBYTES().
 
 %% @doc seal_box/2 encrypts an anonymous message to another party.
@@ -741,30 +741,30 @@ secretbox_open(CipherText, Nonce, Key) ->
             enacl_nif:crypto_secretbox_open([?S_BOXZEROBYTES, CipherText], Nonce, Key)
     end.
 
-%% @doc secretbox_nonce_size/0 returns the size of the secretbox nonce
+%% @doc secretbox_NONCEBYTES()/0 returns the size of the secretbox nonce
 %%
 %% When encrypting with a secretbox, the nonce must have this size
 %% @end
-secretbox_nonce_size() ->
+secretbox_NONCEBYTES() ->
     enacl_nif:crypto_secretbox_NONCEBYTES().
 
-%% @doc secretbox_key_size/0 returns the size of the secretbox key
+%% @doc secretbox_KEYBYTES/0 returns the size of the secretbox key
 %%
 %% When encrypting with a secretbox, the key must have this size
 %% @end
-secretbox_key_size() ->
+secretbox_KEYBYTES() ->
     enacl_nif:crypto_secretbox_KEYBYTES().
 
-%% @doc stream_chacha20_nonce_size/0 returns the byte size of the nonce for streams
+%% @doc stream_chacha20_NONCEBYTES/0 returns the byte size of the nonce for streams
 %% @end
--spec stream_chacha20_nonce_size() -> ?CRYPTO_STREAM_CHACHA20_NONCEBYTES.
-stream_chacha20_nonce_size() ->
+-spec stream_chacha20_NONCEBYTES() -> ?CRYPTO_STREAM_CHACHA20_NONCEBYTES.
+stream_chacha20_NONCEBYTES() ->
     ?CRYPTO_STREAM_CHACHA20_NONCEBYTES.
 
-%% @doc stream_key_size/0 returns the byte size of the key for streams
+%% @doc stream_chacha20_KEYBYTES/0 returns the byte size of the key for streams
 %% @end
--spec stream_chacha20_key_size() -> ?CRYPTO_STREAM_CHACHA20_KEYBYTES.
-stream_chacha20_key_size() ->
+-spec stream_chacha20_KEYBYTES() -> ?CRYPTO_STREAM_CHACHA20_KEYBYTES.
+stream_chacha20_KEYBYTES() ->
     ?CRYPTO_STREAM_CHACHA20_KEYBYTES.
 
 %% @doc stream_chacha20/3 produces a cryptographic stream suitable for secret-key encryption
@@ -812,16 +812,16 @@ stream_chacha20_xor(Msg, Nonce, Key) ->
             enacl_nif:crypto_stream_chacha20_xor(Msg, Nonce, Key)
     end.
 
-%% @doc stream_nonce_size/0 returns the byte size of the nonce for streams
+%% @doc stream_NONCEBYTES/0 returns the byte size of the nonce for streams
 %% @end
--spec stream_nonce_size() -> ?CRYPTO_STREAM_NONCEBYTES.
-stream_nonce_size() ->
+-spec stream_NONCEBYTES() -> ?CRYPTO_STREAM_NONCEBYTES.
+stream_NONCEBYTES() ->
     ?CRYPTO_STREAM_NONCEBYTES.
 
-%% @doc stream_key_size/0 returns the byte size of the key for streams
+%% @doc stream_KEYBYTES/0 returns the byte size of the key for streams
 %% @end
--spec stream_key_size() -> ?CRYPTO_STREAM_KEYBYTES.
-stream_key_size() ->
+-spec stream_KEYBYTES() -> ?CRYPTO_STREAM_KEYBYTES.
+stream_KEYBYTES() ->
     ?CRYPTO_STREAM_KEYBYTES.
 
 %% @doc stream/3 produces a cryptographic stream suitable for secret-key encryption
@@ -869,16 +869,16 @@ stream_xor(Msg, Nonce, Key) ->
             enacl_nif:crypto_stream_xor(Msg, Nonce, Key)
     end.
 
-%% @doc auth_key_size/0 returns the byte-size of the authentication key
+%% @doc auth_KEYBYTES/0 returns the byte-size of the authentication key
 %% @end
--spec auth_key_size() -> pos_integer().
-auth_key_size() ->
+-spec auth_KEYBYTES() -> pos_integer().
+auth_KEYBYTES() ->
     enacl_nif:crypto_auth_KEYBYTES().
 
-%% @doc auth_size/0 returns the byte-size of the authenticator
+%% @doc auth_BYTES/0 returns the byte-size of the authenticator
 %% @end
--spec auth_size() -> pos_integer().
-auth_size() ->
+-spec auth_BYTES() -> pos_integer().
+auth_BYTES() ->
     enacl_nif:crypto_auth_BYTES().
 
 %% @doc auth/2 produces an authenticator (MAC) for a message
@@ -893,8 +893,8 @@ auth_size() ->
       Authenticator :: binary().
 auth(Msg, Key) ->
     case iolist_size(Msg) of
-      K when K =< ?AUTH_SIZE ->
-          bump(enacl_nif:crypto_auth_b(Msg, Key), ?AUTH_REDUCTIONS, ?AUTH_SIZE, K);
+      K when K =< ?auth_BYTES ->
+          bump(enacl_nif:crypto_auth_b(Msg, Key), ?AUTH_REDUCTIONS, ?auth_BYTES, K);
       _ ->
           enacl_nif:crypto_auth(Msg, Key)
   end.
@@ -911,10 +911,10 @@ auth(Msg, Key) ->
       Key :: binary().
 auth_verify(A, M, K) ->
     case iolist_size(M) of
-        K when K =< ?AUTH_SIZE ->
+        K when K =< ?auth_BYTES ->
             bump(enacl_nif:crypto_auth_verify_b(A, M, K),
                  ?AUTH_REDUCTIONS,
-                 ?AUTH_SIZE,
+                 ?auth_BYTES,
                  K);
         _ ->
             enacl_nif:crypto_auth_verify(A, M, K)
@@ -961,10 +961,10 @@ shorthash(Msg, Key) ->
       Authenticator :: binary().
 onetime_auth(Msg, Key) ->
     case iolist_size(Msg) of
-        K when K =< ?ONETIME_AUTH_SIZE ->
+        K when K =< ?ONETIME_auth_BYTES ->
             bump(enacl_nif:crypto_onetimeauth_b(Msg, Key),
                  ?ONETIME_AUTH_REDUCTIONS,
-                 ?ONETIME_AUTH_SIZE,
+                 ?ONETIME_auth_BYTES,
                  K);
         _ ->
             enacl_nif:crypto_onetimeauth(Msg, Key)
@@ -983,25 +983,25 @@ onetime_auth(Msg, Key) ->
       Key :: binary().
 onetime_auth_verify(A, M, K) ->
     case iolist_size(M) of
-        K when K =< ?ONETIME_AUTH_SIZE ->
+        K when K =< ?ONETIME_auth_BYTES ->
             bump(enacl_nif:crypto_onetimeauth_verify_b(A, M, K),
                  ?ONETIME_AUTH_REDUCTIONS,
-                 ?ONETIME_AUTH_SIZE,
+                 ?ONETIME_auth_BYTES,
                  K);
         _ ->
             enacl_nif:crypto_onetimeauth_verify(A, M, K)
     end.
 
-%% @doc onetime_auth_size/0 returns the number of bytes of the one-time authenticator
+%% @doc onetime_auth_BYTES/0 returns the number of bytes of the one-time authenticator
 %% @end
--spec onetime_auth_size() -> pos_integer().
-onetime_auth_size() ->
+-spec onetime_auth_BYTES() -> pos_integer().
+onetime_auth_BYTES() ->
     enacl_nif:crypto_onetimeauth_BYTES().
 
-%% @doc onetime_auth_key_size/0 returns the byte-size of the onetime authentication key
+%% @doc onetime_auth_KEYBYTES/0 returns the byte-size of the onetime authentication key
 %% @end
--spec onetime_auth_key_size() -> pos_integer().
-onetime_auth_key_size() ->
+-spec onetime_auth_KEYBYTES() -> pos_integer().
+onetime_auth_KEYBYTES() ->
     enacl_nif:crypto_onetimeauth_KEYBYTES().
 
 %% Curve 25519 Crypto

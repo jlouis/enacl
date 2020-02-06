@@ -11,10 +11,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   Pretty large change, but OTOH, this ought to happen before a 1.0 release as well.
   - Generichashes must support the finalized state
 
-- Implement missing EQC tests
-  - stream_chacha20...
-  - stream_xor...
-
 ## [Unreleased]
 
 ### Compatibility
