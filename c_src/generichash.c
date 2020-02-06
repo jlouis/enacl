@@ -96,8 +96,8 @@ ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
 
   // Verify that hash size is
   // crypto_generichash_BYTES/crypto_generichash_BYTES_MIN/crypto_generichash_BYTES_MAX
-  if ((hash_size <= crypto_generichash_BYTES_MIN) ||
-      (hash_size >= crypto_generichash_BYTES_MAX)) {
+  if ((hash_size < crypto_generichash_BYTES_MIN) ||
+      (hash_size > crypto_generichash_BYTES_MAX)) {
     goto bad_arg;
   }
 
@@ -105,8 +105,8 @@ ERL_NIF_TERM enacl_crypto_generichash(ErlNifEnv *env, int argc,
   unsigned char *k = key.data;
   if (0 == key.size) {
     k = NULL;
-  } else if (key.size <= crypto_generichash_KEYBYTES_MIN ||
-             key.size >= crypto_generichash_KEYBYTES_MAX) {
+  } else if (key.size < crypto_generichash_KEYBYTES_MIN ||
+             key.size > crypto_generichash_KEYBYTES_MAX) {
     goto bad_arg;
   }
 
@@ -150,8 +150,8 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   // Verify that hash size is valid
-  if ((hash_size <= crypto_generichash_BYTES_MIN) ||
-      (hash_size >= crypto_generichash_BYTES_MAX)) {
+  if ((hash_size < crypto_generichash_BYTES_MIN) ||
+      (hash_size > crypto_generichash_BYTES_MAX)) {
     goto bad_arg;
   }
 
@@ -159,8 +159,8 @@ ERL_NIF_TERM enacl_crypto_generichash_init(ErlNifEnv *env, int argc,
   unsigned char *k = key.data;
   if (0 == key.size) {
     k = NULL;
-  } else if (key.size <= crypto_generichash_KEYBYTES_MIN ||
-             key.size >= crypto_generichash_KEYBYTES_MAX) {
+  } else if (key.size < crypto_generichash_KEYBYTES_MIN ||
+             key.size > crypto_generichash_KEYBYTES_MAX) {
     goto bad_arg;
   }
 

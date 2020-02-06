@@ -140,6 +140,17 @@ kx_keypair_bad() ->
     end
   end).
 
+g_generichash_data() ->
+  binary().
+
+g_generichash_key() ->
+  ?LET({Min, Max}, {return(enacl_nif:crypto_generichash_KEYBYTES_MIN()), return(enacl_nif:crypto_generichash_KEYBYTES_MAX())},
+    largebinary({limit, Min, Max})).
+
+g_generichash_size() ->
+  ?LET({Min, Max}, {return(enacl_nif:crypto_generichash_BYTES_MIN()), return(enacl_nif:crypto_generichash_BYTES_MAX())},
+    choose(Min, Max)).
+
 %% CRYPTO BOX
 %% ---------------------------
 %% * box/4
@@ -798,6 +809,22 @@ prop_crypto_shorthash_eq() ->
         end
       end
     ).
+prop_crypto_generichash_eq() ->
+  ?FORALL({Sz, X, Key}, {g_generichash_size(), g_generichash_data(), g_generichash_key()},
+      equals(enacl:generichash(Sz, X, Key), enacl:generichash(Sz, X, Key))).
+
+generichash_loop(S, []) -> S;
+generichash_loop(S, [M|Ms]) ->
+  S2 = enacl:generichash_update(S, M),
+  generichash_loop(S2, Ms).
+
+prop_crypto_generichash_multi_part_eq() ->
+  ?FORALL({Sz, Xs, Key}, {g_generichash_size(), list(g_generichash_data()), g_generichash_key()},
+  begin
+    S1 = generichash_loop(enacl:generichash_init(Sz, Key), Xs),
+    S2 = generichash_loop(enacl:generichash_init(Sz, Key), Xs),
+    equals(enacl:generichash_final(S1), enacl:generichash_final(S2))
+  end).
 
 prop_crypto_shorthash_neq() ->
   ?FORALL({X, Y}, diff_pair(),
