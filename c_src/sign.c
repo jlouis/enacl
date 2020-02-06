@@ -56,7 +56,8 @@ ERL_NIF_TERM enacl_crypto_sign_init(ErlNifEnv *env, int argc,
 
   if ((obj = enif_alloc_resource(enacl_sign_ctx_rtype,
                                  sizeof(enacl_sign_ctx))) == NULL) {
-    goto err;
+    ret = enacl_internal_error(env);
+    goto done;
   }
   obj->alive = 0;
   obj->state = enif_alloc(crypto_sign_statebytes());
@@ -90,8 +91,6 @@ free:
 release:
   // This also frees the mutex via the destructor
   enif_release_resource(obj);
-err:
-  ret = enacl_internal_error(env);
 done:
   return ret;
 }
