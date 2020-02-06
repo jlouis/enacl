@@ -421,9 +421,9 @@ prop_sign_detached_open() ->
               true ->
                   case SignMsg of
                     {valid, Sig} ->
-                        equals({ok, Msg}, enacl:sign_verify_detached(Sig, Msg, PK));
+                        equals(true, enacl:sign_verify_detached(Sig, Msg, PK));
                     {invalid, Sig} ->
-                        equals({error, failed_verification}, enacl:sign_verify_detached(Sig, Msg, PK))
+                        equals(false, enacl:sign_verify_detached(Sig, Msg, PK))
                   end;
               false ->
                   badargs(fun() -> enacl:sign_verify_detached(SignMsg, Msg, PK) end)

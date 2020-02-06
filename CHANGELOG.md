@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Go through all calls and make them return streamlined exceptions if applicable.
   Pretty large change, but OTOH, this ought to happen before a 1.0 release as well.
-  - secret
   - sign
 
 - Implement missing EQC tests
@@ -27,6 +26,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   `aead_chacha20poly1305_ietf_*` but note it is *not* just a simple substitution
   into your code.
 - The `kx` constants have been renamed to follow libsodium one-to-one.
+- All calls with `verify` now returns booleans. See `sign_verify_detached`, which
+  were changed by this.
 
 ### Removed
 - The functions of the form `aead_chacha20poly1305_*` were removed. They implement

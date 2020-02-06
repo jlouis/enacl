@@ -215,9 +215,9 @@ ERL_NIF_TERM enacl_crypto_sign_final_verify(ErlNifEnv *env, int argc,
   }
 
   if (0 == crypto_sign_final_verify(obj->state, sig.data, pk.data)) {
-    ret = enif_make_atom(env, ATOM_OK);
+    ret = enif_make_atom(env, "true");
   } else {
-    ret = enacl_error_tuple(env, "failed_verification");
+    ret = enif_make_atom(env, "false");
   }
   // Mark as done
   goto cleanup;

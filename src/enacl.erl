@@ -623,17 +623,14 @@ sign_detached(M, SK) ->
 %% message for the given public key.
 %%
 %% Given a signature `SIG', a message `M', and a public key `PK', the function computes
-%% true iff the `SIG' is valid for `M' and `PK'.
--spec sign_verify_detached(SIG, M, PK) -> {ok, M} | {error, failed_verification}
+%% true iff the `SIG' is valid for `M' and `PK'; false otherwise.
+-spec sign_verify_detached(SIG, M, PK) -> boolean()
     when
       SIG :: binary(),
       M   :: iodata(),
       PK  :: binary().
 sign_verify_detached(SIG, M, PK) ->
-    case enacl_nif:crypto_sign_verify_detached(SIG, M, PK) of
-        true -> {ok, M};
-        false -> {error, failed_verification}
-    end.
+    enacl_nif:crypto_sign_verify_detached(SIG, M, PK).
 
 -type sign_state() :: reference().
 
@@ -669,7 +666,7 @@ sign_final_create(SignState, SK) ->
 %% Verifies that `SIG` is a valid signature for the message whose content has
 %% been previously supplied using `sign_update/2` using the public key `PK.`
 %% @end
--spec sign_final_verify(S, SIG, PK) -> ok | {error, failed_verification}
+-spec sign_final_verify(S, SIG, PK) -> boolean()
     when S :: sign_state(),
          SIG :: binary(),
          PK :: iodata().
