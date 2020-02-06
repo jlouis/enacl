@@ -10,3 +10,7 @@ ERL_NIF_TERM enacl_error_tuple(ErlNifEnv *env, char *error_atom) {
 ERL_NIF_TERM enacl_internal_error(ErlNifEnv *env) {
   return enif_raise_exception(env, enif_make_atom(env, "enacl_internal_error"));
 }
+
+ERL_NIF_TERM enacl_error_finalized(ErlNifEnv *env) {
+  return enif_raise_exception(env, enif_make_atom(env, "enacl_finalized"));
+}

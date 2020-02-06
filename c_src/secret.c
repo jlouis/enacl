@@ -130,9 +130,11 @@ ERL_NIF_TERM enacl_crypto_secretbox_open(ErlNifEnv *env, int argc,
     return enacl_error_tuple(env, "failed_verification");
   }
 
-  return enif_make_sub_binary(
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin = enif_make_sub_binary(
       env, enif_make_binary(env, &padded_msg), crypto_secretbox_ZEROBYTES,
       padded_ciphertext.size - crypto_secretbox_ZEROBYTES);
+  return enif_make_tuple2(env, ret_ok, ret_bin);
 }
 
 ERL_NIF_TERM enacl_crypto_stream_chacha20(ErlNifEnv *env, int argc,

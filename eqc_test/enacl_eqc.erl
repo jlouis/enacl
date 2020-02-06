@@ -607,24 +607,6 @@ xor_bytes(<<A, As/binary>>, <<B, Bs/binary>>) ->
     [A bxor B | xor_bytes(As, Bs)];
 xor_bytes(<<>>, <<>>) -> [].
 
-%% prop_stream_xor_correct() ->
-%%     ?FORALL({Msg, Nonce, Key},
-%%             {?FAULT_RATE(1, 40, g_iodata()),
-%%              ?FAULT_RATE(1, 40, nonce()),
-%%              ?FAULT_RATE(1, 40, secret_key())},
-%%         case v_iodata(Msg) andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
-%%             true ->
-%%                 Stream = enacl:stream(iolist_size(Msg), Nonce, Key),
-%%                 CipherText = enacl:stream_xor(Msg, Nonce, Key),
-%%                 StreamXor = enacl:stream_xor(CipherText, Nonce, Key),
-%%                 conjunction([
-%%                     {'xor', equals(iolist_to_binary(Msg), StreamXor)},
-%%                     {stream, equals(iolist_to_binary(xor_bytes(Stream, iolist_to_binary(Msg))), CipherText)}
-%%                 ]);
-%%             false ->
-%%                 badargs(fun() -> enacl:stream_xor(Msg, Nonce, Key) end)
-%%         end).
-
 %% CRYPTO AUTH
 %% ------------------------------------------------------------
 %% * auth/2

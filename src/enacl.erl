@@ -30,7 +30,6 @@
          box_secret_key_bytes/0,
          box_beforenm_bytes/0,
 
-         %% EQC
          sign_keypair_public_size/0,
          sign_keypair_secret_size/0,
          sign_keypair_seed_size/0,
@@ -46,7 +45,6 @@
          sign_final_create/2,
          sign_final_verify/3,
 
-         %% EQC
          box_seal/2,
          box_seal_open/3
 ]).
@@ -73,7 +71,6 @@
          aead_chacha20poly1305_ietf_ABYTES/0,
          aead_chacha20poly1305_ietf_MESSAGEBYTES_MAX/0,
 
-         %% No Tests!
          aead_xchacha20poly1305_ietf_encrypt/4,
          aead_xchacha20poly1305_ietf_decrypt/4,
          aead_xchacha20poly1305_ietf_KEYBYTES/0,
@@ -111,16 +108,14 @@
          generichash_update/2,
          generichash_final/1,
 
-         %% No Tests!
+         %% EQC!
          shorthash_key_size/0,
          shorthash_size/0,
          shorthash/2,
 
-         %% No Tests!
          pwhash/4,
          pwhash_str/3,
 
-         %% EQC
          pwhash/2,
          pwhash_str/1,
          pwhash_str_verify/2
@@ -602,10 +597,7 @@ sign(M, SK) ->
       PK :: binary(),
       M :: binary().
 sign_open(SM, PK) ->
-    case enacl_nif:crypto_sign_open(SM, PK) of
-        M when is_binary(M) -> {ok, M};
-        {error, Err} -> {error, Err}
-    end.
+    enacl_nif:crypto_sign_open(SM, PK).
 
 %% @doc sign_detached/2 computes a digital signature given a message and a secret key.
 %%
@@ -742,17 +734,11 @@ secretbox(Msg, Nonce, Key) ->
 secretbox_open(CipherText, Nonce, Key) ->
     case iolist_size(CipherText) of
         K when K =< ?SECRETBOX_SIZE ->
-            R = case enacl_nif:crypto_secretbox_open_b([?S_BOXZEROBYTES, CipherText],
-                                                       Nonce, Key) of
-                    {error, Err} -> {error, Err};
-                    Bin when is_binary(Bin) -> {ok, Bin}
-                end,
+            R = enacl_nif:crypto_secretbox_open_b([?S_BOXZEROBYTES, CipherText],
+                                                       Nonce, Key),
             bump(R, ?SECRETBOX_OPEN_REDUCTIONS, ?SECRETBOX_SIZE, K);
         _ ->
-            case enacl_nif:crypto_secretbox_open([?S_BOXZEROBYTES, CipherText], Nonce, Key) of
-                {error, Err} -> {error, Err};
-                Bin when is_binary(Bin) -> {ok, Bin}
-            end
+            enacl_nif:crypto_secretbox_open([?S_BOXZEROBYTES, CipherText], Nonce, Key)
     end.
 
 %% @doc secretbox_nonce_size/0 returns the size of the secretbox nonce
