@@ -7,9 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [TODO]
 
-- Go through all calls and make them return streamlined exceptions if applicable.
-  Pretty large change, but OTOH, this ought to happen before a 1.0 release as well.
-  - Generichashes must support the finalized state
+- Generichashes must support the finalized state
 
 ## [Unreleased]
 
@@ -26,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The `kx` constants have been renamed to follow libsodium one-to-one.
 - All calls with `verify` now returns booleans. See `sign_verify_detached`, which
   were changed by this.
+- Many constants were changed to their underlying libsodium names.
 
 ### Removed
 - The functions of the form `aead_chacha20poly1305_*` were removed. They implement
@@ -73,6 +72,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   modules multi-part constructions in API and style.
 - The AEAD constructions have been streamlined so they follow the rules of libsodium
   closer than before. In particular, some dead code has been removed as a result.
+- Constants are now named by their libsodium counterpart. This should make it easier
+  to find the correct names given the libsodium documentation.
 
 ### Fixed
 - Fix a resource leak in generichash/sign init/update/final.
