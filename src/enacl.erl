@@ -14,7 +14,7 @@
 %%% <p><b>Note:</b> All functions will fail with a `badarg' error if given incorrect
 %%% parameters. Also, if something is wrong internally, they will raise an error of
 %%% the form `enacl_internal_error'. There is usually no way to continue gracefully
-%%% from either of these. A third error is `enacl_finalized`, raised when you try
+%%% from either of these. A third error is `enacl_finalized', raised when you try
 %%% re-using an already finalized state for multi-part messages.</p>
 %%% @end.
 -module(enacl).
