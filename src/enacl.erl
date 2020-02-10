@@ -12,7 +12,10 @@
 %%% application may result in severely reduced strength of the cryptography. Take some
 %%% time to make sure this is the case before using.</p>
 %%% <p><b>Note:</b> All functions will fail with a `badarg' error if given incorrect
-%%% parameters.</p>
+%%% parameters. Also, if something is wrong internally, they will raise an error of
+%%% the form `enacl_internal_error'. There is usually no way to continue gracefully
+%%% from either of these. A third error is `enacl_finalized`, raised when you try
+%%% re-using an already finalized state for multi-part messages.</p>
 %%% @end.
 -module(enacl).
 
