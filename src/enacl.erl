@@ -8,9 +8,9 @@
 %%% portable variant of the NaCl library. The C-level API is interchangeable so we can run
 %%% on any of these underlying libraries as seen from the Erlang world. We simply have to
 %%% restrict ourselves to the portion of the code base which is overlapping.</p>
-%%% <p><b>Warning:</b> The cryptographic strength of your implementation is no stronger than
-%%% plaintext cryptography unless you take care in using these primitives correctly. Hence,
-%%% implementors should use these primitives with that in mind.</p>
+%%% <p><b>Warning:</b> It is necessary to apply the primitives here correctly. Wrong
+%%% application may result in severely reduced strength of the cryptography. Take some
+%%% time to make sure this is the case before using.</p>
 %%% <p><b>Note:</b> All functions will fail with a `badarg' error if given incorrect
 %%% parameters.</p>
 %%% @end.
@@ -628,14 +628,14 @@ sign_verify_detached(SIG, M, PK) ->
 
 %% @doc sign_init/0 initialize a multi-part signature state.
 %%
-%% This state must be passed to all future calls to `sign_update/2`,
-%% `sign_final_create/2` and `sign_final_verify/3`.
+%% This state must be passed to all future calls to `sign_update/2',
+%% `sign_final_create/2' and `sign_final_verify/3'.
 %% @end
 -spec sign_init() -> sign_state().
 sign_init() ->
     enacl_nif:crypto_sign_init().
 
-%% @doc sign_update/2 update the signature state `S` with a new chunk of data `M`.
+%% @doc sign_update/2 update the signature state `S' with a new chunk of data `M'.
 %% @end
 -spec sign_update(S, M) -> sign_state() | {error, sign_update_error}
     when S :: sign_state(),
@@ -645,7 +645,7 @@ sign_update(SignState, M) ->
 
 
 %% @doc sign_final_create/2 computes the signature for the previously supplied
-%% message(s) using the secret key `SK`.
+%% message(s) using the secret key `SK'.
 %% @end
 -spec sign_final_create(S, SK) -> {ok, binary()} | {error, atom()}
     when S :: sign_state(),
@@ -655,8 +655,8 @@ sign_final_create(SignState, SK) ->
 
 %% @doc sign_final_verify/3 verify a chunked signature
 %%
-%% Verifies that `SIG` is a valid signature for the message whose content has
-%% been previously supplied using `sign_update/2` using the public key `PK.`
+%% Verifies that `SIG' is a valid signature for the message whose content has
+%% been previously supplied using `sign_update/2' using the public key `PK.'
 %% @end
 -spec sign_final_verify(S, SIG, PK) -> boolean()
     when S :: sign_state(),
