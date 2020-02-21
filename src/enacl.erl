@@ -174,6 +174,25 @@
          kx_SESSIONKEYBYTES/0
 ]).
 
+%% Secretstream operations.
+-export([
+         %% No Tests!
+         secretstream_xchacha20poly1305_ABYTES/0,
+         secretstream_xchacha20poly1305_HEADERBYTES/0,
+         secretstream_xchacha20poly1305_KEYBYTES/0,
+         secretstream_xchacha20poly1305_MESSAGEBYTES_MAX/0,
+         secretstream_xchacha20poly1305_TAG_MESSAGE/0,
+         secretstream_xchacha20poly1305_TAG_PUSH/0,
+         secretstream_xchacha20poly1305_TAG_REKEY/0,
+         secretstream_xchacha20poly1305_TAG_FINAL/0,
+         secretstream_xchacha20poly1305_keygen/0,
+         secretstream_xchacha20poly1305_init_push/1,
+         secretstream_xchacha20poly1305_push/4,
+         secretstream_xchacha20poly1305_init_pull/2,
+         secretstream_xchacha20poly1305_pull/3,
+         secretstream_xchacha20poly1305_rekey/1
+        ]).
+
 %% Internal verification of the system
 -export([verify/0]).
 
@@ -224,6 +243,11 @@
 -define(CRYPTO_GENERICHASH_KEYBYTES_MAX, 64).
 -define(CRYPTO_GENERICHASH_KEYBYTES, 32).
 
+-define(CRYPTO_SECRETSTREAM_TAG_MESSAGE, 0).
+-define(CRYPTO_SECRETSTREAM_TAG_PUSH, 1).
+-define(CRYPTO_SECRETSTREAM_TAG_REKEY, 2).
+-define(CRYPTO_SECRETSTREAM_TAG_FINAL, 3).
+
 %% Size limits
 -define(MAX_32BIT_INT, 1 bsl 32).
 
@@ -253,7 +277,11 @@ verify() ->
          {crypto_generichash_BYTES_MAX, ?CRYPTO_GENERICHASH_BYTES_MAX},
          {crypto_generichash_KEYBYTES, ?CRYPTO_GENERICHASH_KEYBYTES},
          {crypto_generichash_KEYBYTES_MIN, ?CRYPTO_GENERICHASH_KEYBYTES_MIN},
-         {crypto_generichash_KEYBYTES_MAX, ?CRYPTO_GENERICHASH_KEYBYTES_MAX}
+         {crypto_generichash_KEYBYTES_MAX, ?CRYPTO_GENERICHASH_KEYBYTES_MAX},
+         {crypto_secretstream_xchacha20poly1305_TAG_MESSAGE, ?CRYPTO_SECRETSTREAM_TAG_MESSAGE},
+         {crypto_secretstream_xchacha20poly1305_TAG_PUSH, ?CRYPTO_SECRETSTREAM_TAG_PUSH},
+         {crypto_secretstream_xchacha20poly1305_TAG_REKEY, ?CRYPTO_SECRETSTREAM_TAG_REKEY},
+         {crypto_secretstream_xchacha20poly1305_TAG_FINAL, ?CRYPTO_SECRETSTREAM_TAG_FINAL}
     ],
     run_verifiers(Verifiers).
 
@@ -1246,7 +1274,172 @@ aead_xchacha20poly1305_ietf_ABYTES() ->
 aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX() ->
     enacl_nif:crypto_aead_xchacha20poly1305_ietf_MESSAGEBYTES_MAX().
 
+%% Secretstream
+%% ----------------------
+%% @doc secretstream_xchacha20poly1305_ABYTES/0 returns the number of bytes
+%% of the MAC used on secretstream encryption/decryption
+%% @end
+-spec secretstream_xchacha20poly1305_ABYTES() -> pos_integer().
+secretstream_xchacha20poly1305_ABYTES() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_ABYTES().
+
+%% @doc secretstream_xchacha20poly1305_HEADERBYTES/0 returns the number
+%% of bytes for header used in secretstream encryption/decryption.
+%% @end
+-spec secretstream_xchacha20poly1305_HEADERBYTES() -> pos_integer().
+secretstream_xchacha20poly1305_HEADERBYTES() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_HEADERBYTES().
+
+%% @doc secretstream_xchacha20poly1305_KEYBYTES/0 returns the number
+%% of bytes of the key used in secretstream encryption/decryption.
+%% @end
+-spec secretstream_xchacha20poly1305_KEYBYTES() -> pos_integer().
+secretstream_xchacha20poly1305_KEYBYTES() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_KEYBYTES().
+
+%% @doc secretstream_xchacha20poly1305_MESSAGEBYTES_MAX/0 returns the max
+%% number of bytes allowed in a message in secretstream encryption/decryption.
+%% @end
+-spec secretstream_xchacha20poly1305_MESSAGEBYTES_MAX() -> pos_integer().
+secretstream_xchacha20poly1305_MESSAGEBYTES_MAX() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX().
+
+%% @doc secretstream_xchacha20poly1305_TAG_MESSAGE/0 returns integer value
+%% of tag `message'. The most common tag, that doesn't add any information
+%% about the nature of the message.
+%% @end
+-spec secretstream_xchacha20poly1305_TAG_MESSAGE() -> pos_integer().
+secretstream_xchacha20poly1305_TAG_MESSAGE() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_MESSAGE().
+
+%% @doc secretstream_xchacha20poly1305_TAG_PUSH/0 returns integer value
+%% of tag `push'.
+%%
+%% This tag indicates that the message marks the end
+%% of a set of messages, but not the end of the stream.
+%%
+%% For example, a huge JSON string sent as multiple chunks can use
+%% this tag to indicate to the application that the string is complete
+%% and that it can be decoded. But the stream itself is not closed,
+%% and more data may follow.
+%% @end
+-spec secretstream_xchacha20poly1305_TAG_PUSH() -> pos_integer().
+secretstream_xchacha20poly1305_TAG_PUSH() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_PUSH().
+
+%% @doc secretstream_xchacha20poly1305_TAG_REKEY/0 returns integer value
+%% of tag `rekey'. Indicates that next messages will derive new keys.
+%% @end
+-spec secretstream_xchacha20poly1305_TAG_REKEY() -> pos_integer().
+secretstream_xchacha20poly1305_TAG_REKEY() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_REKEY().
+
+%% @doc secretstream_xchacha20poly1305_TAG_FINAL/0 returns integer value
+%% of tag `final'. Indicates that the message is the last message in
+%% the secretstream.
+%% @end
+-spec secretstream_xchacha20poly1305_TAG_FINAL() -> pos_integer().
+secretstream_xchacha20poly1305_TAG_FINAL() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_FINAL().
+
+%% @doc secretstream_xchacha20poly1305_keygen/0 returns new random key
+%% for secretsteam encryption.
+%% @end
+-spec secretstream_xchacha20poly1305_keygen() -> binary().
+secretstream_xchacha20poly1305_keygen() ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_keygen().
+
+%% @doc secretstream_xchacha20poly1305_init_push/1
+%% initializes a secretstream encryption context using given `key'.
+%% Returns `Header' and reference to encryption context.
+%% @end
+-spec secretstream_xchacha20poly1305_init_push(Key) -> {binary(), reference()}
+    when Key :: binary().
+secretstream_xchacha20poly1305_init_push(Key) ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_init_push(Key).
+
+-type secretstream_xchacha20poly1305_tag() :: message | rekey | final | push | pos_integer().
+%% @doc secretstream_xchacha20poly1305_push/4 returns encrypted chunk binary.
+%% Updates a secretstream context referenced by `Ref' with `Message' data,
+%% given `Tag' and additional data `AD'.
+%% @end
+-spec secretstream_xchacha20poly1305_push(Ref, Message, AD, Tag) -> binary()
+    when
+      Ref     :: reference(),
+      Message :: binary(),
+      AD      :: binary(),
+      Tag     :: secretstream_xchacha20poly1305_tag().
+secretstream_xchacha20poly1305_push(Ref, Message, AD, Tag) ->
+    TagValue = secretstream_xchacha20poly1305_tag_value(Tag),
+
+    enacl_nif:crypto_secretstream_xchacha20poly1305_push(Ref, Message, AD, TagValue).
+
+%% @doc secretstream_xchacha20poly1305_init_pull/3
+%% initializes a secretstream decryption context using `Header' and `Key'.
+%% Returns reference to decryption context.
+%% @end
+-spec secretstream_xchacha20poly1305_init_pull(Header, Key) -> reference()
+    when
+      Header :: binary(),
+      Key    :: binary().
+secretstream_xchacha20poly1305_init_pull(Header, Key) ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_init_pull(Header, Key).
+
+%% @doc secretstream_xchacha20poly1305_pull/3 decrypts `CipherText'
+%% with additional data `AD' in referenced decryption context `Ref'.
+%% @end
+-spec secretstream_xchacha20poly1305_pull(Ref, CipherText, AD) ->
+  {binary(), secretstream_xchacha20poly1305_tag()} | {error, failed_verification}
+    when
+      Ref        :: reference(),
+      CipherText :: binary(),
+      AD         :: binary().
+secretstream_xchacha20poly1305_pull(Ref, CipherText, AD) ->
+    {Message, TagValue} = enacl_nif:crypto_secretstream_xchacha20poly1305_pull(Ref, CipherText, AD),
+    {Message, secretstream_xchacha20poly1305_tag(TagValue)}.
+
+%% @doc secretstream_xchacha20poly1305_rekey/1 updates encryption/decryption context state.
+%% This doesn't add any information about key update to stream.
+%% If this function is used to create an encrypted stream,
+%% the decryption process must call that function at the exact same stream location.
+%% @end
+-spec secretstream_xchacha20poly1305_rekey(Ref) -> ok
+    when Ref :: reference().
+secretstream_xchacha20poly1305_rekey(Ref) ->
+    enacl_nif:crypto_secretstream_xchacha20poly1305_rekey(Ref).
+
+%% @doc secretstream_xchacha20poly1305_tag_value/1 returns integer value of tag.
+%% @end
+-spec secretstream_xchacha20poly1305_tag_value(TagName) -> pos_integer()
+    when TagName :: secretstream_xchacha20poly1305_tag().
+secretstream_xchacha20poly1305_tag_value(message) ->
+  enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_MESSAGE();
+secretstream_xchacha20poly1305_tag_value(rekey) ->
+  enacl_nif:crypto_secretstream_xcacha20poly1305_TAG_REKEY();
+secretstream_xchacha20poly1305_tag_value(push) ->
+  enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_PUSH();
+secretstream_xchacha20poly1305_tag_value(final) ->
+  enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_FINAL();
+secretstream_xchacha20poly1305_tag_value(Other) ->
+  Other.
+
+%% @doc secretstream_xchacha20poly1305_tag/1 returns tag name
+%% @end
+-spec secretstream_xchacha20poly1305_tag(TagValue) -> secretstream_xchacha20poly1305_tag()
+    when TagValue :: pos_integer().
+secretstream_xchacha20poly1305_tag(?CRYPTO_SECRETSTREAM_TAG_MESSAGE) ->
+  message;
+secretstream_xchacha20poly1305_tag(?CRYPTO_SECRETSTREAM_TAG_PUSH) ->
+  push;
+secretstream_xchacha20poly1305_tag(?CRYPTO_SECRETSTREAM_TAG_REKEY) ->
+  rekey;
+secretstream_xchacha20poly1305_tag(?CRYPTO_SECRETSTREAM_TAG_FINAL) ->
+  final;
+secretstream_xchacha20poly1305_tag(Other) ->
+  Other.
+
 %% Obtaining random bytes
+%% ----------------------
 
 %% @doc randombytes/1 produces a stream of random bytes of the given size
 %%

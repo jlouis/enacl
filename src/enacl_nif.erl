@@ -166,6 +166,24 @@
          crypto_generichash_final/1
         ]).
 
+%% Secretstream
+-export([
+         crypto_secretstream_xchacha20poly1305_ABYTES/0,
+         crypto_secretstream_xchacha20poly1305_HEADERBYTES/0,
+         crypto_secretstream_xchacha20poly1305_KEYBYTES/0,
+         crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX/0,
+         crypto_secretstream_xchacha20poly1305_TAG_MESSAGE/0,
+         crypto_secretstream_xchacha20poly1305_TAG_PUSH/0,
+         crypto_secretstream_xchacha20poly1305_TAG_REKEY/0,
+         crypto_secretstream_xchacha20poly1305_TAG_FINAL/0,
+         crypto_secretstream_xchacha20poly1305_keygen/0,
+         crypto_secretstream_xchacha20poly1305_init_push/1,
+         crypto_secretstream_xchacha20poly1305_push/4,
+         crypto_secretstream_xchacha20poly1305_init_pull/2,
+         crypto_secretstream_xchacha20poly1305_pull/3,
+         crypto_secretstream_xchacha20poly1305_rekey/1
+        ]).
+
 %% Access to the RNG
 -export([
          randombytes/1,
@@ -204,6 +222,21 @@ crypto_generichash(_HashSize, _Message, _Key) -> erlang:nif_error(nif_not_loaded
 crypto_generichash_init(_HashSize, _Key) ->  erlang:nif_error(nif_not_loaded).
 crypto_generichash_update(_HashState, _Message) ->  erlang:nif_error(nif_not_loaded).
 crypto_generichash_final(_HashState) ->  erlang:nif_error(nif_not_loaded).
+
+crypto_secretstream_xchacha20poly1305_ABYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_HEADERBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_TAG_MESSAGE() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_TAG_PUSH() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_TAG_REKEY() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_TAG_FINAL() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_keygen() -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_init_push(_Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_push(_Ref, _Message, _AD, _Tag) -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_init_pull(_Header, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_pull(_Ref, _CipherText, _AD) -> erlang:nif_error(nif_not_loaded).
+crypto_secretstream_xchacha20poly1305_rekey(_Ref) -> erlang:nif_error(nif_not_loaded).
 
 crypto_pwhash(_Password, _Salt, _Ops, _Mem) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str(_Password, _Ops, _Mem) -> erlang:nif_error(nif_not_loaded).
