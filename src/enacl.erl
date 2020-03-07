@@ -165,7 +165,7 @@
 
 %% Key exchange functions
 -export([
-         %% No Tests!
+         %% EQC
          kx_keypair/0,
          kx_client_session_keys/3,
          kx_server_session_keys/3,
@@ -176,7 +176,7 @@
 
 %% Secretstream operations.
 -export([
-         %% No Tests!
+         %% Unit tests
          secretstream_xchacha20poly1305_ABYTES/0,
          secretstream_xchacha20poly1305_HEADERBYTES/0,
          secretstream_xchacha20poly1305_KEYBYTES/0,
