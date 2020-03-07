@@ -1415,7 +1415,7 @@ secretstream_xchacha20poly1305_rekey(Ref) ->
 secretstream_xchacha20poly1305_tag_value(message) ->
   enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_MESSAGE();
 secretstream_xchacha20poly1305_tag_value(rekey) ->
-  enacl_nif:crypto_secretstream_xcacha20poly1305_TAG_REKEY();
+  enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_REKEY();
 secretstream_xchacha20poly1305_tag_value(push) ->
   enacl_nif:crypto_secretstream_xchacha20poly1305_TAG_PUSH();
 secretstream_xchacha20poly1305_tag_value(final) ->
