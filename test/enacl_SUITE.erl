@@ -44,7 +44,8 @@ groups() ->
                      aead_chacha20poly1305_ietf,
                      pwhash,
                      sign,
-                     kx]},
+                     kx,
+                     secretstream]},
 
     [Neg, Pos].
 
@@ -161,4 +162,24 @@ kx(_Config) ->
     %% Verify we got a shared keypair
     CTX = SRX,
     STX = CRX,
+    ok.
+
+secretstream(_Config) ->
+    Part1 = <<"Arbitrary data to encrypt">>,
+    Part2 = <<"split into">>,
+    Part3 = <<"three messages">>,
+
+    Key = enacl:secretstream_xchacha20poly1305_keygen(),
+
+    %% Encrypt
+    {Header, State} = enacl:secretstream_xchacha20poly1305_init_push(Key),
+    Block1 = enacl:secretstream_xchacha20poly1305_push(State, Part1, <<"AD1">>, message),
+    Block2 = enacl:secretstream_xchacha20poly1305_push(State, Part2, <<>>, message),
+    Block3 = enacl:secretstream_xchacha20poly1305_push(State, Part3, <<"AD3">>, final),
+
+    %% Decrypt
+    DState = enacl:secretstream_xchacha20poly1305_init_pull(Header, Key),
+    {Part1, message} = enacl:secretstream_xchacha20poly1305_pull(DState, Block1, <<"AD1">>),
+    {Part2, message} = enacl:secretstream_xchacha20poly1305_pull(DState, Block2, <<>>),
+    {Part3, final} = enacl:secretstream_xchacha20poly1305_pull(DState, Block3, <<"AD3">>),
     ok.
