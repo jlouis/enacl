@@ -956,6 +956,46 @@ prop_scalarmult() ->
                        enacl:curve25519_scalarmult(S1, Basepoint)))
          ).
 
+%% Secretstream
+secretstream_key() ->
+  ?LET(K, enacl:secretstream_xchacha20poly1305_keygen(), K).
+
+secretstream_msg() ->
+  ?LET({Tag, AD, Msg}, {oneof([message,rekey,push]), binary(), binary()},
+    {Tag, AD, Msg}).
+
+secretstream_msgs() ->
+  ?LET({Ms, {_, AD, Msg}}, {list(secretstream_msg()), secretstream_msg()},
+   Ms ++ [{final, AD, Msg}]).
+
+push_messages(_State, []) ->
+  [];
+push_messages(State, [{Tag, AD, Msg}|Next]) ->
+  Block = enacl:secretstream_xchacha20poly1305_push(State, Msg, AD, Tag),
+  [Block|push_messages(State, Next)].
+
+pull_messages(_State, [], []) ->
+  true;
+pull_messages(State, [B|Bs], [{_Tag, AD, _Msg}=Expect|Next]) ->
+  {Msgx, Tagx} = enacl:secretstream_xchacha20poly1305_pull(State, B, AD),
+  case equals(Expect, {Tagx, AD, Msgx}) of
+    true ->
+      pull_messages(State, Bs, Next);
+    R ->
+      R
+  end.
+
+prop_secretstream() ->
+  ?FORALL({Key, Msgs}, {secretstream_key(), secretstream_msgs()},
+    begin
+      %% Encrypt
+      {Header, State} = enacl:secretstream_xchacha20poly1305_init_push(Key),
+      Blocks = push_messages(State, Msgs),
+      %% Decrypt & Verify
+      DState = enacl:secretstream_xchacha20poly1305_init_pull(Header, Key),
+      pull_messages(DState, Blocks, Msgs)
+    end).
+
 %% HELPERS
 
 %% INTERNAL FUNCTIONS
