@@ -57,6 +57,12 @@ static size_t enacl_pwhash_memlimit(ErlNifEnv *env, ERL_NIF_TERM arg) {
   return 0;
 }
 
+
+ERL_NIF_TERM enacl_crypto_pwhash_SALTBYTES(ErlNifEnv *env, int argc,
+                                           ERL_NIF_TERM const argv[]) {
+  return enif_make_int64(env, crypto_pwhash_SALTBYTES);
+}
+
 ERL_NIF_TERM enacl_crypto_pwhash(ErlNifEnv *env, int argc,
                                  ERL_NIF_TERM const argv[]) {
   ErlNifBinary h, p, s;

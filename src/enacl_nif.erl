@@ -147,6 +147,7 @@
 
 %% Password Hashing - Argon2 Algorithm
 -export([
+         crypto_pwhash_SALTBYTES/0,
          crypto_pwhash/4,
          crypto_pwhash_str/3,
          crypto_pwhash_str_verify/2
@@ -238,6 +239,7 @@ crypto_secretstream_xchacha20poly1305_init_pull(_Header, _Key) -> erlang:nif_err
 crypto_secretstream_xchacha20poly1305_pull(_Ref, _CipherText, _AD) -> erlang:nif_error(nif_not_loaded).
 crypto_secretstream_xchacha20poly1305_rekey(_Ref) -> erlang:nif_error(nif_not_loaded).
 
+crypto_pwhash_SALTBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash(_Password, _Salt, _Ops, _Mem) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str(_Password, _Ops, _Mem) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str_verify(_HashedPassword, _Password) -> erlang:nif_error(nif_not_loaded).
