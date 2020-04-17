@@ -287,7 +287,7 @@ static ErlNifFunc nif_funcs[] = {
     {"crypto_verify_32", 2, enacl_crypto_verify_32},
     {"sodium_memzero", 1, enif_sodium_memzero},
 
-    erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash", 4, enacl_crypto_pwhash),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash", 5, enacl_crypto_pwhash),
     erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash_str", 3,
                                       enacl_crypto_pwhash_str),
     erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash_str_verify", 2,
