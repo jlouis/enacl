@@ -125,6 +125,13 @@
 
 ]).
 
+%% Key derivation
+-export([
+         kdf_KEYBYTES/0,
+         kdf_CONTEXTBYTES/0,
+         kdf_derive_from_key/3
+]).
+
 %% Low-level subtle functions which are hard to get correct
 -export([
          %% EQC
@@ -455,6 +462,29 @@ null_terminate(ASCII) ->
 -spec pwhash_str_verify(binary(), iodata()) -> boolean().
 pwhash_str_verify(HashPassword, Password) ->
     enacl_nif:crypto_pwhash_str_verify(null_terminate(HashPassword), Password).
+
+%% Key Derivation
+%% @doc kdf_KEYBYTES/0 returns the number of bytes required for master key.
+%% @end
+-spec kdf_KEYBYTES() -> pos_integer().
+kdf_KEYBYTES() ->
+    enacl_nif:crypto_kdf_KEYBYTES().
+
+%% @doc kdf_CONTEXTBYTES/0 returns the number of bytes required for context.
+%% @end
+-spec kdf_CONTEXTBYTES() -> pos_integer().
+kdf_CONTEXTBYTES() ->
+    enacl_nif:crypto_kdf_CONTEXTBYTES().
+
+%% @doc kdf_derive_from_key/3 derive a key from a single high entropy key
+%% @end.
+-spec kdf_derive_from_key(MasterKey, Context, Id) -> binary()
+    when
+      MasterKey :: iodata(),
+      Context   :: binary(),
+      Id        :: pos_integer().
+kdf_derive_from_key(MasterKey, Context, Id) ->
+    enacl_nif:crypto_kdf_derive_from_key(MasterKey, Context, Id).
 
 %% Public Key Crypto
 %% ---------------------

@@ -152,6 +152,13 @@
          crypto_pwhash_str_verify/2
         ]).
 
+%% Key Derivation
+-export([
+         crypto_kdf_KEYBYTES/0,
+         crypto_kdf_CONTEXTBYTES/0,
+         crypto_kdf_derive_from_key/3
+        ]).
+
 %% Generic hash
 -export([
          crypto_generichash_BYTES/0,
@@ -241,6 +248,10 @@ crypto_secretstream_xchacha20poly1305_rekey(_Ref) -> erlang:nif_error(nif_not_lo
 crypto_pwhash(_Password, _Salt, _Ops, _Mem) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str(_Password, _Ops, _Mem) -> erlang:nif_error(nif_not_loaded).
 crypto_pwhash_str_verify(_HashedPassword, _Password) -> erlang:nif_error(nif_not_loaded).
+
+crypto_kdf_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_kdf_CONTEXTBYTES() -> erlang:nif_error(nif_not_loaded).
+crypto_kdf_derive_from_key(_MasterKey, _Context, _Id) -> erlang:nif_error(nif_not_loaded).
 
 crypto_box_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_box_ZEROBYTES() -> erlang:nif_error(nif_not_loaded).
