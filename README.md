@@ -8,12 +8,17 @@ libsodium as the underlying driver.
 
 ## INSTALL/Requirements:
 
-* Erlang/OTP 17.3. This library *needs* the newest dirty scheduler
-  implementation. The library relies on dirty scheduler support in
-  order to handle long-running cryptography jobs, by moving them off
-  the main Erlang scheduler and letting the dirty schedulers handle
-  the work. This keeps the Erlang VM responsive.
-* *Requires* the libsodium library, and at least in version 1.0.12.
+* Erlang/OTP above 17.3. This library *needs* the dirty scheduler
+  implementation from 17.3 and onwards. The library relies on dirty
+  scheduler support in order to handle long-running cryptography jobs,
+  by moving them off the main Erlang scheduler and letting the dirty
+  schedulers handle the work. This keeps the Erlang VM responsive while
+  doing large amounts of cryptographic processing.
+* Is tested with Erlang 22.3. Erlang version 21 *may* work, but that isn't
+  the current testing target.
+* *Requires* the libsodium library, and has been tested with version
+  1.0.18. Lower versions might work, or they might fail to compile,
+  due to missing functionality.
   *Note:* If installing on systems which cuts packages into
   subpackages, make sure you also get the "-dev" package containing
   the header files necessary in order to compile software linking to
@@ -38,7 +43,7 @@ To build and run eqc-mini version of test execute:
 ## Features:
 
 * Complete NaCl library, implementing all default functionality.
-* Implements a small set of additional functionality from libsodium.
+* Implements a large set of additional functionality from libsodium.
   Most notably access to a proper CSPRNG random source
 * Tests created by aggressive use of Erlang QuickCheck.
 * NaCl is a very fast cryptographic library. That is,
