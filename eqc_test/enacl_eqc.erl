@@ -761,6 +761,13 @@ pwhash(Passwd, Salt) ->
     error:badarg -> badarg
   end.
 
+pwhash(Password, Salt, Ops, Mem, Alg) ->
+  try
+    enacl:pwhsah(Password, Salt, Ops, Mem, Alg)
+  catch
+    error:badarg -> badarg
+  end.
+
 pwhash_str(Passwd) ->
   try
     enacl:pwhash_str(Passwd)
@@ -775,11 +782,25 @@ pwhash_str_verify(PasswdHash, Passwd) ->
     error:badarg -> badarg
   end.
 
+prop_pwhash() ->
+  ?FORALL({Password, Salt, OLimit, MLimit, Alg},
+          {binary(16),
+           binary(16),
+           elements([interactive, moderate]), %% These could add senstitive, but are too runtime-expensive
+           elements([interactive, moderate]), %% And that is for a reason.
+           elements([default, 'argon2id13'])}, %% Argon2I13 uses different limits, so it is kept out as
+                                               %% this would otherwise fail
+    begin
+       Bin1 = enacl:pwhash(Password, Salt, OLimit, MLimit, Alg),
+       Bin2 = enacl:pwhash(Password, Salt, OLimit, MLimit, Alg),
+       equals(Bin1, Bin2)
+    end).
+
 prop_pwhash_str_verify() ->
     ?FORALL({Passwd, OLimit, MLimit},
             {?FAULT_RATE(1, 40, g_iodata()),
-             elements([interactive, moderate, sensitive]),
-             elements([interactive, moderate, sensitive])},
+             elements([interactive, moderate]),
+             elements([interactive, moderate])},
             begin
                 case v_iodata(Passwd) of
                     true ->
