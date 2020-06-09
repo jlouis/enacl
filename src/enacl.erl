@@ -117,11 +117,11 @@
          shorthash/2,
 
          pwhash_SALTBYTES/0,
-         pwhash/4,
-         pwhash_str/3,
-
          pwhash/2,
+         pwhash/4,
+         pwhash/5,
          pwhash_str/1,
+         pwhash_str/3,
          pwhash_str_verify/2
 
 ]).
@@ -403,6 +403,7 @@ generichash_final(State) ->
 pwhash_SALTBYTES() ->
     enacl_nif:crypto_pwhash_SALTBYTES().
 
+-type pwhash_alg() :: default | argon2i13 | argon2id13 | pos_integer().
 %% @doc pwhash/2 hash a password
 %%
 %% This function generates a fixed size salted hash of a user defined password.
@@ -424,7 +425,22 @@ pwhash(Password, Salt) ->
       Ops      :: pwhash_limit(),
       Mem      :: pwhash_limit().
 pwhash(Password, Salt, Ops, Mem) ->
-    enacl_nif:crypto_pwhash(Password, Salt, Ops, Mem).
+    enacl_nif:crypto_pwhash(Password, Salt, Ops, Mem, default).
+
+%% @doc pwhash/5 hash a password
+%%
+%% This function generates a fixed size salted hash of a user defined password given Ops and Mem
+%% limits.
+%% @end
+-spec pwhash(Password, Salt, Ops, Mem, Alg) -> binary()
+    when
+      Password :: iodata(),
+      Salt     :: binary(),
+      Ops      :: pwhash_limit(),
+      Mem      :: pwhash_limit(),
+      Alg      :: pwhash_alg().
+pwhash(Password, Salt, Ops, Mem, Alg) ->
+    enacl_nif:crypto_pwhash(Password, Salt, Ops, Mem, Alg).
 
 %% @doc pwhash_str/1 generates a ASCII encoded hash of a password
 %%

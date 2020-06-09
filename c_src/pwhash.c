@@ -57,22 +57,49 @@ static size_t enacl_pwhash_memlimit(ErlNifEnv *env, ERL_NIF_TERM arg) {
   return 0;
 }
 
-
 ERL_NIF_TERM enacl_crypto_pwhash_SALTBYTES(ErlNifEnv *env, int argc,
                                            ERL_NIF_TERM const argv[]) {
   return enif_make_int64(env, crypto_pwhash_SALTBYTES);
+}
+
+static int enacl_pwhash_alg(ErlNifEnv *env, ERL_NIF_TERM arg) {
+  ERL_NIF_TERM a;
+  int r;
+
+  if (enif_is_atom(env, arg)) {
+    a = enif_make_atom(env, "default");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_ALG_DEFAULT;
+    }
+
+    a = enif_make_atom(env, "argon2i13");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_ALG_ARGON2I13;
+    }
+
+    a = enif_make_atom(env, "argon2id13");
+    if (enif_is_identical(a, arg)) {
+      return crypto_pwhash_ALG_ARGON2ID13;
+    }
+  } else if (enif_get_int(env, arg, &r)) {
+    return r;
+  }
+
+  return 0;
 }
 
 ERL_NIF_TERM enacl_crypto_pwhash(ErlNifEnv *env, int argc,
                                  ERL_NIF_TERM const argv[]) {
   ErlNifBinary h, p, s;
   size_t o, m;
+  int alg;
 
   // Validate the arguments
-  if ((argc != 4) || (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
+  if ((argc != 5) || (!enif_inspect_iolist_as_binary(env, argv[0], &p)) ||
       (!enif_inspect_binary(env, argv[1], &s)) ||
       !(o = enacl_pwhash_opslimit(env, argv[2])) ||
-      !(m = enacl_pwhash_memlimit(env, argv[3]))) {
+      !(m = enacl_pwhash_memlimit(env, argv[3])) ||
+      !(alg = enacl_pwhash_alg(env, argv[4]))) {
     return enif_make_badarg(env);
   }
 
@@ -93,7 +120,7 @@ ERL_NIF_TERM enacl_crypto_pwhash(ErlNifEnv *env, int argc,
   }
 
   if (crypto_pwhash(h.data, h.size, (char *)p.data, p.size, s.data, o, m,
-                    crypto_pwhash_ALG_DEFAULT) != 0) {
+                    alg) != 0) {
     /* out of memory */
     enif_release_binary(&h);
     return enacl_internal_error(env);

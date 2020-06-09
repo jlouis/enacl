@@ -13,8 +13,8 @@
 #include "pwhash.h"
 #include "randombytes.h"
 #include "secret.h"
-#include "sign.h"
 #include "secretstream.h"
+#include "sign.h"
 
 #ifdef ERL_NIF_DIRTY_JOB_CPU_BOUND
 #define erl_nif_dirty_job_cpu_bound_macro(a, b, c)                             \
@@ -288,7 +288,7 @@ static ErlNifFunc nif_funcs[] = {
     {"sodium_memzero", 1, enif_sodium_memzero},
 
     {"crypto_pwhash_SALTBYTES", 0, enacl_crypto_pwhash_SALTBYTES},
-    erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash", 4, enacl_crypto_pwhash),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash", 5, enacl_crypto_pwhash),
     erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash_str", 3,
                                       enacl_crypto_pwhash_str),
     erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash_str_verify", 2,
@@ -380,22 +380,35 @@ static ErlNifFunc nif_funcs[] = {
     erl_nif_dirty_job_cpu_bound_macro("crypto_generichash_final", 1,
                                       enacl_crypto_generichash_final),
 
-    {"crypto_secretstream_xchacha20poly1305_ABYTES", 0, enacl_crypto_secretstream_xchacha20poly1305_ABYTES},
-    {"crypto_secretstream_xchacha20poly1305_HEADERBYTES", 0, enacl_crypto_secretstream_xchacha20poly1305_HEADERBYTES},
-    {"crypto_secretstream_xchacha20poly1305_KEYBYTES", 0, enacl_crypto_secretstream_xchacha20poly1305_KEYBYTES},
-    {"crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX", 0, enacl_crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX},
-    {"crypto_secretstream_xchacha20poly1305_TAG_MESSAGE", 0, enacl_crypto_secretstream_xchacha20poly1305_TAG_MESSAGE},
-    {"crypto_secretstream_xchacha20poly1305_TAG_PUSH", 0, enacl_crypto_secretstream_xchacha20poly1305_TAG_PUSH},
-    {"crypto_secretstream_xchacha20poly1305_TAG_REKEY", 0, enacl_crypto_secretstream_xchacha20poly1305_TAG_REKEY},
-    {"crypto_secretstream_xchacha20poly1305_TAG_FINAL", 0, enacl_crypto_secretstream_xchacha20poly1305_TAG_FINAL},
-    {"crypto_secretstream_xchacha20poly1305_keygen", 0, enacl_crypto_secretstream_xchacha20poly1305_keygen},
-    {"crypto_secretstream_xchacha20poly1305_init_push", 1, enacl_crypto_secretstream_xchacha20poly1305_init_push},
-    {"crypto_secretstream_xchacha20poly1305_init_pull", 2, enacl_crypto_secretstream_xchacha20poly1305_init_pull},
-    {"crypto_secretstream_xchacha20poly1305_rekey", 1, enacl_crypto_secretstream_xchacha20poly1305_rekey},
-    erl_nif_dirty_job_cpu_bound_macro("crypto_secretstream_xchacha20poly1305_push", 4,
+    {"crypto_secretstream_xchacha20poly1305_ABYTES", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_ABYTES},
+    {"crypto_secretstream_xchacha20poly1305_HEADERBYTES", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_HEADERBYTES},
+    {"crypto_secretstream_xchacha20poly1305_KEYBYTES", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_KEYBYTES},
+    {"crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_MESSAGEBYTES_MAX},
+    {"crypto_secretstream_xchacha20poly1305_TAG_MESSAGE", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_TAG_MESSAGE},
+    {"crypto_secretstream_xchacha20poly1305_TAG_PUSH", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_TAG_PUSH},
+    {"crypto_secretstream_xchacha20poly1305_TAG_REKEY", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_TAG_REKEY},
+    {"crypto_secretstream_xchacha20poly1305_TAG_FINAL", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_TAG_FINAL},
+    {"crypto_secretstream_xchacha20poly1305_keygen", 0,
+     enacl_crypto_secretstream_xchacha20poly1305_keygen},
+    {"crypto_secretstream_xchacha20poly1305_init_push", 1,
+     enacl_crypto_secretstream_xchacha20poly1305_init_push},
+    {"crypto_secretstream_xchacha20poly1305_init_pull", 2,
+     enacl_crypto_secretstream_xchacha20poly1305_init_pull},
+    {"crypto_secretstream_xchacha20poly1305_rekey", 1,
+     enacl_crypto_secretstream_xchacha20poly1305_rekey},
+    erl_nif_dirty_job_cpu_bound_macro(
+        "crypto_secretstream_xchacha20poly1305_push", 4,
         enacl_crypto_secretstream_xchacha20poly1305_push),
-    erl_nif_dirty_job_cpu_bound_macro("crypto_secretstream_xchacha20poly1305_pull", 3,
-        enacl_crypto_secretstream_xchacha20poly1305_pull)
-};
+    erl_nif_dirty_job_cpu_bound_macro(
+        "crypto_secretstream_xchacha20poly1305_pull", 3,
+        enacl_crypto_secretstream_xchacha20poly1305_pull)};
 
 ERL_NIF_INIT(enacl_nif, nif_funcs, enacl_crypto_load, NULL, NULL, NULL);
