@@ -5,11 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [Unreleased]
 
 ### Added
 
 - Secretstream support was added to the API (Alexander Malaev)
+- Add KDF functions (Nicolas Goy, @kuon)
+- Add pwhash/5 specifying what algorithm to use for older compatibility (Nicolas Goy, @kuon)
+
+### Changed
+
+- Remove rebar3_hex as a direct dependency (Bryan Paxton, @starbelly)
 
 ## [1.0.0]
 
