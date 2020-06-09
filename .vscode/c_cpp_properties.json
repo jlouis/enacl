@@ -6,7 +6,7 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "/nix/store/a9hbzlkdfvpr4r8mjwcxcda9smjp5v1i-gcc-wrapper-9.2.0/bin/gcc",
+            "compilerPath": "/nix/store/fb30zc52va0g99q8qgv7kx4ngq163pii-gcc-wrapper-9.3.0/bin/gcc",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "clang-x64"
