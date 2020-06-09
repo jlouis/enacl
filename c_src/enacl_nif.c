@@ -11,6 +11,7 @@
 #include "kx.h"
 #include "public.h"
 #include "pwhash.h"
+#include "kdf.h"
 #include "randombytes.h"
 #include "secret.h"
 #include "secretstream.h"
@@ -293,6 +294,11 @@ static ErlNifFunc nif_funcs[] = {
                                       enacl_crypto_pwhash_str),
     erl_nif_dirty_job_cpu_bound_macro("crypto_pwhash_str_verify", 2,
                                       enacl_crypto_pwhash_str_verify),
+
+    {"crypto_kdf_KEYBYTES", 0, enacl_crypto_kdf_KEYBYTES},
+    {"crypto_kdf_CONTEXTBYTES", 0, enacl_crypto_kdf_CONTEXTBYTES},
+    erl_nif_dirty_job_cpu_bound_macro("crypto_kdf_derive_from_key", 3,
+                                      enacl_crypto_kdf_derive_from_key),
 
     erl_nif_dirty_job_cpu_bound_macro("crypto_curve25519_scalarmult", 2,
                                       enacl_crypto_curve25519_scalarmult),
