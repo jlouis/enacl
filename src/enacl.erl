@@ -116,6 +116,7 @@
          shorthash_size/0,
          shorthash/2,
 
+         pwhash_SALTBYTES/0,
          pwhash/4,
          pwhash_str/3,
 
@@ -395,6 +396,13 @@ generichash_final(State) ->
     enacl_nif:crypto_generichash_final(State).
 
 -type pwhash_limit() :: interactive | moderate | sensitive | pos_integer().
+
+%% @doc pwhash_SALTBYTES/0 returns the number of bytes required for salt.
+%% @end
+-spec pwhash_SALTBYTES() -> pos_integer().
+pwhash_SALTBYTES() ->
+    enacl_nif:crypto_pwhash_SALTBYTES().
+
 %% @doc pwhash/2 hash a password
 %%
 %% This function generates a fixed size salted hash of a user defined password.

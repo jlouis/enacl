@@ -136,6 +136,7 @@ pwhash(_Config) ->
     Str1 = enacl:pwhash_str(PW),
     true = enacl:pwhash_str_verify(Str1, PW),
     false = enacl:pwhash_str_verify(Str1, <<PW/binary, 1>>),
+    16 = enacl:pwhash_SALTBYTES(),
     ok.
 
 sign(_Config) ->
