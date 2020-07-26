@@ -41,7 +41,11 @@ static int enacl_crypto_load(ErlNifEnv *env, void **priv_data,
     return -1;
   }
 
-  return sodium_init();
+  if (sodium_init() == -1) {
+    return -1;
+  }
+
+  return 0;
 }
 
 /* GENERAL ROUTINES
