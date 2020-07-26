@@ -36,7 +36,11 @@ int enif_crypto_load(ErlNifEnv *env, void **priv_data, ERL_NIF_TERM load_info) {
     return -1;
   }
 
-  return sodium_init();
+  if (sodium_init() == -1) {
+    return -1;
+  }
+
+  return 0;
 }
 
 /* Low-level functions (Hashing, String Equality, ...) */
