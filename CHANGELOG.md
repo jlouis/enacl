@@ -7,21 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Introduce the ability to reload the enacl module (Bryan Paxton, @starbelly)
+
 ## [1.1.0]
 
-### Added
+### Added [1.1.0]
 
 - Secretstream support was added to the API (Alexander Malaev)
 - Add KDF functions (Nicolas Goy, @kuon)
 - Add pwhash/5 specifying what algorithm to use for older compatibility (Nicolas Goy, @kuon)
 
-### Changed
+### Changed [1.1.0]
 
 - Remove rebar3_hex as a direct dependency (Bryan Paxton, @starbelly)
 
 ## [1.0.0]
 
-### Compatibility
+### Compatibility [1.0.0]
 
 - Some functions have been streamlined to badarg in certain cases where it made more
   sense to do so than returning back an error to the caller.
@@ -37,14 +41,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   were changed by this.
 - Many constants were changed to their underlying libsodium names.
 
-### Removed
+### Removed [1.0.0]
 
 - The functions of the form `aead_chacha20poly1305_*` were removed. They implement
   the IETF variant, and the argument order for them were wrong. Also, they used
   severely limited nonce values, which is somewhat dangerous. The `..._NONCEBYTES`
   name was changed to the consistent `..._NPUBBYTES`.
 
-### Added
+### Added [1.0.0]
 
 - Added `aead_chacha20poly1305_ietf_*` variants.
 - Implement multipart signature support, by Garry Hill.
@@ -63,7 +67,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added Win32 build support (Tino Breddin)
 - Added a nix shell for easier development
 
-### Changed
+### Changed [1.0.0]
 
 - Started a split the C code over multiple files for easier maintenance.
 - Rewrote the generichash routines to be more consistent. We are now more-or-less
@@ -92,7 +96,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   hashing on the object. The rejection is an error: if you ever do this, your code
   is definitely wrong and there is no recovery possible.
 
-### Fixed
+### Fixed [1.0.0]
 
 - Fix a resource leak in generichash/sign init/update/final.
 - Clang static analysis warnings (Thomas Arts).
@@ -103,13 +107,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.17.2]
 
-### Fixed
+### Fixed [0.17.2]
 
 - Work around `rebar3 hex` publishing .so files
 
 ## [0.17.1]
 
-### Fixed
+### Fixed [0.17.1]
 
 - Provide a fix for the `pwhash_str/x` functions. The C strings were
   not properly handled wrt. NULL-termination and what the libsodium
@@ -117,7 +121,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.17.0]
 
-### Added
+### Added [0.17.0]
 
 - Expose the AEAD ChaCha20 Poly1305 (IETF) functionality (Hans
   Svensson / Quviq).
@@ -130,12 +134,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   to verify the enacl library on embedded platforms and so on.
 - Support generichash functions (Venkatakumar Srinivasan / Xaptum)
 
-### Fixed
+### Fixed [0.17.0]
 
 - The type specification of generichash/2 and generichash/3 was
   corrected (Technion)
 
-### Changed
+### Changed [0.17.0]
 
 - Removed the experimental feature flag `ERL_NIF_DIRTY_JOB_CPU_BOUND`.
   This breaks compatibility with older Erlang releases of dirty
@@ -154,26 +158,26 @@ Bump libsodium requirement to version 1.0.12. This gives us access to
 a number of functions which are added recently and thus gives us
 access to implement these from libsodium.
 
-### Added
+### Added [0.16.0]
 
 - Add kx_* functions (Alexander Malaev)
 - chacha stream functions added, siphash-2-4 added, unsafe_memzero/1
   added (no attribution)
 
-### Fixed
+### Fixed [0.16.0]
 
 - Do not use the dirty-scheduler test macro as it is gone.
 
 ## [0.15.0]
 
-### Fixed
+### Fixed [0.15.0]
 
 - Using `enacl:sign_verify_detacted` on large iolists would fail to do
   the correct thing due to a typo. This has been corrected. Also the
   EQC tests have been extended to include large binary support to
   capture these kinds of errors in the future.
 
-### Changed
+### Changed [0.15.0]
 
 - Many dirty-scheduler tunings have been performed to make sure we
   won't block a scheduler ever.
@@ -189,13 +193,13 @@ a better citizen to other libraries and other parts of the system.
 
 ## [0.14.0]
 
-### Added
+### Added [0.14.0]
 
 - Add support for libsodiums `box_seal` functions (Amir Ghassemi Nasr)
 - Add support for libsodiums `crypto_sign_detached` (Joel Stanley,
   Parnell Springmeyer)
 
-### Changed
+### Changed [0.14.0]
 
 - Switch the tag names to the form `0.14.0` rather than `v0.14.0`. For
   this release both tags are present, but from the next release on, it
@@ -203,25 +207,25 @@ a better citizen to other libraries and other parts of the system.
 
 ## [0.13.0]
 
-### Fixed
+### Fixed [0.13.0]
 
 - Quell warnings from the C code
 
-### Added
+### Added [0.13.0]
 
 - Add Ed 25519 utility API (Alexander Færøy)
 - Add FreeBSD support for the NIF compilation (Ricardo Lanziano)
 
 ## [0.12.1]
 
-### Changed
+### Changed [0.12.1]
 
 - Provide the `priv` directory for being able to properly build
   without manual intervention.
 
 ## [0.12.0]
 
-### Added
+### Added [0.12.0]
 
 - Introduce an extension interface for various necessary extensions to
   the eNaCl system for handling the Tor network, thanks to Alexander
@@ -232,14 +236,14 @@ a better citizen to other libraries and other parts of the system.
 
 ## [0.11.0]
 
-### Added
+### Added [0.11.0]
 
 - Introduce NIF layer beforenm/afternm calls.
 - Introduce the API for precomputed keys (beforenm/afternm calls).
 - Use test cases which tries to inject `iodata()` rather than binaries
   in all places where `iodata()` tend to be accepted.
 
-### Fixed
+### Fixed [0.11.0]
 
 - Fix type for `enacl:box_open/4`. The specification was wrong which
   results in errors in other applications using enacl.
@@ -248,7 +252,7 @@ a better citizen to other libraries and other parts of the system.
 
 Maintenance release. Fix some usability problems with the library.
 
-### Fixed
+### Fixed [0.10.2]
 
 - Do not compile the C NIF code if there are no dirty scheduler
   support in the Erlang system (Thanks to David N. Welton)
@@ -263,7 +267,7 @@ Maintenance release. Fix some usability problems with the library.
 
 ## [0.10.1]
 
-### Added
+### Added [0.10.1]
 
 - This small patch-release provides tests for the `randombytes/1`
 function call, and optimizes EQC tests to make it easier to implement
@@ -279,7 +283,7 @@ included in this library.
 Ultra-late beta; tuning for the last couple of functions which could
 be nice to have.
 
-### Added
+### Added [0.10.0]
 
 Added the function `randombytes/1` to obtain randombytes from the
 operating system. The system uses the "best" applicable (P)RNG on the
