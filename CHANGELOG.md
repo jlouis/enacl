@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [1.0.0]
 
 ### Compatibility
+
 - Some functions have been streamlined to badarg in certain cases where it made more
   sense to do so than returning back an error to the caller.
 - Functions generally don't return error values for internal errors. They now raise
@@ -37,12 +38,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Many constants were changed to their underlying libsodium names.
 
 ### Removed
+
 - The functions of the form `aead_chacha20poly1305_*` were removed. They implement
   the IETF variant, and the argument order for them were wrong. Also, they used
   severely limited nonce values, which is somewhat dangerous. The `..._NONCEBYTES`
   name was changed to the consistent `..._NPUBBYTES`.
 
 ### Added
+
 - Added `aead_chacha20poly1305_ietf_*` variants.
 - Implement multipart signature support, by Garry Hill.
 - Implement enacl:crypto_sign_seed_keypair/1, by Ole Andre Birkedal.
@@ -61,6 +64,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a nix shell for easier development
 
 ### Changed
+
 - Started a split the C code over multiple files for easier maintenance.
 - Rewrote the generichash routines to be more consistent. We are now more-or-less
   following the style of the Erlang/OTP `crypto` library. While here, make sure
@@ -89,6 +93,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   is definitely wrong and there is no recovery possible.
 
 ### Fixed
+
 - Fix a resource leak in generichash/sign init/update/final.
 - Clang static analysis warnings (Thomas Arts).
 - Replace a constant 31 with a computation from libsodium (Thomas Arts, from a security review).
@@ -99,11 +104,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.17.2]
 
 ### Fixed
+
 - Work around `rebar3 hex` publishing .so files
 
 ## [0.17.1]
 
 ### Fixed
+
 - Provide a fix for the `pwhash_str/x` functions. The C strings were
   not properly handled wrt. NULL-termination and what the libsodium
   library expects.
@@ -111,6 +118,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.17.0]
 
 ### Added
+
 - Expose the AEAD ChaCha20 Poly1305 (IETF) functionality (Hans
   Svensson / Quviq).
 - Expose Curve25519 Scalar Multiplication over a base point in the
@@ -123,10 +131,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Support generichash functions (Venkatakumar Srinivasan / Xaptum)
 
 ### Fixed
+
 - The type specification of generichash/2 and generichash/3 was
   corrected (Technion)
 
 ### Changed
+
 - Removed the experimental feature flag `ERL_NIF_DIRTY_JOB_CPU_BOUND`.
   This breaks compatibility with older Erlang releases of dirty
   schedulers, but prepares us correctly for the new releases where the
@@ -151,11 +161,13 @@ access to implement these from libsodium.
   added (no attribution)
 
 ### Fixed
+
 - Do not use the dirty-scheduler test macro as it is gone.
 
 ## [0.15.0]
 
 ### Fixed
+
 - Using `enacl:sign_verify_detacted` on large iolists would fail to do
   the correct thing due to a typo. This has been corrected. Also the
   EQC tests have been extended to include large binary support to
@@ -178,10 +190,13 @@ a better citizen to other libraries and other parts of the system.
 ## [0.14.0]
 
 ### Added
+
 - Add support for libsodiums `box_seal` functions (Amir Ghassemi Nasr)
 - Add support for libsodiums `crypto_sign_detached` (Joel Stanley,
   Parnell Springmeyer)
+
 ### Changed
+
 - Switch the tag names to the form `0.14.0` rather than `v0.14.0`. For
   this release both tags are present, but from the next release on, it
   won't be the case.
@@ -189,21 +204,25 @@ a better citizen to other libraries and other parts of the system.
 ## [0.13.0]
 
 ### Fixed
+
 - Quell warnings from the C code
 
 ### Added
+
 - Add Ed 25519 utility API (Alexander Færøy)
 - Add FreeBSD support for the NIF compilation (Ricardo Lanziano)
 
 ## [0.12.1]
 
 ### Changed
+
 - Provide the `priv` directory for being able to properly build
   without manual intervention.
 
 ## [0.12.0]
 
 ### Added
+
 - Introduce an extension interface for various necessary extensions to
   the eNaCl system for handling the Tor network, thanks to Alexander
   Færøy (ahf).
@@ -214,11 +233,14 @@ a better citizen to other libraries and other parts of the system.
 ## [0.11.0]
 
 ### Added
+
 - Introduce NIF layer beforenm/afternm calls.
 - Introduce the API for precomputed keys (beforenm/afternm calls).
 - Use test cases which tries to inject `iodata()` rather than binaries
   in all places where `iodata()` tend to be accepted.
+
 ### Fixed
+
 - Fix type for `enacl:box_open/4`. The specification was wrong which
   results in errors in other applications using enacl.
 
@@ -227,6 +249,7 @@ a better citizen to other libraries and other parts of the system.
 Maintenance release. Fix some usability problems with the library.
 
 ### Fixed
+
 - Do not compile the C NIF code if there are no dirty scheduler
   support in the Erlang system (Thanks to David N. Welton)
 - Fix dialyzer warnings (Thanks Anthony Ramine)
@@ -262,9 +285,9 @@ Added the function `randombytes/1` to obtain randombytes from the
 operating system. The system uses the "best" applicable (P)RNG on the
 target system:
 
-* Windows: `RtlGenRandom()`
-* OpenBSD, Bitrig: `arc4random()`
-* Unix in general: `/dev/urandom`
+- Windows: `RtlGenRandom()`
+- OpenBSD, Bitrig: `arc4random()`
+- Unix in general: `/dev/urandom`
 
 Do note that on Linux and FreeBSD at the *least*, this is the best
 thing you can do. Relying on `/dev/random` is almost always wrong and
@@ -278,4 +301,3 @@ Ultra-late beta. Code probably works, but it requires some real-world
 use before it is deemed entirely stable.
 
 Initial release.
-
