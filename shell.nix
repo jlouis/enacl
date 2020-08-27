@@ -5,7 +5,7 @@ with pkgs;
 let
   inherit (lib) optional optionals;
 
-  erlang_wx = erlangR22.override {
+  erlang_wx = erlangR23.override {
       wxSupport = true;
   };
 in
