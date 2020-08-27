@@ -41,7 +41,22 @@ static int enacl_crypto_load(ErlNifEnv *env, void **priv_data,
     return -1;
   }
 
-  return sodium_init();
+  if (sodium_init() == -1) {
+    return -1;
+  }
+
+  return 0;
+}
+
+static int enacl_crypto_upgrade(ErlNifEnv* env, void **priv_data,
+                                void **old_priv_data,
+                                ERL_NIF_TERM load_info) {
+    return 0;
+}
+
+static int enacl_crypto_unload(ErlNifEnv* env, void **priv_data,
+                                ERL_NIF_TERM load_info) {
+    return 0;
 }
 
 /* GENERAL ROUTINES
@@ -417,4 +432,4 @@ static ErlNifFunc nif_funcs[] = {
         "crypto_secretstream_xchacha20poly1305_pull", 3,
         enacl_crypto_secretstream_xchacha20poly1305_pull)};
 
-ERL_NIF_INIT(enacl_nif, nif_funcs, enacl_crypto_load, NULL, NULL, NULL);
+ERL_NIF_INIT(enacl_nif, nif_funcs, enacl_crypto_load, NULL, enacl_crypto_upgrade, enacl_crypto_unload);
