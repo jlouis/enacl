@@ -1,16 +1,12 @@
 { pkgs ? import <nixpkgs> {} }:
 
-with pkgs;
+pkgs.mkShell {
+  buildInputs = [
+    pkgs.hello
 
-let
-  inherit (lib) optional optionals;
-
-  erlang_wx = erlangR23.override {
-      wxSupport = true;
-  };
-in
-
-mkShell {
-  buildInputs = [ erlang_wx git libsodium ]
-    ++ optional stdenv.isLinux inotify-tools;
+    # keep this line if you use bash
+    pkgs.bashInteractive
+    pkgs.erlang
+    pkgs.libsodium
+  ];
 }
