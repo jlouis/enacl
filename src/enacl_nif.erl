@@ -288,7 +288,7 @@ crypto_sign_verify_detached(_Sig, _M, _PK) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_init() -> erlang:nif_error(nif_not_loaded).
 crypto_sign_update(_S, _M) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_final_create(_S, _SK) -> erlang:nif_error(nif_not_loaded).
-crypto_sign_final_verify(_S, _S, _PK) -> erlang:nif_error(nif_not_loaded).
+crypto_sign_final_verify(_State, _Sig, _PK) -> erlang:nif_error(nif_not_loaded).
 
 crypto_box_seal(_Msg, _PK) -> erlang:nif_error(nif_not_loaded).
 crypto_box_seal_open(_CipherText, _PK, _SK) -> erlang:nif_error(nif_not_loaded).
