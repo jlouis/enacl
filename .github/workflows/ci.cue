@@ -1,6 +1,7 @@
 let OTP_Versions = {
 	latest: [24.0]
 	all: [18.3, 19.3, 20.3, 21.3, 22.3, 23.3, 24.0]
+	test: [23.3, 24.0]
 }
 
 name: "build"
@@ -17,7 +18,7 @@ jobs: ci: {
 	"runs-on": "${{matrix.os}}"
 	container: image: "erlang:${{matrix.otp_vsn}}"
 	strategy: matrix: {
-		otp_vsn: OTP_Versions.latest
+		otp_vsn: OTP_Versions.test
 		os: ["ubuntu-latest"]
 	}
 	steps: [
