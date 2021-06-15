@@ -23,7 +23,7 @@ jobs: ci: {
 	steps: [
 		{uses: "actions/checkout@v2"},
 	    {name: "Install libsodium",
-		 run: "sudo apt-get install -y libsodium"},
+		 run: "apt-get install -y libsodium"},
 		{name: "Compile source code",
 		 run: "make compile"},
 		{name: "Run the tests",
