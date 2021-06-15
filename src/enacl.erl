@@ -1222,7 +1222,7 @@ kx_SECRETKEYBYTES() ->
 %% ----------------------
 %% @doc aead_chacha20poly1305_encrypt/4 encrypts `Message' with additional data
 %% `AD' using `Key' and `Nonce'. Returns the encrypted message followed by
-%% `aead_chacha20poly1305_ABYTES/0' bytes of MAC.
+%% aead_chacha20poly1305_ABYTES/0 bytes of MAC.
 %% @end
 -spec aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key) -> binary()
     when Key :: binary(),
@@ -1234,7 +1234,7 @@ aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key) ->
 
 %% @doc aead_chacha20poly1305_decrypt/4 decrypts ciphertext `CT' with additional
 %% data `AD' using `Key' and `Nonce'. Note: `CipherText' should contain
-%% `aead_chacha20poly1305_ABYTES/0' bytes that is the MAC. Returns the decrypted
+%% aead_chacha20poly1305_ABYTES/0 bytes that is the MAC. Returns the decrypted
 %% message.
 %% @end
 -spec aead_chacha20poly1305_ietf_decrypt(CT, AD, Nonce, Key) -> binary() | {error, term()}
