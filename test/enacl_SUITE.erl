@@ -38,14 +38,17 @@ groups() ->
     Neg = {negative, [shuffle, parallel],
       [generichash_basic_neg]},
     Pos = {positive, [shuffle, parallel],
-                    [generichash_basic_pos,
-                     generichash_chunked,
-                     aead_xchacha20poly1305,
+                    [
                      aead_chacha20poly1305_ietf,
-                     pwhash,
-                     sign,
+                     aead_xchacha20poly1305,
+                     generichash_basic_pos,
+                     generichash_chunked,
                      kx,
-                     secretstream]},
+                     pwhash,
+                     secretstream,
+                     sign,
+                     verify_detached
+                    ]},
 
     [Neg, Pos].
 
@@ -183,4 +186,11 @@ secretstream(_Config) ->
     {Part1, message} = enacl:secretstream_xchacha20poly1305_pull(DState, Block1, <<"AD1">>),
     {Part2, message} = enacl:secretstream_xchacha20poly1305_pull(DState, Block2, <<>>),
     {Part3, final} = enacl:secretstream_xchacha20poly1305_pull(DState, Block3, <<"AD3">>),
+    ok.
+
+verify_detached(_Config) ->
+    #{ public := PK, secret := SK} = enacl:sign_keypair(),
+    M = <<"Arbitrary data to encrypt">>,
+    Sig = enacl:sign_detached(M, SK),
+    true = enacl:sign_verify_detached(Sig, M, PK),
     ok.
