@@ -14,7 +14,8 @@ jobs:
       image: erlang:${{matrix.otp_vsn}}
     strategy:
       matrix:
-        otp_vsn: 24.0
+        otp_vsn:
+        - 24.0
         os:
         - ubuntu-latest
     steps:
