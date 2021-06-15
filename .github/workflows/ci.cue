@@ -21,7 +21,9 @@ jobs: ci: {
 	container: image: "erlang:${{matrix.otp_vsn}}"
 	strategy: matrix: {
 		otp_vsn: OTP_Versions.all
-		// os: ["ubuntu-latest"] // This is somewhat of a lie.
+		// This entry is a lie. The container images are Debian containers, but
+		// one has to specify where those containers are hosted.
+		os: ["ubuntu-latest"]
 	}
 	steps: [
 		{uses: "actions/checkout@v2"},

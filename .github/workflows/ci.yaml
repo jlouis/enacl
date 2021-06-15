@@ -18,6 +18,8 @@ jobs:
         - 22.3
         - 23.3
         - 24.0
+        os:
+        - ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Update apt-get database
