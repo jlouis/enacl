@@ -5,6 +5,9 @@ RUN_EQC=erl -pa _build/default/lib/enacl/ebin -noshell -s enacl_eqc -s init stop
 compile:
 	$(REBAR) compile
 
+.PHONY: tests
+	$(REBAR) ct
+
 eqc_compile: compile
 	erlc -o _build/default/lib/enacl/ebin eqc_test/enacl_eqc.erl
 
