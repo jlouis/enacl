@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.2.0]
+
+### Fixed [1.2.0]
+
+- `sign_verify_detached/3` The code now verifies the size of signatures in detached mode. Before
+  this change, you could supply a larger binary and the code would only use the first `SIGNBYTES`
+  of the binary, assuming the signature were in there. Now, it fails with a badarg if the signature
+  doesn't match expectation in size.
 
 ## [1.1.1]
 
