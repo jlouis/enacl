@@ -6,6 +6,7 @@ compile:
 	$(REBAR) compile
 
 .PHONY: tests
+tests:
 	$(REBAR) ct
 
 eqc_compile: compile
