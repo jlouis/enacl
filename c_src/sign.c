@@ -468,6 +468,10 @@ enacl_crypto_sign_verify_detached(ErlNifEnv *env, int argc,
     return enif_make_badarg(env);
   }
 
+  if (sig.size != crypto_sign_BYTES) {
+    return enif_make_badarg(env);
+  }
+
   if (pk.size != crypto_sign_PUBLICKEYBYTES) {
     return enif_make_badarg(env);
   }

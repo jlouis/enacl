@@ -419,7 +419,7 @@ signed_message(M) ->
     ?FAULT(signed_message_bad(), signed_message_good(M)).
 
 signed_message_d(M) ->
-    ?FAULT(signed_message_bad(), signed_message_good(M)).
+    ?FAULT(signed_message_bad_d(), signed_message_good_d(M)).
 
 signed_message_valid({valid, _}, _) -> true;
 signed_message_valid({invalid, _}, _) -> true;
