@@ -24,6 +24,8 @@ jobs: ci: {
 		{uses: "actions/checkout@v2"},
 	    {name: "Install libsodium",
 		 run: "apt-get install -y libsodium-dev"},
-		{run: "make compile"},
-		{run: "make tests"}]
+		{name: "Compile source code",
+		 run: "make compile"},
+		{name: "Run the tests",
+		 run: "make tests"}]
 }
