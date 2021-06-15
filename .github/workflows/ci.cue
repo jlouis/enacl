@@ -22,8 +22,10 @@ jobs: ci: {
 	}
 	steps: [
 		{uses: "actions/checkout@v2"},
+		{name: "Update apt-get database",
+		 run: "apt-get update"},
 	    {name: "Install libsodium",
-		 run: "apt-get install -y libsodium"},
+		 run: "apt-get install -y libsodium-dev"},
 		{name: "Compile source code",
 		 run: "make compile"},
 		{name: "Run the tests",
