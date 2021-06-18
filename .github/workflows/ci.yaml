@@ -15,9 +15,9 @@ jobs:
     strategy:
       matrix:
         otp_vsn:
-        - 22.3
-        - 23.3
-        - 24.0
+        - "22.3"
+        - "23.3"
+        - "24.0"
         os:
         - ubuntu-latest
     steps:
