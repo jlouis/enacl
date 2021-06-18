@@ -23,7 +23,7 @@ jobs:
       with: {}
     - name: Update apt-get database
       run: apt-get update
-    - uses: actions/setup-beam@v1
+    - uses: erlef/setup-beam@v1
       with:
         otp-version: ${{matrix.otp_vsn}}
         rebar3-version: 3.16.1
