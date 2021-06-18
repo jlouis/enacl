@@ -5,6 +5,7 @@ _versions: {
 	// In turn, we can't compile for the newer libsodium functions on this image,
 	// and it fails. Hence these versions.
 	all: ["22.3", "23.3", "24.0"]
+	rebar3: "3.16.1"
 }
 
 #Name: string
@@ -17,9 +18,11 @@ _versions: {
 	page_build?:   #Branches
 }
 
-#Action: "actions/checkout@v2"
+#Action: "actions/checkout@v2" | "actions/setup-beam@v1"
 #Steps: {
 	uses: #Action
+	with:
+		_: string
 } | {
 	name: string
 	run:  string
@@ -30,7 +33,6 @@ _versions: {
 #Jobs: ci: {
 	name:      string
 	"runs-on": string
-	container: image: string
 	strategy:
 		matrix: {
 			otp_vsn: [...string]
@@ -52,7 +54,6 @@ jobs: #Jobs & {
 	ci: {
 		name:      "Run checks and tests over ${{matrix.otp_vsn}} and ${{matrix.os}}"
 		"runs-on": "${{matrix.os}}"
-		container: image: "erlang:${{matrix.otp_vsn}}"
 		strategy: matrix: {
 			otp_vsn: _versions.all
 			// This entry is a lie. The container images are Debian containers, but
@@ -64,6 +65,13 @@ jobs: #Jobs & {
 			{
 				name: "Update apt-get database"
 				run:  "apt-get update"
+			},
+			{
+				uses: "actions/setup-beam@v1"
+				with: {
+					"otp-version": "${{matrix.otp_vsn}}"
+					"rebar3-version": _versions.rebar3
+				}
 			},
 			{
 				name: "Install libsodium"
