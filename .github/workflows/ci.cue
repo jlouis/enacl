@@ -1,9 +1,8 @@
 // Versions for simplicity
 _versions: {
 	latest: ["24.0"]
-	// Older versions than 22.3 use Debian stretch, and it only has libsodium 0.18
-	// In turn, we can't compile for the newer libsodium functions on this image,
-	// and it fails. Hence these versions.
+	// The versions here have an underlying Debian/Ubuntu which support enough of
+	// libsodium to handle what enacl provides. Older versions will fail to compile
 	all: ["22.3", "23.3", "24.0"]
 	rebar3: "3.16.1"
 }
@@ -59,8 +58,6 @@ jobs: #Jobs & {
 		"runs-on": "${{matrix.os}}"
 		strategy: matrix: {
 			otp_vsn: _versions.all
-			// This entry is a lie. The container images are Debian containers, but
-			// one has to specify where those containers are hosted.
 			os: ["ubuntu-latest"]
 		}
 		steps: [
