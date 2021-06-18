@@ -8,18 +8,24 @@ _versions: {
 }
 
 #Name: string
-#Branches: branches: [string]
+#Branches: branches: [string, ...]
+#Tags: tags: [string, ...]
 
 #On: {
-	push:         #Branches
-	pull_request: #Branches
+	push?:         #Branches
+	pull_request?: #Branches
+	page_build?:   #Branches
 }
+
+#Action: "actions/checkout@v2"
 #Steps: {
-	uses: "actions/checkout@v2"
+	uses: #Action
 } | {
 	name: string
 	run:  string
 }
+
+#OS_Version: "ubuntu-latest" | "macos-latest" | "windows_latest"
 
 #Jobs: ci: {
 	name:      string
@@ -27,8 +33,8 @@ _versions: {
 	container: image: string
 	strategy:
 		matrix: {
-			otp_vsn: [string, ...]
-			os: ["ubuntu-latest"]
+			otp_vsn: [...string]
+			os: [...#OS_Version]
 		}
 	steps: [#Steps, ...]
 }
