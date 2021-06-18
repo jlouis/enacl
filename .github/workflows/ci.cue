@@ -55,16 +55,20 @@ jobs: #Jobs & {
 		}
 		steps: [
 			{uses: "actions/checkout@v2"},
-			{name: "Update apt-get database"
-				run: "apt-get update"
+			{
+				name: "Update apt-get database"
+				run:  "apt-get update"
 			},
-			{name: "Install libsodium"
-				run: "apt-get install -y libsodium-dev"
+			{
+				name: "Install libsodium"
+				run:  "apt-get install -y libsodium-dev"
 			},
-			{name: "Compile source code"
-				run: "make compile"
+			{
+				name: "Compile source code"
+				run:  "make compile"
 			},
-			{name: "Run the tests"
-				run: "make tests"
+			{
+				name: "Run the tests"
+				run:  "make tests"
 			}]
 	}}
