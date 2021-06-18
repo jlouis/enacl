@@ -19,7 +19,7 @@ _versions: {
 }
 
 #Action: "actions/checkout@v2" | "erlef/setup-beam@v1"
-#Uses : {
+#Uses: {
 	uses: #Action
 	with?: {
 		...
@@ -27,7 +27,7 @@ _versions: {
 }
 #Run: {
 	name: string
-	run: string
+	run:  string
 }
 #Steps: #Uses | #Run
 
