@@ -18,15 +18,18 @@ _versions: {
 	page_build?:   #Branches
 }
 
-#Action: "actions/checkout@v2" | "actions/setup-beam@v1"
-#Steps: {
+#Action: "actions/checkout@v2" | "erlef/setup-beam@v1"
+#Uses : {
 	uses: #Action
-	with:
-		_: string
-} | {
-	name: string
-	run:  string
+	with?: {
+		...
+	}
 }
+#Run: {
+	name: string
+	run: string
+}
+#Steps: #Uses | #Run
 
 #OS_Version: "ubuntu-latest" | "macos-latest" | "windows_latest"
 
@@ -38,7 +41,7 @@ _versions: {
 			otp_vsn: [...string]
 			os: [...#OS_Version]
 		}
-	steps: [#Steps, ...]
+	steps: [...#Steps]
 }
 
 name: #Name & "build"
@@ -61,21 +64,23 @@ jobs: #Jobs & {
 			os: ["ubuntu-latest"]
 		}
 		steps: [
-			{uses: "actions/checkout@v2"},
 			{
-				name: "Update apt-get database"
-				run:  "apt-get update"
+				uses: "actions/checkout@v2"
 			},
 			{
-				uses: "actions/setup-beam@v1"
+				name: "Update apt-get database"
+				run:  "sudo apt-get update"
+			},
+			{
+				uses: "erlef/setup-beam@v1"
 				with: {
-					"otp-version": "${{matrix.otp_vsn}}"
+					"otp-version":    "${{matrix.otp_vsn}}"
 					"rebar3-version": _versions.rebar3
 				}
 			},
 			{
 				name: "Install libsodium"
-				run:  "apt-get install -y libsodium-dev"
+				run:  "sudo apt-get install -y libsodium-dev"
 			},
 			{
 				name: "Compile source code"
