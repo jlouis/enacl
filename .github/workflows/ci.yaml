@@ -22,7 +22,7 @@ jobs:
     - uses: actions/checkout@v2
       with: {}
     - name: Update apt-get database
-      run: apt-get update
+      run: sudo apt-get update
     - uses: erlef/setup-beam@v1
       with:
         otp-version: ${{matrix.otp_vsn}}
