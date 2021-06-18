@@ -9,8 +9,8 @@ _versions: {
 }
 
 #Name: string
-#Branches: branches: [string, ...]
-#Tags: tags: [string, ...]
+#Branches: branches: [...string]
+#Tags: tags: [...string]
 
 #On: {
 	push?:         #Branches
