@@ -1,3 +1,5 @@
+package actions
+
 // Versions for simplicity
 _versions: {
 	latest: ["24.0"]
