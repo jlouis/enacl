@@ -20,12 +20,12 @@ jobs:
         - ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Update apt-get database
-      run: sudo apt-get update
     - uses: erlef/setup-beam@v1
       with:
         otp-version: ${{matrix.otp_vsn}}
         rebar3-version: 3.16.1
+    - name: Update apt-get database
+      run: sudo apt-get update
     - name: Install libsodium
       run: sudo apt-get install -y libsodium-dev
     - name: Compile source code

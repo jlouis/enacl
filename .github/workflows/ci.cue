@@ -7,6 +7,8 @@ _versions: {
 	rebar3: "3.16.1"
 }
 
+_branch: "master"
+
 #Name: string
 #Branches: branches: [...string]
 #Tags: tags: [...string]
@@ -30,7 +32,7 @@ _versions: {
 }
 #Steps: #Uses | #Run
 
-#OS_Version: "ubuntu-latest" | "macos-latest" | "windows_latest"
+#OS_Version: *"ubuntu-latest" | "macos-latest" | "windows_latest"
 
 #Jobs: ci: {
 	name:      string
@@ -46,45 +48,46 @@ _versions: {
 name: #Name & "build"
 on:   #On & {
 	push: branches: [
-		"master",
+		_branch,
 	]
 	pull_request: branches: [
-		"master",
+		_branch,
 	]
 }
-jobs: #Jobs & {
-	ci: {
-		name:      "Run checks and tests over ${{matrix.otp_vsn}} and ${{matrix.os}}"
-		"runs-on": "${{matrix.os}}"
-		strategy: matrix: {
-			otp_vsn: _versions.all
-			os: ["ubuntu-latest"]
+jobs: #Jobs
+jobs: ci: {
+	name:      "Run checks and tests over ${{matrix.otp_vsn}} and ${{matrix.os}}"
+	"runs-on": "${{matrix.os}}"
+	strategy: matrix: {
+		otp_vsn: _versions.all
+		os: ["ubuntu-latest"]
+	}
+}
+jobs: ci: steps:
+[
+	{
+		uses: "actions/checkout@v2"
+	},
+	{
+		uses: "erlef/setup-beam@v1"
+		with: {
+			"otp-version":    "${{matrix.otp_vsn}}"
+			"rebar3-version": _versions.rebar3
 		}
-		steps: [
-			{
-				uses: "actions/checkout@v2"
-			},
-			{
-				name: "Update apt-get database"
-				run:  "sudo apt-get update"
-			},
-			{
-				uses: "erlef/setup-beam@v1"
-				with: {
-					"otp-version":    "${{matrix.otp_vsn}}"
-					"rebar3-version": _versions.rebar3
-				}
-			},
-			{
-				name: "Install libsodium"
-				run:  "sudo apt-get install -y libsodium-dev"
-			},
-			{
-				name: "Compile source code"
-				run:  "make compile"
-			},
-			{
-				name: "Run the tests"
-				run:  "make tests"
-			}]
-	}}
+	},
+	{
+		name: "Update apt-get database"
+		run:  "sudo apt-get update"
+	},
+	{
+		name: "Install libsodium"
+		run:  "sudo apt-get install -y libsodium-dev"
+	},
+	{
+		name: "Compile source code"
+		run:  "make compile"
+	},
+	{
+		name: "Run the tests"
+		run:  "make tests"
+	}]
