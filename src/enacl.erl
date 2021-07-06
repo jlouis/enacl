@@ -204,6 +204,22 @@
 %% Internal verification of the system
 -export([verify/0]).
 
+%% Type specifications
+-type generichash_bytes() :: 10..64.
+-type sign_state() :: reference().
+
+-type pwhash_alg() :: default | argon2i13 | argon2id13 | pos_integer().
+-type pwhash_limit() :: interactive | moderate | sensitive | pos_integer().
+-type secretstream_xchacha20poly1305_tag() :: message | rekey | final | push | pos_integer().
+
+-export_type([
+    generichash_bytes/0,
+    pwhash_alg/0,
+    pwhash_limit/0,
+    secretstream_xchacha20poly1305_tag/0,
+    sign_state/0
+]).
+
 
 
 %% Definitions of system budgets
@@ -371,7 +387,6 @@ unsafe_memzero(_) ->
 %% This function generates a hash of the message using a key. The hash size is
 %% either 16, 32 or 64 bytes
 %% @end
--type generichash_bytes() :: 10..64.
 -spec generichash(generichash_bytes(), iodata(), binary()) -> binary().
 generichash(HashSize, Message, Key) ->
     enacl_nif:crypto_generichash(HashSize, Message, Key).
@@ -402,15 +417,12 @@ generichash_update(State, Message) ->
 generichash_final(State) ->
     enacl_nif:crypto_generichash_final(State).
 
--type pwhash_limit() :: interactive | moderate | sensitive | pos_integer().
-
 %% @doc pwhash_SALTBYTES/0 returns the number of bytes required for salt.
 %% @end
 -spec pwhash_SALTBYTES() -> pos_integer().
 pwhash_SALTBYTES() ->
     enacl_nif:crypto_pwhash_SALTBYTES().
 
--type pwhash_alg() :: default | argon2i13 | argon2id13 | pos_integer().
 %% @doc pwhash/2 hash a password
 %%
 %% This function generates a fixed size salted hash of a user defined password.
@@ -709,7 +721,6 @@ sign_detached(M, SK) ->
 sign_verify_detached(SIG, M, PK) ->
     enacl_nif:crypto_sign_verify_detached(SIG, M, PK).
 
--type sign_state() :: reference().
 
 %% @doc sign_init/0 initialize a multi-part signature state.
 %%
@@ -1412,7 +1423,6 @@ secretstream_xchacha20poly1305_keygen() ->
 secretstream_xchacha20poly1305_init_push(Key) ->
     enacl_nif:crypto_secretstream_xchacha20poly1305_init_push(Key).
 
--type secretstream_xchacha20poly1305_tag() :: message | rekey | final | push | pos_integer().
 %% @doc secretstream_xchacha20poly1305_push/4 returns encrypted chunk binary.
 %% Updates a secretstream context referenced by `Ref' with `Message' data,
 %% given `Tag' and additional data `AD'.
