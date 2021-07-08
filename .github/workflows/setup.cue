@@ -16,6 +16,6 @@ jobs: ci: {
 	"runs-on": "${{matrix.os}}"
 	strategy: matrix: {
 		otp_vsn: _versions.otp
-		os: ["ubuntu-latest"]
+		os: ["ubuntu-latest", "macos-latest"]
 	}
 }
