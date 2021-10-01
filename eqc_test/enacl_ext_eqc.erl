@@ -1,7 +1,8 @@
 -module(enacl_ext_eqc).
 
 -include_lib("eqc/include/eqc.hrl").
--compile(export_all).
+-compile({parse_transform, eqc_parallelize}).
+-compile([export_all, nowarn_export_all]).
 
 public_keypair() ->
     ?LET(#{ public := PK, secret := SK}, enacl_ext:curve25519_keypair(),

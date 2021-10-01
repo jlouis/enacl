@@ -15,4 +15,5 @@ _build
 priv/enacl_nif.dll
 priv/enacl_nif.exp
 priv/enacl_nif.lib
-c_src/enacl_nif.d
+c_src/*.d
+
