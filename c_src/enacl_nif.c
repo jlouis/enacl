@@ -4,6 +4,7 @@
 #include <erl_nif.h>
 
 #include "aead.h"
+#include "ed25519.h"
 #include "enacl.h"
 #include "enacl_ext.h"
 #include "generichash.h"
@@ -319,6 +320,22 @@ static ErlNifFunc nif_funcs[] = {
                                       enacl_crypto_curve25519_scalarmult),
     erl_nif_dirty_job_cpu_bound_macro("crypto_curve25519_scalarmult_base", 1,
                                       enacl_crypto_curve25519_scalarmult_base),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_ed25519_scalarmult", 2,
+        enacl_crypto_ed25519_scalarmult),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_ed25519_scalarmult_base", 1,
+      enacl_crypto_ed25519_scalarmult_base),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_ed25519_scalarmult_noclamp", 2,
+      enacl_crypto_ed25519_scalarmult_noclamp),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_ed25519_scalarmult_base_noclamp",
+        1, enacl_crypto_ed25519_scalarmult_base_noclamp),
+    {"crypto_ed25519_is_valid_point", 1, enacl_crypto_ed25519_is_valid_point},
+    {"crypto_ed25519_add", 2, enacl_crypto_ed25519_add},
+    {"crypto_ed25519_sub", 2, enacl_crypto_ed25519_sub},
+    {"crypto_ed25519_scalar_reduce", 1, enacl_crypto_ed25519_scalar_reduce},
+    {"crypto_ed25519_scalar_negate", 1, enacl_crypto_ed25519_scalar_negate},
+    {"crypto_ed25519_scalar_add", 2, enacl_crypto_ed25519_scalar_add},
+    {"crypto_ed25519_scalar_sub", 2, enacl_crypto_ed25519_scalar_sub},
+    {"crypto_ed25519_scalar_mul", 2, enacl_crypto_ed25519_scalar_mul},
 
     erl_nif_dirty_job_cpu_bound_macro("crypto_sign_ed25519_keypair", 0,
                                       enacl_crypto_sign_ed25519_keypair),

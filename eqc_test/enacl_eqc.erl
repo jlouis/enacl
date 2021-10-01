@@ -967,7 +967,7 @@ prop_scramble_block() ->
     ?FORALL({Block, Key}, {binary(16), eqc_gen:largebinary(32)},
         is_binary(enacl_ext:scramble_block_16(Block, Key))).
 
-%% Scala multiplication
+%% Scalar multiplication
 prop_scalarmult() ->
   Bytes = 32,
   ?FORALL({S1, S2, Basepoint}, {binary(Bytes), binary(Bytes), binary(Bytes)},
@@ -1016,6 +1016,69 @@ prop_secretstream() ->
       DState = enacl:secretstream_xchacha20poly1305_init_pull(Header, Key),
       pull_messages(DState, Blocks, Msgs)
     end).
+
+%% ED25519
+gen_ed25519_point() ->
+  ?LET(Scalar, noshrink(binary(32)), return(enacl:crypto_ed25519_scalarmult_base(Scalar))).
+
+gen_ed25519_scalar() ->
+  ?LET(Bin, binary(64), return(enacl:crypto_ed25519_scalar_reduce(Bin))).
+
+prop_ed25519_add() ->
+  ?FORALL({P1, P2}, {gen_ed25519_point(), gen_ed25519_point()},
+          equals(enacl:crypto_ed25519_add(P1, P2), enacl:crypto_ed25519_add(P2, P1))
+         ).
+
+prop_ed25519_sub() ->
+  ?FORALL({P1, P2, P3}, {gen_ed25519_point(), gen_ed25519_point(), gen_ed25519_point()},
+  begin
+          equals(enacl:crypto_ed25519_sub(P1, enacl:crypto_ed25519_add(P2, P3)),
+                 enacl:crypto_ed25519_sub(enacl:crypto_ed25519_sub(P1, P2), P3))
+  end
+         ).
+
+prop_ed25519_addsub() ->
+  ?FORALL({P1, P2}, {gen_ed25519_point(), gen_ed25519_point()},
+          equals(P1, enacl:crypto_ed25519_add(enacl:crypto_ed25519_sub(P1, P2), P2))
+         ).
+
+prop_ed25519_scalarmult() ->
+  ?FORALL({S, P}, {gen_ed25519_scalar(), gen_ed25519_point()},
+          true == enacl:crypto_ed25519_is_valid_point(
+                    enacl:crypto_ed25519_scalarmult(S, P))
+         ).
+
+prop_ed25519_scalarmult_base() ->
+  ?FORALL(S, gen_ed25519_scalar(),
+          true == enacl:crypto_ed25519_is_valid_point(
+                    enacl:crypto_ed25519_scalarmult_base(S))
+         ).
+
+prop_ed25519_scalarmult_noclamp() ->
+  ?FORALL({S, P}, {binary(32), gen_ed25519_point()},
+          true == enacl:crypto_ed25519_is_valid_point(
+                    enacl:crypto_ed25519_scalarmult_noclamp(S, P))
+         ).
+
+prop_ed25519_scalarmult_base_noclamp() ->
+  ?FORALL(S, binary(32),
+          true == enacl:crypto_ed25519_is_valid_point(
+                    enacl:crypto_ed25519_scalarmult_base_noclamp(S))
+         ).
+
+prop_ed25519_scalar() ->
+  ?FORALL({S1, S2}, {gen_ed25519_scalar(), gen_ed25519_scalar()},
+          equals(
+            enacl:crypto_ed25519_scalar_add(S1, enacl:crypto_ed25519_scalar_negate(S2)),
+            enacl:crypto_ed25519_scalar_sub(S1, S2)
+           )).
+
+prop_ed25519_scalar_mul() ->
+  ?FORALL({S1, S2}, {gen_ed25519_scalar(), gen_ed25519_scalar()},
+          equals(
+            enacl:crypto_ed25519_scalar_mul(S1, S2),
+            enacl:crypto_ed25519_scalar_mul(S2, S1)
+           )).
 
 %% HELPERS
 
