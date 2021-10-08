@@ -1,6 +1,6 @@
 -module(enacl_eqc).
 -include_lib("eqc/include/eqc.hrl").
--compile(export_all).
+-compile([export_all, nowarn_export_all]).
 
 -ifndef(mini).
 -compile({parse_transform, eqc_parallelize}).
@@ -83,8 +83,8 @@ v_binary(_, _) -> false.
 
 
 %% Typical generators based on the binaries
-nonce() -> g_binary(enacl:box_nonce_size()).
-nonce_valid(N) -> v_binary(enacl:box_nonce_size(), N).
+nonce() -> g_binary(enacl:box_NONCEBYTES()).
+nonce_valid(N) -> v_binary(enacl:box_NONCEBYTES(), N).
 
 %% Generator of natural numbers
 g_nat() ->
@@ -111,16 +111,45 @@ keypair_bad() ->
         #{ public := PK, secret := SK} = enacl:box_keypair(),
         case X of
             pk ->
-              PKBytes = enacl:box_public_key_bytes(),
+              PKBytes = enacl:box_PUBLICKEYBYTES(),
               {oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= PKBytes)]), SK};
             sk ->
-              SKBytes = enacl:box_secret_key_bytes(),
+              SKBytes = enacl:box_SECRETKEYBYTES(),
               {PK, oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= SKBytes)])}
         end
       end).
 
 keypair() ->
     ?FAULT(keypair_bad(), keypair_good()).
+
+kx_keypair_good() ->
+  #{ public := PK, secret := SK} = enacl:kx_keypair(),
+  {PK, SK}.
+
+kx_keypair_bad() ->
+  ?LET(X, elements([pk, sk]),
+  begin
+    #{ public := PK, secret := SK} = enacl:box_keypair(),
+    case X of
+      pk ->
+        PKBytes = enacl:kx_public_key_size(),
+        {oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= PKBytes)]), SK};
+      sk ->
+        SKBytes = enacl:kx_secret_key_size(),
+        {PK, oneof([return(a), nat(), ?SUCHTHAT(B, binary(), byte_size(B) /= SKBytes)])}
+    end
+  end).
+
+g_generichash_data() ->
+  binary().
+
+g_generichash_key() ->
+  ?LET({Min, Max}, {return(enacl_nif:crypto_generichash_KEYBYTES_MIN()), return(enacl_nif:crypto_generichash_KEYBYTES_MAX())},
+    largebinary({limit, Min, Max})).
+
+g_generichash_size() ->
+  ?LET({Min, Max}, {return(enacl_nif:crypto_generichash_BYTES_MIN()), return(enacl_nif:crypto_generichash_BYTES_MAX())},
+    choose(Min, Max)).
 
 %% CRYPTO BOX
 %% ---------------------------
@@ -130,8 +159,8 @@ keypair() ->
 %% * box_afternm/3
 %% * box_open_afternm/3
 keypair_valid(PK, SK) when is_binary(PK), is_binary(SK) ->
-    PKBytes = enacl:box_public_key_bytes(),
-    SKBytes = enacl:box_secret_key_bytes(),
+    PKBytes = enacl:box_PUBLICKEYBYTES(),
+    SKBytes = enacl:box_SECRETKEYBYTES(),
     byte_size(PK) == PKBytes andalso byte_size(SK) == SKBytes;
 keypair_valid(_PK, _SK) -> false.
 
@@ -235,11 +264,11 @@ beforenm_key() ->
                 oneof([
                   elements([a,b,c]),
                   real(),
-                  ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:box_beforenm_bytes())
+                  ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:box_BEFORENMBYTES())
                   ])
         end).
 
-v_key(K) when is_binary(K) -> byte_size(K) == enacl:box_beforenm_bytes();
+v_key(K) when is_binary(K) -> byte_size(K) == enacl:box_BEFORENMBYTES();
 v_key(_) -> false.
 
 prop_beforenm_correct() ->
@@ -295,11 +324,11 @@ sign_keypair_bad() ->
       KP = enacl:sign_keypair(),
       case X of
         pk ->
-          Sz = enacl:sign_keypair_public_size(),
+          Sz = enacl:sign_PUBLICBYTES(),
           ?LET(Wrong, oneof([a, int(), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)]),
             KP#{ public := Wrong });
         sk ->
-          Sz = enacl:sign_keypair_secret_size(),
+          Sz = enacl:sign_SECRETBYTES(),
           ?LET(Wrong, oneof([a, int(), ?SUCHTHAT(B, binary(), byte_size(B) /= Sz)]),
             KP#{ secret := Wrong })
       end
@@ -313,12 +342,12 @@ sign_keypair() ->
 
 sign_keypair_public_valid(#{ public := Public })
   when is_binary(Public) ->
-    byte_size(Public) == enacl:sign_keypair_public_size();
+    byte_size(Public) == enacl:sign_PUBLICBYTES();
 sign_keypair_public_valid(_) -> false.
 
 sign_keypair_secret_valid(#{ secret := Secret })
   when is_binary(Secret) ->
-    byte_size(Secret) == enacl:sign_keypair_secret_size();
+    byte_size(Secret) == enacl:sign_SECRETBYTES();
 sign_keypair_secret_valid(_) -> false.
 
 sign_keypair_valid(KP) ->
@@ -379,18 +408,18 @@ signed_message_good_d(M) ->
                end)}]).
 
 signed_message_bad() ->
-    Sz = enacl:sign_keypair_public_size(),
+    Sz = enacl:sign_PUBLICBYTES(),
     {binary(), oneof([a, int(), ?SUCHTHAT(B, binary(Sz), byte_size(B) /= Sz)])}.
 
 signed_message_bad_d() ->
-    Sz = enacl:sign_keypair_public_size(),
+    Sz = enacl:sign_PUBLICBYTES(),
     {binary(), oneof([a, int(), ?SUCHTHAT(B, binary(Sz), byte_size(B) /= Sz)])}.
 
 signed_message(M) ->
     ?FAULT(signed_message_bad(), signed_message_good(M)).
 
 signed_message_d(M) ->
-    ?FAULT(signed_message_bad(), signed_message_good(M)).
+    ?FAULT(signed_message_bad_d(), signed_message_good_d(M)).
 
 signed_message_valid({valid, _}, _) -> true;
 signed_message_valid({invalid, _}, _) -> true;
@@ -403,9 +432,9 @@ prop_sign_detached_open() ->
               true ->
                   case SignMsg of
                     {valid, Sig} ->
-                        equals({ok, Msg}, enacl:sign_verify_detached(Sig, Msg, PK));
+                        equals(true, enacl:sign_verify_detached(Sig, Msg, PK));
                     {invalid, Sig} ->
-                        equals({error, failed_verification}, enacl:sign_verify_detached(Sig, Msg, PK))
+                        equals(false, enacl:sign_verify_detached(Sig, Msg, PK))
                   end;
               false ->
                   badargs(fun() -> enacl:sign_verify_detached(SignMsg, Msg, PK) end)
@@ -467,19 +496,19 @@ prop_seal_box_correct() ->
 %% * secretbox/3
 %% * secretbo_open/3
 secret_key_good() ->
-	Sz = enacl:secretbox_key_size(),
+	Sz = enacl:secretbox_KEYBYTES(),
 	binary(Sz).
 
 secret_key_bad() ->
 	oneof([return(a),
 	       nat(),
-	       ?SUCHTHAT(B, binary(), byte_size(B) /= enacl:secretbox_key_size())]).
+	       ?SUCHTHAT(B, binary(), byte_size(B) /= enacl:secretbox_KEYBYTES())]).
 
 secret_key() ->
 	?FAULT(secret_key_bad(), secret_key_good()).
 
 secret_key_valid(SK) when is_binary(SK) ->
-	Sz = enacl:secretbox_key_size(),
+	Sz = enacl:secretbox_KEYBYTES(),
 	byte_size(SK) == Sz;
 secret_key_valid(_SK) -> false.
 
@@ -525,20 +554,45 @@ prop_secretbox_failure_integrity() ->
 %% ------------------------------------------------------------
 %% * aead_chacha20poly1305_encrypt/4,
 %% * aead_chacha20poly1305_decrypt/4,
-prop_aead_chacha20poly1305() ->
+prop_aead_chacha20poly1305_ietf() ->
+  NPubBytes = enacl:aead_chacha20poly1305_ietf_NPUBBYTES(),
   ?FORALL({Key, Msg, AD, Nonce},
-          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), binary(NPubBytes)},
   begin
-    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
-    equals(enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, EncryptMsg), Msg)
+    EncryptMsg = enacl:aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    equals(enacl:aead_chacha20poly1305_ietf_decrypt(EncryptMsg, AD, Nonce, Key), Msg)
   end).
 
-prop_aead_chacha20poly1305_fail() ->
+prop_aead_chacha20poly1305_ietf_fail() ->
+  NPubBytes = enacl:aead_chacha20poly1305_ietf_NPUBBYTES(),
   ?FORALL({Key, Msg, AD, Nonce},
-          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), largeint()},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), binary(NPubBytes)},
   begin
-    EncryptMsg = enacl:aead_chacha20poly1305_encrypt(Key, Nonce, AD, Msg),
-    case enacl:aead_chacha20poly1305_decrypt(Key, Nonce, AD, <<0:8, EncryptMsg/binary>>) of
+    EncryptMsg = enacl:aead_chacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    case enacl:aead_chacha20poly1305_ietf_decrypt(<<0:8, EncryptMsg/binary>>, AD, Nonce, Key) of
+        {error, _} -> true;
+        _          -> false
+    end
+  end).
+
+%% * aead_xchacha20poly1305_encrypt/4,
+%% * aead_xchacha20poly1305_decrypt/4,
+prop_aead_xchacha20poly1305_ietf() ->
+  NPubBytes = enacl:aead_xchacha20poly1305_ietf_NPUBBYTES(),
+  ?FORALL({Key, Msg, AD, Nonce},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), binary(NPubBytes)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    equals(enacl:aead_xchacha20poly1305_ietf_decrypt(EncryptMsg, AD, Nonce, Key), Msg)
+  end).
+
+prop_aead_xchacha20poly1305_ietf_fail() ->
+  NPubBytes = enacl:aead_xchacha20poly1305_ietf_NPUBBYTES(),
+  ?FORALL({Key, Msg, AD, Nonce},
+          {binary(32), binary(), ?LET(ADBytes, choose(0,16), binary(ADBytes)), binary(NPubBytes)},
+  begin
+    EncryptMsg = enacl:aead_xchacha20poly1305_ietf_encrypt(Msg, AD, Nonce, Key),
+    case enacl:aead_xchacha20poly1305_ietf_decrypt(<<0:8, EncryptMsg/binary>>, AD, Nonce, Key) of
         {error, _} -> true;
         _          -> false
     end
@@ -564,23 +618,26 @@ xor_bytes(<<A, As/binary>>, <<B, Bs/binary>>) ->
     [A bxor B | xor_bytes(As, Bs)];
 xor_bytes(<<>>, <<>>) -> [].
 
-%% prop_stream_xor_correct() ->
-%%     ?FORALL({Msg, Nonce, Key},
-%%             {?FAULT_RATE(1, 40, g_iodata()),
-%%              ?FAULT_RATE(1, 40, nonce()),
-%%              ?FAULT_RATE(1, 40, secret_key())},
-%%         case v_iodata(Msg) andalso nonce_valid(Nonce) andalso secret_key_valid(Key) of
-%%             true ->
-%%                 Stream = enacl:stream(iolist_size(Msg), Nonce, Key),
-%%                 CipherText = enacl:stream_xor(Msg, Nonce, Key),
-%%                 StreamXor = enacl:stream_xor(CipherText, Nonce, Key),
-%%                 conjunction([
-%%                     {'xor', equals(iolist_to_binary(Msg), StreamXor)},
-%%                     {stream, equals(iolist_to_binary(xor_bytes(Stream, iolist_to_binary(Msg))), CipherText)}
-%%                 ]);
-%%             false ->
-%%                 badargs(fun() -> enacl:stream_xor(Msg, Nonce, Key) end)
-%%         end).
+positive() ->
+  ?LET(N, nat(), N+1).
+
+chacha20_nonce() ->
+  Sz = enacl:stream_chacha20_NONCEBYTES(),
+  binary(Sz).
+
+chacha20_key() ->
+  Sz = enacl:stream_chacha20_KEYBYTES(),
+  binary(Sz).
+
+prop_stream_chacha20_correct() ->
+  ?FORALL(Len, positive(),
+    ?FORALL({Msg, Nonce, Key}, {binary(Len), chacha20_nonce(), chacha20_key()},
+      begin
+        CT = enacl:stream_chacha20_xor(Msg, Nonce, Key),
+        Stream = enacl:stream_chacha20(Len, Nonce, Key),
+        CT2 = list_to_binary(xor_bytes(Stream, Msg)),
+        equals(CT, CT2)
+      end)).
 
 %% CRYPTO AUTH
 %% ------------------------------------------------------------
@@ -599,19 +656,19 @@ prop_auth_correct() ->
        end).
 
 authenticator_bad() ->
-    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:auth_size())]).
+    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:auth_BYTES())]).
 
 authenticator_good(Msg, Key) when is_binary(Key) ->
-    Sz = enacl:secretbox_key_size(),
+    Sz = enacl:secretbox_KEYBYTES(),
     case v_iodata(Msg) andalso byte_size(Key) == Sz of
       true ->
-        frequency([{1, ?LAZY({invalid, binary(enacl:auth_size())})},
+        frequency([{1, ?LAZY({invalid, binary(enacl:auth_BYTES())})},
                    {3, return({valid, enacl:auth(Msg, Key)})}]);
       false ->
-        binary(enacl:auth_size())
+        binary(enacl:auth_BYTES())
     end;
 authenticator_good(_Msg, _Key) ->
-    binary(enacl:auth_size()).
+    binary(enacl:auth_BYTES()).
 
 authenticator(Msg, Key) ->
   ?FAULT(authenticator_bad(), authenticator_good(Msg, Key)).
@@ -654,19 +711,19 @@ prop_onetimeauth_correct() ->
        end).
 
 ot_authenticator_bad() ->
-    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:onetime_auth_size())]).
+    oneof([a, int(), ?SUCHTHAT(X, binary(), byte_size(X) /= enacl:onetime_auth_BYTES())]).
 
 ot_authenticator_good(Msg, Key) when is_binary(Key) ->
-    Sz = enacl:secretbox_key_size(),
+    Sz = enacl:secretbox_KEYBYTES(),
     case v_iodata(Msg) andalso byte_size(Key) == Sz of
       true ->
-        frequency([{1, ?LAZY({invalid, binary(enacl:onetime_auth_size())})},
+        frequency([{1, ?LAZY({invalid, binary(enacl:onetime_auth_BYTES())})},
                    {3, return({valid, enacl:onetime_auth(Msg, Key)})}]);
       false ->
-        binary(enacl:onetime_auth_size())
+        binary(enacl:onetime_auth_BYTES())
     end;
 ot_authenticator_good(_Msg, _Key) ->
-    binary(enacl:auth_size()).
+    binary(enacl:auth_BYTES()).
 
 ot_authenticator(Msg, Key) ->
   ?FAULT(ot_authenticator_bad(), ot_authenticator_good(Msg, Key)).
@@ -704,6 +761,13 @@ pwhash(Passwd, Salt) ->
     error:badarg -> badarg
   end.
 
+pwhash(Password, Salt, Ops, Mem, Alg) ->
+  try
+    enacl:pwhsah(Password, Salt, Ops, Mem, Alg)
+  catch
+    error:badarg -> badarg
+  end.
+
 pwhash_str(Passwd) ->
   try
     enacl:pwhash_str(Passwd)
@@ -718,13 +782,29 @@ pwhash_str_verify(PasswdHash, Passwd) ->
     error:badarg -> badarg
   end.
 
+prop_pwhash() ->
+  ?FORALL({Password, Salt, OLimit, MLimit, Alg},
+          {binary(16),
+           binary(16),
+           elements([interactive, moderate]), %% These could add senstitive, but are too runtime-expensive
+           elements([interactive, moderate]), %% And that is for a reason.
+           elements([default, 'argon2id13'])}, %% Argon2I13 uses different limits, so it is kept out as
+                                               %% this would otherwise fail
+    begin
+       Bin1 = enacl:pwhash(Password, Salt, OLimit, MLimit, Alg),
+       Bin2 = enacl:pwhash(Password, Salt, OLimit, MLimit, Alg),
+       equals(Bin1, Bin2)
+    end).
+
 prop_pwhash_str_verify() ->
-    ?FORALL({Passwd},
-            {?FAULT_RATE(1, 40, g_iodata())},
+    ?FORALL({Passwd, OLimit, MLimit},
+            {?FAULT_RATE(1, 40, g_iodata()),
+             elements([interactive, moderate]),
+             elements([interactive, moderate])},
             begin
                 case v_iodata(Passwd) of
                     true ->
-                        {ok, Ascii} = enacl:pwhash_str(Passwd),
+                        Ascii = enacl:pwhash_str(Passwd, OLimit, MLimit),
                         S = enacl:pwhash_str_verify(Ascii, Passwd),
                         equals(S, true);
                     false ->
@@ -757,6 +837,41 @@ prop_crypto_hash_neq() ->
     ?FORALL({X, Y}, diff_pair(),
         enacl:hash(X) /= enacl:hash(Y)
     ).
+
+prop_crypto_shorthash_eq() ->
+  ?FORALL(X, g_iodata(),
+    case v_iodata(X) of
+      true -> equals(enacl:hash(X), enacl:hash(X));
+      false ->
+        try
+          enacl:hash(X),
+          false
+        catch
+          error:badarg -> true
+        end
+      end
+    ).
+prop_crypto_generichash_eq() ->
+  ?FORALL({Sz, X, Key}, {g_generichash_size(), g_generichash_data(), g_generichash_key()},
+      equals(enacl:generichash(Sz, X, Key), enacl:generichash(Sz, X, Key))).
+
+generichash_loop(S, []) -> S;
+generichash_loop(S, [M|Ms]) ->
+  S2 = enacl:generichash_update(S, M),
+  generichash_loop(S2, Ms).
+
+prop_crypto_generichash_multi_part_eq() ->
+  ?FORALL({Sz, Xs, Key}, {g_generichash_size(), list(g_generichash_data()), g_generichash_key()},
+  begin
+    S1 = generichash_loop(enacl:generichash_init(Sz, Key), Xs),
+    S2 = generichash_loop(enacl:generichash_init(Sz, Key), Xs),
+    equals(enacl:generichash_final(S1), enacl:generichash_final(S2))
+  end).
+
+prop_crypto_shorthash_neq() ->
+  ?FORALL({X, Y}, diff_pair(),
+    enacl:hash(X) /= enacl:hash(Y)
+  ).
 
 %% STRING COMPARISON
 %% -------------------------
@@ -817,7 +932,8 @@ prop_randombytes() ->
     ?FORALL(X, g_nat(),
         case is_nat(X) of
             true ->
-                is_binary(enacl:randombytes(X));
+              R = enacl:randombytes(X),
+              is_binary(R) andalso (byte_size(R) == X);
             false ->
                 try
                     enacl:randombytes(X),
@@ -828,8 +944,84 @@ prop_randombytes() ->
                 end
        end).
 
+prop_randombytes_uint32() ->
+  ?FORALL(_, return(x),
+    begin
+      V = enacl:randombytes_uint32(),
+      is_integer(V)
+    end).
+
+%% KX
+%% ---------------------------
+prop_kx() ->
+  ?FORALL({{CPK, CSK}, {SPK, SSK}}, {kx_keypair_good(), kx_keypair_good()},
+  begin
+    #{ client_tx := CTX, client_rx := CRX} = enacl:kx_client_session_keys(CPK, CSK, SPK),
+    #{ server_tx := STX, server_rx := SRX} = enacl:kx_server_session_keys(SPK, SSK, CPK),
+    %% This keypair must be shared in both directions
+    conjunction([{ctx_srx, equals(CTX, SRX)}, {stx_crx, equals(STX, CRX)}])
+  end).
+
+%% SCRAMBLING
+prop_scramble_block() ->
+    ?FORALL({Block, Key}, {binary(16), eqc_gen:largebinary(32)},
+        is_binary(enacl_ext:scramble_block_16(Block, Key))).
+
+%% Scala multiplication
+prop_scalarmult() ->
+  Bytes = 32,
+  ?FORALL({S1, S2, Basepoint}, {binary(Bytes), binary(Bytes), binary(Bytes)},
+          equals(enacl:curve25519_scalarmult(S1,
+                       enacl:curve25519_scalarmult(S2, Basepoint)),
+                 enacl:curve25519_scalarmult(S2,
+                       enacl:curve25519_scalarmult(S1, Basepoint)))
+         ).
+
+%% Secretstream
+secretstream_key() ->
+  ?LET(K, enacl:secretstream_xchacha20poly1305_keygen(), K).
+
+secretstream_msg() ->
+  ?LET({Tag, AD, Msg}, {oneof([message,rekey,push]), binary(), binary()},
+    {Tag, AD, Msg}).
+
+secretstream_msgs() ->
+  ?LET({Ms, {_, AD, Msg}}, {list(secretstream_msg()), secretstream_msg()},
+   Ms ++ [{final, AD, Msg}]).
+
+push_messages(_State, []) ->
+  [];
+push_messages(State, [{Tag, AD, Msg}|Next]) ->
+  Block = enacl:secretstream_xchacha20poly1305_push(State, Msg, AD, Tag),
+  [Block|push_messages(State, Next)].
+
+pull_messages(_State, [], []) ->
+  true;
+pull_messages(State, [B|Bs], [{_Tag, AD, _Msg}=Expect|Next]) ->
+  {Msgx, Tagx} = enacl:secretstream_xchacha20poly1305_pull(State, B, AD),
+  case equals(Expect, {Tagx, AD, Msgx}) of
+    true ->
+      pull_messages(State, Bs, Next);
+    R ->
+      R
+  end.
+
+prop_secretstream() ->
+  ?FORALL({Key, Msgs}, {secretstream_key(), secretstream_msgs()},
+    begin
+      %% Encrypt
+      {Header, State} = enacl:secretstream_xchacha20poly1305_init_push(Key),
+      Blocks = push_messages(State, Msgs),
+      %% Decrypt & Verify
+      DState = enacl:secretstream_xchacha20poly1305_init_pull(Header, Key),
+      pull_messages(DState, Blocks, Msgs)
+    end).
+
+%% HELPERS
+
 %% INTERNAL FUNCTIONS
 %% ------------------------------------------------------------
+
 badargs(Thunk) ->
   try
     Thunk(),
