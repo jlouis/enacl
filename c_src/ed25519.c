@@ -92,20 +92,14 @@ ERL_NIF_TERM
 enacl_crypto_ed25519_scalarmult(ErlNifEnv *env, int argc,
                                 ERL_NIF_TERM const argv[]) {
   ERL_NIF_TERM result;
-  ErlNifBinary secret, basepoint, output;
-  uint8_t bp[crypto_scalarmult_ed25519_BYTES];
+  ErlNifBinary scalar, point, output;
 
-  if ((argc != 2) || (!enif_inspect_binary(env, argv[0], &secret)) ||
-      (!enif_inspect_binary(env, argv[1], &basepoint)) ||
-      (secret.size != crypto_scalarmult_ed25519_BYTES) ||
-      (basepoint.size != crypto_scalarmult_ed25519_BYTES)) {
+  if ((argc != 2) || (!enif_inspect_binary(env, argv[0], &scalar)) ||
+      (!enif_inspect_binary(env, argv[1], &point)) ||
+      (scalar.size != crypto_scalarmult_ed25519_BYTES) ||
+      (point.size != crypto_scalarmult_ed25519_BYTES)) {
     return enif_make_badarg(env);
   }
-
-  memcpy(bp, basepoint.data, crypto_scalarmult_ed25519_BYTES);
-
-  /* Clear the high-bit. Better safe than sorry. */
-  bp[crypto_scalarmult_curve25519_BYTES - 1] &= 0x7f;
 
   do {
     if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
@@ -113,7 +107,7 @@ enacl_crypto_ed25519_scalarmult(ErlNifEnv *env, int argc,
       continue;
     }
 
-    if (crypto_scalarmult_ed25519(output.data, secret.data, bp) != 0) {
+    if (crypto_scalarmult_ed25519(output.data, scalar.data, point.data) != 0) {
       enif_release_binary(&output);
       result = enacl_error_tuple(env, "scalarmult_ed25519_failed");
       continue;
@@ -121,8 +115,6 @@ enacl_crypto_ed25519_scalarmult(ErlNifEnv *env, int argc,
 
     result = enif_make_binary(env, &output);
   } while (0);
-
-  sodium_memzero(bp, crypto_scalarmult_curve25519_BYTES);
 
   return result;
 }
@@ -160,20 +152,14 @@ ERL_NIF_TERM
 enacl_crypto_ed25519_scalarmult_noclamp(ErlNifEnv *env, int argc,
                                         ERL_NIF_TERM const argv[]) {
   ERL_NIF_TERM result;
-  ErlNifBinary secret, basepoint, output;
-  uint8_t bp[crypto_scalarmult_ed25519_BYTES];
+  ErlNifBinary scalar, point, output;
 
-  if ((argc != 2) || (!enif_inspect_binary(env, argv[0], &secret)) ||
-      (!enif_inspect_binary(env, argv[1], &basepoint)) ||
-      (secret.size != crypto_scalarmult_ed25519_BYTES) ||
-      (basepoint.size != crypto_scalarmult_ed25519_BYTES)) {
+  if ((argc != 2) || (!enif_inspect_binary(env, argv[0], &scalar)) ||
+      (!enif_inspect_binary(env, argv[1], &point)) ||
+      (scalar.size != crypto_scalarmult_ed25519_BYTES) ||
+      (point.size != crypto_scalarmult_ed25519_BYTES)) {
     return enif_make_badarg(env);
   }
-
-  memcpy(bp, basepoint.data, crypto_scalarmult_ed25519_BYTES);
-
-  /* Clear the high-bit. Better safe than sorry. */
-  bp[crypto_scalarmult_curve25519_BYTES - 1] &= 0x7f;
 
   do {
     if (!enif_alloc_binary(crypto_scalarmult_curve25519_BYTES, &output)) {
@@ -181,7 +167,7 @@ enacl_crypto_ed25519_scalarmult_noclamp(ErlNifEnv *env, int argc,
       continue;
     }
 
-    if (crypto_scalarmult_ed25519_noclamp(output.data, secret.data, bp) != 0) {
+    if (crypto_scalarmult_ed25519_noclamp(output.data, scalar.data, point.data) != 0) {
       enif_release_binary(&output);
       result = enacl_error_tuple(env, "scalarmult_ed25519_noclamp_failed");
       continue;
@@ -189,8 +175,6 @@ enacl_crypto_ed25519_scalarmult_noclamp(ErlNifEnv *env, int argc,
 
     result = enif_make_binary(env, &output);
   } while (0);
-
-  sodium_memzero(bp, crypto_scalarmult_curve25519_BYTES);
 
   return result;
 }

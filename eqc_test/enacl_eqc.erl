@@ -1048,6 +1048,11 @@ prop_ed25519_scalarmult() ->
                     enacl:crypto_ed25519_scalarmult(S, P))
          ).
 
+prop_ed25519_scalarmult_1() ->
+  ?FORALL(P, gen_ed25519_point(),
+          equals(P, enacl:crypto_ed25519_scalarmult_noclamp(<<1:256/little>>, P))
+         ).
+
 prop_ed25519_scalarmult_base() ->
   ?FORALL(S, gen_ed25519_scalar(),
           true == enacl:crypto_ed25519_is_valid_point(
