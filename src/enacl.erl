@@ -524,7 +524,7 @@ kdf_derive_from_key(MasterKey, Context, Id) ->
 
 %% Public Key Crypto
 %% ---------------------
-%% @doc box_keypair/0 creates a new Public/Secret keypair.
+%% @doc box_keypair/0 creates a new Public/Secret key pair.
 %%
 %% Generates and returns a new key pair for the Box encryption scheme. The return value is a
 %% map in order to avoid using the public key as a secret key and vice versa.
@@ -566,7 +566,7 @@ box(Msg, Nonce, PK, SK) ->
 box_open(CipherText, Nonce, PK, SK) ->
     enacl_nif:crypto_box_open([?P_BOXZEROBYTES, CipherText], Nonce, PK, SK).
 
-%% @doc box_beforenm/2 precomputes a box shared key for a PK/SK keypair
+%% @doc box_beforenm/2 precomputes a box shared key for a PK/SK key pair
 %% @end
 -spec box_beforenm(PK, SK) -> binary()
     when
@@ -650,7 +650,7 @@ sign_SECRETBYTES() ->
 sign_SEEDBYTES() ->
     enacl_nif:crypto_sign_SEEDBYTES().
 
-%% @doc sign_keypair/0 returns a signature keypair for signing
+%% @doc sign_keypair/0 returns a signature key pair for signing
 %%
 %% The returned value is a map in order to make it harder to misuse keys.
 %% @end
@@ -659,7 +659,7 @@ sign_keypair() ->
     {PK, SK} = enacl_nif:crypto_sign_keypair(),
     #{ public => PK, secret => SK}.
 
-%% @doc sign_seed_keypair/1 returns a signature keypair based on seed for signing
+%% @doc sign_seed_keypair/1 returns a signature key pair based on seed for signing
 %%
 %% The returned value is a map in order to make it harder to misuse keys.
 %% @end
@@ -769,7 +769,7 @@ box_SECRETKEYBYTES() ->
 %% @doc seal_box/2 encrypts an anonymous message to another party.
 %%
 %% Encrypt a `Msg' to a party using his public key, `PK'. This generates an ephemeral
-%% keypair and then uses `box'. Ephemeral public key will sent to other party. Returns the
+%% key pair and then uses `box'. Ephemeral public key will sent to other party. Returns the
 %% enciphered message `SealedCipherText' which includes ephemeral public key at head.
 %% @end
 -spec box_seal(Msg, PK) -> SealedCipherText
@@ -998,7 +998,7 @@ auth(Msg, Key) ->
 %% @doc auth_verify/3 verifies an authenticator for a message
 %%
 %% Given an `Authenticator', a `Msg' and a `Key'; verify that the MAC for the pair `{Msg, Key}' is really `Authenticator'. Returns
-%% the value `true' if the verfication passes. Upon failure, the function returns `false'.
+%% the value `true' if the verification passes. Upon failure, the function returns `false'.
 %% @end
 -spec auth_verify(Authenticator, Msg, Key) -> boolean()
     when
@@ -1048,7 +1048,7 @@ shorthash(Msg, Key) ->
 %% @doc onetime_auth/2 produces a ONE-TIME authenticator for a message
 %%
 %% This function works like {@link auth/2} except that the key must not be used again for subsequent messages. That is, the pair
-%% `{Msg, Key}' is unique and only to be used once. The advantage is noticably faster execution.
+%% `{Msg, Key}' is unique and only to be used once. The advantage is noticeably faster execution.
 %% @end
 -spec onetime_auth(Msg, Key) -> Authenticator
     when
@@ -1124,7 +1124,7 @@ curve25519_scalarmult_base(Secret) ->
 
 %% Ed 25519 Crypto
 %% ---------------
-%% @doc crypto_sign_ed25519_keypair/0 creates a new Ed 25519 Public/Secret keypair.
+%% @doc crypto_sign_ed25519_keypair/0 creates a new Ed 25519 Public/Secret key pair.
 %%
 %% Generates and returns a new key pair for the Ed 25519 signature scheme. The return value is a
 %% map in order to avoid using the public key as a secret key and vice versa.
@@ -1170,7 +1170,7 @@ crypto_sign_ed25519_secret_size() ->
 
 %% Key exchange functions
 %% ----------------------
-%% @doc kx_keypair/0 creates a new Public/Secret keypair.
+%% @doc kx_keypair/0 creates a new Public/Secret key pair.
 %%
 %% Generates and returns a new key pair for the key exchange. The return value is a
 %% map in order to avoid using the public key as a secret key and vice versa.

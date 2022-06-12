@@ -289,7 +289,7 @@ function call, and optimizes EQC tests to make it easier to implement
 `largebinary`-support in EQC tests.
 - The release also adds an (experimental) scrambling function for
 hiding the internal structure of counters. This is based on an
-enlarged TEA-cipher by Wheeler and Needham. It is neccessary for
+enlarged TEA-cipher by Wheeler and Needham. It is necessary for
 correct operation of the CurveCP implementation, which is why it is
 included in this library.
 

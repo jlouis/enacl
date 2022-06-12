@@ -33,7 +33,7 @@ scramble_block_16(Block, Key) ->
 
 %% Curve 25519 Crypto
 %% ------------------
-%% @doc curve25519_keypair/0 creates a new Public/Secret keypair.
+%% @doc curve25519_keypair/0 creates a new Public/Secret key pair.
 %%
 %% Generates and returns a new key pair for the Curve 25519 encryption scheme. The return value is a
 %% map in order to avoid using the public key as a secret key and vice versa.
