@@ -15,7 +15,8 @@ jobs:
         otp_vsn:
         - "22.3"
         - "23.3"
-        - "24.0"
+        - "24.3"
+        - "25.0"
         os:
         - ubuntu-latest
     steps:
