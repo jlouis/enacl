@@ -17,13 +17,8 @@
 #include "secretstream.h"
 #include "sign.h"
 
-#ifdef ERL_NIF_DIRTY_JOB_CPU_BOUND
 #define erl_nif_dirty_job_cpu_bound_macro(a, b, c)                             \
   { a, b, c, ERL_NIF_DIRTY_JOB_CPU_BOUND }
-#else
-#define erl_nif_dirty_job_cpu_bound_macro(a, b, c)                             \
-  { a, b, c }
-#endif
 
 /* Initialization */
 static int enacl_crypto_load(ErlNifEnv *env, void **priv_data,
