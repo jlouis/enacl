@@ -54,9 +54,7 @@ static int enacl_crypto_upgrade(ErlNifEnv* env, void **priv_data,
     return 0;
 }
 
-static int enacl_crypto_unload(ErlNifEnv* env, void **priv_data,
-                                ERL_NIF_TERM load_info) {
-    return 0;
+static void enacl_crypto_unload(ErlNifEnv* env, void *priv_data) {
 }
 
 /* GENERAL ROUTINES
