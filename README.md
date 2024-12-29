@@ -62,7 +62,7 @@ place.
 
 In general, consult the libsodium documentation at [Libsodium documentation](https://download.libsodium.org/doc/)
 
-The original NaCl documentation is nowadays largely superceded by the
+The original NaCl documentation is nowadays largely superseded by the
 libsodium documentation, but it is still worth a visit [NaCl website](https://nacl.cr.yp.to)
 
 but also note that our interface has full Edoc documentation,
@@ -124,7 +124,7 @@ However, their correct use is still needed in order to be secure:
   an attacker can time the response in order to guess at how many
   bytes where matched. This in turn enables some attacks where you use
   a foreign system as an oracle in order to learn the structure of a
-  string, breaking the cryptograhic system in the process.
+  string, breaking the cryptographic system in the process.
 
 ## Versions
 
@@ -158,7 +158,7 @@ This implements standard Public/Secret key cryptography. The
 implementation roughly consists of two major sections:
 
 * *Authenticated encryption:* provides a `box` primitive which
-  encrypts and then also authenticates a message. The reciever is only
+  encrypts and then also authenticates a message. The receiver is only
   able to open the sealed box if they posses the secret key and the
   authentication from the sender is correct.
 * *Signatures:* allows one party to sign a message (not encrypting it)
