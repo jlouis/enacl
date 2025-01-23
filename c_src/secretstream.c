@@ -227,11 +227,13 @@ ERL_NIF_TERM enacl_crypto_secretstream_xchacha20poly1305_init_pull(
   obj->state = enif_alloc(crypto_secretstream_xchacha20poly1305_statebytes());
 
   if (obj->state == NULL) {
+    ret = enacl_internal_error(env);
     goto release;
   }
   obj->alive = 1;
 
   if ((obj->mtx = enif_mutex_create("enacl.secretstream")) == NULL) {
+    ret = enacl_internal_error(env);
     goto free;
   }
 

@@ -4,6 +4,7 @@
 #include <erl_nif.h>
 
 #include "aead.h"
+#include "ed25519.h"
 #include "enacl.h"
 #include "enacl_ext.h"
 #include "generichash.h"
@@ -54,9 +55,8 @@ static int enacl_crypto_upgrade(ErlNifEnv* env, void **priv_data,
     return 0;
 }
 
-static int enacl_crypto_unload(ErlNifEnv* env, void **priv_data,
-                                ERL_NIF_TERM load_info) {
-    return 0;
+static void enacl_crypto_unload(ErlNifEnv* env, void *priv_data) {
+    return;
 }
 
 /* GENERAL ROUTINES
@@ -256,6 +256,12 @@ static ErlNifFunc nif_funcs[] = {
     {"crypto_secretbox_open_b", 3, enacl_crypto_secretbox_open},
     erl_nif_dirty_job_cpu_bound_macro("crypto_secretbox_open", 3,
                                       enacl_crypto_secretbox_open),
+    {"crypto_secretbox_easy_b", 3, enacl_crypto_secretbox_easy},
+    erl_nif_dirty_job_cpu_bound_macro("crypto_secretbox_easy", 3,
+                                      enacl_crypto_secretbox_easy),
+    {"crypto_secretbox_open_easy_b", 3, enacl_crypto_secretbox_open_easy},
+    erl_nif_dirty_job_cpu_bound_macro("crypto_secretbox_open_easy", 3,
+                                      enacl_crypto_secretbox_open_easy),
 
     {"crypto_stream_chacha20_KEYBYTES", 0,
      enacl_crypto_stream_chacha20_KEYBYTES},
@@ -319,6 +325,22 @@ static ErlNifFunc nif_funcs[] = {
                                       enacl_crypto_curve25519_scalarmult),
     erl_nif_dirty_job_cpu_bound_macro("crypto_curve25519_scalarmult_base", 1,
                                       enacl_crypto_curve25519_scalarmult_base),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_ed25519_scalarmult", 2,
+        enacl_crypto_ed25519_scalarmult),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_ed25519_scalarmult_base", 1,
+      enacl_crypto_ed25519_scalarmult_base),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_ed25519_scalarmult_noclamp", 2,
+      enacl_crypto_ed25519_scalarmult_noclamp),
+    erl_nif_dirty_job_cpu_bound_macro("crypto_ed25519_scalarmult_base_noclamp",
+        1, enacl_crypto_ed25519_scalarmult_base_noclamp),
+    {"crypto_ed25519_is_valid_point", 1, enacl_crypto_ed25519_is_valid_point},
+    {"crypto_ed25519_add", 2, enacl_crypto_ed25519_add},
+    {"crypto_ed25519_sub", 2, enacl_crypto_ed25519_sub},
+    {"crypto_ed25519_scalar_reduce", 1, enacl_crypto_ed25519_scalar_reduce},
+    {"crypto_ed25519_scalar_negate", 1, enacl_crypto_ed25519_scalar_negate},
+    {"crypto_ed25519_scalar_add", 2, enacl_crypto_ed25519_scalar_add},
+    {"crypto_ed25519_scalar_sub", 2, enacl_crypto_ed25519_scalar_sub},
+    {"crypto_ed25519_scalar_mul", 2, enacl_crypto_ed25519_scalar_mul},
 
     erl_nif_dirty_job_cpu_bound_macro("crypto_sign_ed25519_keypair", 0,
                                       enacl_crypto_sign_ed25519_keypair),

@@ -62,6 +62,7 @@ ERL_NIF_TERM enacl_crypto_sign_init(ErlNifEnv *env, int argc,
   obj->alive = 0;
   obj->state = enif_alloc(crypto_sign_statebytes());
   if (obj->state == NULL) {
+    ret = enacl_internal_error(env);
     goto release;
   }
   obj->alive = 1;
@@ -82,6 +83,7 @@ ERL_NIF_TERM enacl_crypto_sign_init(ErlNifEnv *env, int argc,
 bad_arg:
   return enif_make_badarg(env);
 free:
+  ret = enacl_internal_error(env);
   if (obj->alive)
     if (obj->state != NULL) {
       sodium_memzero(obj->state, crypto_sign_statebytes());
@@ -285,7 +287,9 @@ enacl_crypto_sign_ed25519_public_to_curve25519(ErlNifEnv *env, int argc,
     return enacl_internal_error(env);
   }
 
-  crypto_sign_ed25519_pk_to_curve25519(curve25519_pk.data, ed25519_pk.data);
+  if (crypto_sign_ed25519_pk_to_curve25519(curve25519_pk.data, ed25519_pk.data) != 0) {
+    return enacl_internal_error(env);
+  }
 
   return enif_make_binary(env, &curve25519_pk);
 }

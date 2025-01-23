@@ -221,7 +221,6 @@ ERL_NIF_TERM enacl_crypto_generichash_update(ErlNifEnv *env, int argc,
                                              ERL_NIF_TERM const argv[]) {
   ERL_NIF_TERM ret;
   ErlNifBinary data;
-  unsigned int data_size;
   enacl_generichash_ctx *obj = NULL;
 
   // Validate the arguments

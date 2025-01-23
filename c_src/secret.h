@@ -43,6 +43,12 @@ ERL_NIF_TERM enacl_crypto_secretbox(ErlNifEnv *env, int argc,
 ERL_NIF_TERM enacl_crypto_secretbox_open(ErlNifEnv *env, int argc,
                                          ERL_NIF_TERM const argv[]);
 
+ERL_NIF_TERM enacl_crypto_secretbox_easy(ErlNifEnv *env, int argc,
+                                         ERL_NIF_TERM const argv[]);
+
+ERL_NIF_TERM enacl_crypto_secretbox_open_easy(ErlNifEnv *env, int argc,
+                                              ERL_NIF_TERM const argv[]);
+
 ERL_NIF_TERM enacl_crypto_stream_chacha20(ErlNifEnv *env, int argc,
                                           ERL_NIF_TERM const argv[]);
 

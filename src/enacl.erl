@@ -59,6 +59,8 @@
          secretbox_NONCEBYTES/0,
          secretbox/3,
          secretbox_open/3,
+         secretbox_easy/3,
+         secretbox_open_easy/3,
 
          %% No Tests!
          stream_chacha20_KEYBYTES/0,
@@ -168,7 +170,20 @@
          crypto_sign_ed25519_public_to_curve25519/1,
          crypto_sign_ed25519_secret_to_curve25519/1,
          crypto_sign_ed25519_public_size/0,
-         crypto_sign_ed25519_secret_size/0
+         crypto_sign_ed25519_secret_size/0,
+
+         crypto_ed25519_scalarmult/2,
+         crypto_ed25519_scalarmult_base/1,
+         crypto_ed25519_scalarmult_noclamp/2,
+         crypto_ed25519_scalarmult_base_noclamp/1,
+         crypto_ed25519_add/2,
+         crypto_ed25519_sub/2,
+         crypto_ed25519_is_valid_point/1,
+         crypto_ed25519_scalar_reduce/1,
+         crypto_ed25519_scalar_negate/1,
+         crypto_ed25519_scalar_add/2,
+         crypto_ed25519_scalar_sub/2,
+         crypto_ed25519_scalar_mul/2
         ]).
 
 %% Key exchange functions
@@ -837,6 +852,50 @@ secretbox_open(CipherText, Nonce, Key) ->
             enacl_nif:crypto_secretbox_open([?S_BOXZEROBYTES, CipherText], Nonce, Key)
     end.
 
+%% @doc secretbox_easy/3 encrypts a message with a key (and nonce)
+%%
+%% Given a `Msg', a `Nonce' and a `Key' encrypt the message with the Key while taking the
+%% nonce into consideration. `easy' refers to not having to take padding, etc. into
+%% account. The function returns the Box obtained from the encryption.
+%% @end
+-spec secretbox_easy(Msg, Nonce, Key) -> Box
+    when
+      Msg :: iodata(),
+      Nonce :: binary(),
+      Key :: binary(),
+      Box :: binary().
+secretbox_easy(Msg, Nonce, Key) ->
+    case iolist_size(Msg) of
+        K when K =< ?SECRETBOX_SIZE ->
+            bump(enacl_nif:crypto_secretbox_easy_b(Msg, Nonce, Key),
+                 ?SECRETBOX_REDUCTIONS,
+                 ?SECRETBOX_SIZE,
+                 K);
+        _ ->
+            enacl_nif:crypto_secretbox_easy(Msg, Nonce, Key)
+    end.
+
+%% @doc secretbox_open_easy/3 opens a sealed box.
+%%
+%% Given a boxed `CipherText' and given we know the used `Nonce' and `Key' we can open the box
+%% to obtain the `Msg' within.  `easy' refers to not having to take padding, etc. into
+%% account. Returns either `{ok, Msg}' or `{error, failed_verification}'.
+%% @end
+-spec secretbox_open_easy(CipherText, Nonce, Key) -> {ok, Msg} | {error, failed_verification}
+    when
+      CipherText :: iodata(),
+      Nonce :: binary(),
+      Key :: binary(),
+      Msg :: binary().
+secretbox_open_easy(CipherText, Nonce, Key) ->
+    case iolist_size(CipherText) of
+        K when K =< ?SECRETBOX_SIZE ->
+            R = enacl_nif:crypto_secretbox_open_easy_b(CipherText, Nonce, Key),
+            bump(R, ?SECRETBOX_OPEN_REDUCTIONS, ?SECRETBOX_SIZE, K);
+        _ ->
+            enacl_nif:crypto_secretbox_open_easy(CipherText, Nonce, Key)
+    end.
+
 %% @doc secretbox_NONCEBYTES()/0 returns the size of the secretbox nonce
 %%
 %% When encrypting with a secretbox, the nonce must have this size
@@ -1159,6 +1218,80 @@ crypto_sign_ed25519_secret_to_curve25519(SecretKey) ->
     R = enacl_nif:crypto_sign_ed25519_secret_to_curve25519(SecretKey),
     erlang:bump_reductions(?ED25519_SECRET_TO_CURVE_REDS),
     R.
+
+%% @doc crypto_ed25519_valid_point/1 checks if P is a valid point on the edwards25519 curve.
+%% @end.
+-spec crypto_ed25519_is_valid_point(P :: binary()) -> boolean().
+crypto_ed25519_is_valid_point(P) ->
+    enacl_nif:crypto_ed25519_is_valid_point(P).
+
+%% @doc crypto_ed25519_add/2 adds the point P to the point Q.
+%% @end.
+-spec crypto_ed25519_add(P :: binary(), Q :: binary()) -> binary().
+crypto_ed25519_add(P, Q) ->
+    enacl_nif:crypto_ed25519_add(P, Q).
+
+%% @doc crypto_ed25519_sub/2 subtracts the point Q from the point P.
+%% @end.
+-spec crypto_ed25519_sub(P :: binary(), Q :: binary()) -> binary().
+crypto_ed25519_sub(P, Q) ->
+    enacl_nif:crypto_ed25519_sub(P, Q).
+
+%% @doc crypto_ed25519_scalarmult/2 does a scalar multiplication between the scalar N and the point P.
+%% @end.
+-spec crypto_ed25519_scalarmult(N :: binary(), P :: binary()) -> binary().
+crypto_ed25519_scalarmult(N, P) ->
+    enacl_nif:crypto_ed25519_scalarmult(N, P).
+
+%% @doc crypto_ed25519_scalarmult_base/1 compute scalar multiplication of the scalar N and the base point.
+%% @end.
+-spec crypto_ed25519_scalarmult_base(N :: binary()) -> binary().
+crypto_ed25519_scalarmult_base(N) ->
+    enacl_nif:crypto_ed25519_scalarmult_base(N).
+
+%% @doc crypto_ed25519_scalarmult_noclamp/2 does a scalar multiplication between the scalar N and the point P.
+%% N is not clamped!
+%% @end.
+-spec crypto_ed25519_scalarmult_noclamp(N :: binary(), P :: binary()) -> binary().
+crypto_ed25519_scalarmult_noclamp(N, P) ->
+    enacl_nif:crypto_ed25519_scalarmult_noclamp(N, P).
+
+%% @doc crypto_ed25519_scalarmult_base_noclamp/1 compute scalar multiplication of the scalar N and the base point.
+%% N is not clamped!
+%% @end.
+-spec crypto_ed25519_scalarmult_base_noclamp(N :: binary()) -> binary().
+crypto_ed25519_scalarmult_base_noclamp(N) ->
+    enacl_nif:crypto_ed25519_scalarmult_base_noclamp(N).
+
+%% @doc crypto_ed25519_scalar_reduce/1 reduces the scalar s to (s mod L).
+%% @end.
+-spec crypto_ed25519_scalar_reduce(S :: binary()) -> binary().
+crypto_ed25519_scalar_reduce(S) ->
+    enacl_nif:crypto_ed25519_scalar_reduce(S).
+
+%% @doc crypto_ed25519_scalar_negate/1 returns neg so that s + neg = 0 (mod L).
+%% @end.
+-spec crypto_ed25519_scalar_negate(S :: binary()) -> binary().
+crypto_ed25519_scalar_negate(S) ->
+    enacl_nif:crypto_ed25519_scalar_negate(S).
+
+%% @doc crypto_ed25519_scalar_add/2 computes the scalar x + y (mod L).
+%% @end.
+-spec crypto_ed25519_scalar_add(X :: binary(), Y :: binary()) -> binary().
+crypto_ed25519_scalar_add(X, Y) ->
+    enacl_nif:crypto_ed25519_scalar_add(X, Y).
+
+%% @doc crypto_ed25519_scalar_sub/2 computes the scalar x - y (mod L).
+%% @end.
+-spec crypto_ed25519_scalar_sub(X :: binary(), Y :: binary()) -> binary().
+crypto_ed25519_scalar_sub(X, Y) ->
+    enacl_nif:crypto_ed25519_scalar_sub(X, Y).
+
+%% @doc crypto_ed25519_scalar_mul/2 computes the scalar x - y (mod L).
+%% @end.
+-spec crypto_ed25519_scalar_mul(X :: binary(), Y :: binary()) -> binary().
+crypto_ed25519_scalar_mul(X, Y) ->
+    enacl_nif:crypto_ed25519_scalar_mul(X, Y).
 
 -spec crypto_sign_ed25519_public_size() -> pos_integer().
 crypto_sign_ed25519_public_size() ->

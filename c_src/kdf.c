@@ -20,7 +20,7 @@ ERL_NIF_TERM enacl_crypto_kdf_CONTEXTBYTES(ErlNifEnv *env, int argc,
 ERL_NIF_TERM enacl_crypto_kdf_derive_from_key(ErlNifEnv *env, int argc,
                                               ERL_NIF_TERM const argv[]) {
   ErlNifBinary m, c, r;
-  uint64_t id;
+  ErlNifUInt64 id;
 
   // Validate the arguments
   if ((argc != 3) ||

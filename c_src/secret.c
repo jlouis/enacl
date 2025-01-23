@@ -137,6 +137,64 @@ ERL_NIF_TERM enacl_crypto_secretbox_open(ErlNifEnv *env, int argc,
   return enif_make_tuple2(env, ret_ok, ret_bin);
 }
 
+ERL_NIF_TERM enacl_crypto_secretbox_easy(ErlNifEnv *env, int argc,
+                                         ERL_NIF_TERM const argv[]) {
+  ErlNifBinary key, nonce, msg, cipherbox;
+
+  if ((argc != 3) ||
+      (!enif_inspect_iolist_as_binary(env, argv[0], &msg)) ||
+      (!enif_inspect_binary(env, argv[1], &nonce)) ||
+      (!enif_inspect_binary(env, argv[2], &key))) {
+    return enif_make_badarg(env);
+  }
+
+  if ((key.size != crypto_secretbox_KEYBYTES) ||
+      (nonce.size != crypto_secretbox_NONCEBYTES)) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(msg.size + crypto_secretbox_MACBYTES, &cipherbox)) {
+    return enacl_internal_error(env);
+  }
+
+  crypto_secretbox_easy(cipherbox.data, msg.data, msg.size,
+                        nonce.data, key.data);
+
+  return enif_make_binary(env, &cipherbox);
+}
+
+ERL_NIF_TERM enacl_crypto_secretbox_open_easy(ErlNifEnv *env, int argc,
+                                              ERL_NIF_TERM const argv[]) {
+  ErlNifBinary key, nonce, cipherbox, msg;
+
+  if ((argc != 3) ||
+      (!enif_inspect_iolist_as_binary(env, argv[0], &cipherbox)) ||
+      (!enif_inspect_binary(env, argv[1], &nonce)) ||
+      (!enif_inspect_binary(env, argv[2], &key))) {
+    return enif_make_badarg(env);
+  }
+
+  if ((key.size != crypto_secretbox_KEYBYTES) ||
+      (nonce.size != crypto_secretbox_NONCEBYTES) ||
+      (cipherbox.size < crypto_secretbox_MACBYTES)) {
+    return enif_make_badarg(env);
+  }
+
+  if (!enif_alloc_binary(cipherbox.size - crypto_secretbox_MACBYTES, &msg)) {
+    return enacl_internal_error(env);
+  }
+
+  if (crypto_secretbox_open_easy(msg.data, cipherbox.data, cipherbox.size,
+                                 nonce.data, key.data) != 0) {
+    enif_release_binary(&msg);
+    return enacl_error_tuple(env, "failed_verification");
+  }
+
+  ERL_NIF_TERM ret_ok = enif_make_atom(env, ATOM_OK);
+  ERL_NIF_TERM ret_bin = enif_make_binary(env, &msg);
+  return enif_make_tuple2(env, ret_ok, ret_bin);
+}
+
 ERL_NIF_TERM enacl_crypto_stream_chacha20(ErlNifEnv *env, int argc,
                                           ERL_NIF_TERM const argv[]) {
   ErlNifBinary c, n, k;

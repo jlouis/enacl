@@ -57,6 +57,10 @@
          crypto_secretbox_b/3,
          crypto_secretbox_open/3,
          crypto_secretbox_open_b/3,
+         crypto_secretbox_easy/3,
+         crypto_secretbox_easy_b/3,
+         crypto_secretbox_open_easy/3,
+         crypto_secretbox_open_easy_b/3,
 
          crypto_stream_chacha20_KEYBYTES/0,
          crypto_stream_chacha20_NONCEBYTES/0,
@@ -123,7 +127,20 @@
          crypto_sign_ed25519_public_to_curve25519/1,
          crypto_sign_ed25519_secret_to_curve25519/1,
          crypto_sign_ed25519_PUBLICKEYBYTES/0,
-         crypto_sign_ed25519_SECRETKEYBYTES/0
+         crypto_sign_ed25519_SECRETKEYBYTES/0,
+
+         crypto_ed25519_scalarmult/2,
+         crypto_ed25519_scalarmult_base/1,
+         crypto_ed25519_scalarmult_noclamp/2,
+         crypto_ed25519_scalarmult_base_noclamp/1,
+         crypto_ed25519_add/2,
+         crypto_ed25519_sub/2,
+         crypto_ed25519_is_valid_point/1,
+         crypto_ed25519_scalar_reduce/1,
+         crypto_ed25519_scalar_negate/1,
+         crypto_ed25519_scalar_add/2,
+         crypto_ed25519_scalar_sub/2,
+         crypto_ed25519_scalar_mul/2
         ]).
 
 %% Key exchange
@@ -303,6 +320,10 @@ crypto_secretbox(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_secretbox_b(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_secretbox_open(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 crypto_secretbox_open_b(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_easy(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_easy_b(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_open_easy(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
+crypto_secretbox_open_easy_b(_Msg, _Nonce, _Key) -> erlang:nif_error(nif_not_loaded).
 
 crypto_stream_chacha20_KEYBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_stream_chacha20_NONCEBYTES() -> erlang:nif_error(nif_not_loaded).
@@ -357,6 +378,19 @@ crypto_sign_ed25519_keypair() -> erlang:nif_error(nif_not_loaded).
 crypto_sign_ed25519_sk_to_pk(_SecretKey) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_ed25519_public_to_curve25519(_PublicKey) -> erlang:nif_error(nif_not_loaded).
 crypto_sign_ed25519_secret_to_curve25519(_SecretKey) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalarmult(_S, _Base) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalarmult_base(_S) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalarmult_noclamp(_S, _Base) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalarmult_base_noclamp(_S) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_add(_X, _Y) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_sub(_X, _Y) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_is_valid_point(_P) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalar_reduce(_S) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalar_negate(_S) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalar_add(_X, _Y) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalar_sub(_X, _Y) -> erlang:nif_error(nif_not_loaded).
+crypto_ed25519_scalar_mul(_X, _Y) -> erlang:nif_error(nif_not_loaded).
+
 crypto_sign_ed25519_PUBLICKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 crypto_sign_ed25519_SECRETKEYBYTES() -> erlang:nif_error(nif_not_loaded).
 

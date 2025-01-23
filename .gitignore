@@ -1,5 +1,6 @@
 .rebar
 .rebar3
+.envrc
 ebin
 *.beam
 *.o

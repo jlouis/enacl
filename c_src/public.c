@@ -90,7 +90,7 @@ ERL_NIF_TERM enacl_crypto_box(ErlNifEnv *env, int argc,
     goto bad_arg;
 
   if (!enif_alloc_binary(padded_msg.size, &result)) {
-    goto done;
+    goto err;
   }
 
   if (0 != crypto_box(result.data, padded_msg.data, padded_msg.size, nonce.data,
